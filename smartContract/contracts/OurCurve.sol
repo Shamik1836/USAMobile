@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 
-
 /**
 * @title
 *
@@ -22,32 +21,32 @@ contract OurCurve {
     // validate input
     require(_tokensToMint > 0, "OurCurve: Must mint more than 0 tokens");  
 
-    //console.log(_tokensToMint, '_tokensToMint in MC, calcPriceForTokenMint');  
-    //console.log(_supply, ' _supply in MC, calcPriceForTokenMint');   
+    //console.log(_tokensToMint, '_tokensToMint in OC, calcPriceForTokenMint');  
+    console.log(_supply, ' _supply in OC, calcPriceForTokenMint');   
     
     uint256 _supplySquared = _supply*_supply;
-    //console.log(_supplySquared, ' _supplySquared in MC, calcPriceForTokenMint');    
+    //console.log(_supplySquared, ' _supplySquared in OC, calcPriceForTokenMint');    
 
     uint256 _supplyAfterMint = _supply + _tokensToMint;    
     uint256 _supplyAfterMintSquared = _supplyAfterMint * _supplyAfterMint; 
 
     uint256 _step1 = _supplyAfterMintSquared - _supplySquared; 
-    //console.log(_step1, '_step1 in MC, calcPriceForTokenMint');
+    //console.log(_step1, '_step1 in OC, calcPriceForTokenMint');
 
     uint256 _step2 = _step1 * mockUSDCscale;
-    //console.log(_step2, '_step2 in MC, calcPriceForTokenMint');
+    //console.log(_step2, '_step2 in OC, calcPriceForTokenMint');
 
     uint256 _totalPriceForTokensMintingNowInMockUSDC_WEI = _step2 / 800000;  
-    //console.log(_totalPriceForTokensMintingNowInMockUSDC_WEI, '_totalPriceForTokensMintingNowInMockUSDC_WEI in MC, calcPriceForTokenMint');
+    //console.log(_totalPriceForTokensMintingNowInMockUSDC_WEI, '_totalPriceForTokensMintingNowInMockUSDC_WEI in OC, calcPriceForTokenMint');
     
     uint256 takeOffFactor = 10 ** 16;
-    //console.log(takeOffFactor, 'takeOff in MC, calcPriceForTokenMint');
+    //console.log(takeOffFactor, 'takeOff in OC, calcPriceForTokenMint');
 
     uint256 rest = _totalPriceForTokensMintingNowInMockUSDC_WEI % takeOffFactor;
-    //console.log(rest, 'rest in MC, calcPriceForTokenMint');
+    //console.log(rest, 'rest in OC, calcPriceForTokenMint');
 
     uint256 mintResultWithCentsroundedDown = _totalPriceForTokensMintingNowInMockUSDC_WEI - rest;
-    //console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in MC, calcPriceForTokenMint');
+    //console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in OC, calcPriceForTokenMint');
 
     // returning price for specified token amount
     return mintResultWithCentsroundedDown;        
@@ -79,35 +78,34 @@ contract OurCurve {
     uint256 _supplySquared = _supply * _supply; 
     uint256 _supplyAfterBurnSquared = _supplyAfterBurn * _supplyAfterBurn;
     /*
-    console.log('MC, calcReturnForTokenBurn: _supply', _supply);
-    console.log('MC, calcReturnForTokenBurn: _tokensToBurn', _tokensToBurn);
-    console.log('MC, calcReturnForTokenBurn: _supplyAfterBurn', _supplyAfterBurn);
+    console.log('OC, calcReturnForTokenBurn: _supply', _supply);
+    console.log('OC, calcReturnForTokenBurn: _tokensToBurn', _tokensToBurn);
+    console.log('OC, calcReturnForTokenBurn: _supplyAfterBurn', _supplyAfterBurn);
 
-    console.log('MC, calcReturnForTokenBurn: _supplySquared', _supplySquared);
-    console.log('MC, calcReturnForTokenBurn: _supplyAfterBurnSquared', _supplyAfterBurnSquared);
+    console.log('OC, calcReturnForTokenBurn: _supplySquared', _supplySquared);
+    console.log('OC, calcReturnForTokenBurn: _supplyAfterBurnSquared', _supplyAfterBurnSquared);
     */
     uint256 _step1 = _supplySquared - _supplyAfterBurnSquared;    
-    //console.log('MC, calcReturnForTokenBurn: _step1', _step1);    
+    //console.log('OC, calcReturnForTokenBurn: _step1', _step1);    
 
     uint256 _step2 = _step1 * mockUSDCscale ;
-    //console.log('MC, calcReturnForTokenBurn: _step2', _step2);
+    //console.log('OC, calcReturnForTokenBurn: _step2', _step2);
 
     uint256 _returnForTokenBurnInMockUSDC_WEI = _step2/ 800000 ;
-    //console.log('MC, calcReturnForTokenBurn: _result', _result);
+    //console.log('OC, calcReturnForTokenBurn: _result', _result);
 
     uint256 takeOffFactor = 10 ** 16;
-    //console.log(takeOffFactor, 'takeOff in MC, calcReturnForTokenBurn');
+    //console.log(takeOffFactor, 'takeOff in OC, calcReturnForTokenBurn');
 
     uint256 rest = _returnForTokenBurnInMockUSDC_WEI % takeOffFactor;
-    //console.log(rest, 'rest in MC, calcPriceForTokenMint');
+    //console.log(rest, 'rest in OC, calcPriceForTokenMint');
 
     uint256 burnResultWithCentsroundedDown = _returnForTokenBurnInMockUSDC_WEI - rest;
-    //console.log(burnResultWithCentsroundedDown, 'burnResultWithCentsroundedDown in MC, calcReturnForTokenBurn');
+    //console.log(burnResultWithCentsroundedDown, 'burnResultWithCentsroundedDown in OC, calcReturnForTokenBurn');
 
     return burnResultWithCentsroundedDown ;
     
   }
-
   
 
 }

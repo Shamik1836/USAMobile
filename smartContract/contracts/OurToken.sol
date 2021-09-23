@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./OurCurve.sol";
 
-import "hardhat/console.sol";
+import "hardhat/console.sol"; 
 
 contract OurToken is OurCurve, Ownable, ERC20, Pausable  {
   using SafeMath for uint256;
@@ -28,8 +28,7 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable  {
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
   }
-  
- 
+   
 
   /*
   function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
