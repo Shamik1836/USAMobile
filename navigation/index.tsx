@@ -14,8 +14,17 @@ import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
+
 import TabOneScreen from '../screens/TabOneScreen';
 import TabTwoScreen from '../screens/TabTwoScreen';
+
+import NewsScreen from '../screens/NewsScreen';
+import StackScreen from '../screens/StackScreen';
+import WeatherScreen from '../screens/WeatherScreen';
+import CommandScreen from '../screens/CommandScreen';
+import LibraryScreen from '../screens/LibraryScreen';
+import CollectionsScreen from '../screens/CollectionsScreen';
+
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
@@ -63,10 +72,10 @@ function BottomTabNavigator() {
         tabBarActiveTintColor: Colors[colorScheme].tint,
       }}>
       <BottomTab.Screen
-        name="TabOne"
-        component={TabOneScreen}
-        options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
+        name="News"
+        component={NewsScreen}
+        options={({ navigation }: RootTabScreenProps<'News'>) => ({
+          title: 'News',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
           headerRight: () => (
             <Pressable
@@ -85,10 +94,42 @@ function BottomTabNavigator() {
         })}
       />
       <BottomTab.Screen
-        name="TabTwo"
-        component={TabTwoScreen}
+        name="Stack"
+        component={StackScreen}
         options={{
-          title: 'Tab Two',
+          title: 'Stack',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Weather"
+        component={WeatherScreen}
+        options={{
+          title: 'Weather',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Command"
+        component={CommandScreen}
+        options={{
+          title: 'Command',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Library"
+        component={LibraryScreen}
+        options={{
+          title: 'Library',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Collections"
+        component={CollectionsScreen}
+        options={{
+          title: 'Collections',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "HelloMobileWorld",
-    "slug": "HelloMobileWorld",
-    "version": "1.0.0",
+    "name": "USAWallet",
+    "slug": "USAWallet",
+    "version": "0.9.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "usawallet",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -15,9 +15,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
