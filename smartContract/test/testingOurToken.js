@@ -321,6 +321,35 @@ describe("OurToken Test", function () {
     ourTokenContract = await _ourTokenInstance.deploy(mockUSDCTokenContract.address, accounts[1].address);    
   })  
 
+  
+  /*
+    it(`0 temp. Testing withdraw accumulated  `, async function () { 
+      
+      const testAcc4MockUSDCBalanceStart = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[4].address));
+      console.log('testAcc4MockUSDCBalanceStart', testAcc4MockUSDCBalanceStart);
+
+      await mockUSDCTokenContract.connect(accounts[4]).getmockUSDC();
+      const testAcc4MockUSDCBalanceAfterGet = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[4].address));
+      console.log('testAcc4MockUSDCBalanceAfterGet', testAcc4MockUSDCBalanceAfterGet);
+
+      await mockUSDCTokenContract.connect(accounts[4]).transfer(ourTokenContract.address, testAcc4MockUSDCBalanceAfterGet);
+      const testAcc4MockUSDCBalanceAfterSend = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[4].address));    
+      const testContractMockUSDCBalanceAfterGet = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address));
+      console.log('testAcc4MockUSDCBalanceAfterSend', testAcc4MockUSDCBalanceAfterSend);
+      console.log('testContractMockUSDCBalanceAfterGet', testContractMockUSDCBalanceAfterGet);
+
+      const testAcc0MockUSDCBalanceShouldBeEmpty = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[0].address));
+      console.log('testAcc0MockUSDCBalanceShouldBeEmpty', testAcc0MockUSDCBalanceShouldBeEmpty);
+
+      await ourTokenContract.withdrawERC20(mockUSDCTokenContract.address);
+      const testContractMockUSDCBalanceAfterWithdraw = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address));
+      console.log('testContractMockUSDCBalanceAfterWithdraw', testContractMockUSDCBalanceAfterWithdraw);
+
+      const testAcc0MockUSDCBalanceAfterWithdraw = bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[0].address));
+      console.log('testAcc0MockUSDCBalanceAfterWithdraw', testAcc0MockUSDCBalanceAfterWithdraw);     
+    });  
+  */ 
+  
   it("1. Should show deployment went as expected", async function () {
     
     // after deployment, querying ourToken balance of accounts[0], logging as number and from WEI to ETH
@@ -346,6 +375,10 @@ describe("OurToken Test", function () {
   it(`4. First burn should burn 11766 tokens  `, async function () {  
     await testBurning("first", 11766, accounts[3]);
     confirmBurn(122478, 11766);  
-  });   
+  });   */
+
+  
+
+
 
 }); 

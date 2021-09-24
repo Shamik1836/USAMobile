@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol"; 
 // importing openzeppelin interface for ERC20 tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./OurCurve.sol";
@@ -153,5 +153,12 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable  {
   function calcSpecBurnReturn(uint256 _amount) public view whenNotPaused returns (uint256 burnReturn) {
     return calcReturnForTokenBurn(totalSupply(), _amount); 
   }  
+    
+  // function for owner to withdraw any ERC20 token that has accumulated
+  function withdrawERC20 (address ERC20ContractAddress) public onlyOwner {
+    IERC20 ERC20Instance = IERC20(ERC20ContractAddress);    
+    uint256 accumulatedTokens = ERC20Instance.balanceOf(address(this));
+    ERC20Instance.transfer(_msgSender(), accumulatedTokens);         
+  }
 
 }
