@@ -71,7 +71,7 @@ contract OurCurve {
   {
     // validate input
     
-    require(_supply > 0 && _tokensToBurn > 0 && _supply > _tokensToBurn, "OurCurve: Sending args must be larger than 0");   
+    require(_supply > 0 && _tokensToBurn > 0 && _supply >= _tokensToBurn, "OurCurve: Sending args must be larger than 0");   
     
     uint256 _supplyAfterBurn = _supply - _tokensToBurn; 
 

@@ -103,7 +103,7 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   const callingAccMockUSDCBalanceBeforeMintInUSDC = fromCentsToUSDC(callingAccMockUSDCBalanceBeforeMintInCents);
   console.log(`mockUSDC balance of ${callingAccountName} before ${mintName} `, callingAccMockUSDCBalanceBeforeMintInUSDC);        
 
-  //mint, after getting ${callingAccMockUSDCBalanceBeforeMintInUSDC}:`, callingAccMockUSDCBalanceBeforeMintInUSDC
+  //mint, ${callingAccMockUSDCBalanceBeforeMintInUSDC}:`, callingAccMockUSDCBalanceBeforeMintInUSDC
 
   const contractMockUSDCBalanceBeforeMintBN = await mockUSDCTokenContract.balanceOf(ourTokenContract.address);
   const contractMockUSDCBalanceBeforeMintInCents = fromWEItoCents(contractMockUSDCBalanceBeforeMintBN);    
@@ -180,7 +180,7 @@ async function testBurning(burnName, amountToBurn, callingAcc) {
   const callingAccMockUSDCBalanceBeforeBurnBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceBeforeBurnInCents = fromWEItoCents(callingAccMockUSDCBalanceBeforeBurnBN);  
   const callingAccMockUSDCBalanceBeforeBurnInUSDC = fromCentsToUSDC(callingAccMockUSDCBalanceBeforeBurnInCents);
-  console.log(`mockUSDC balance of ${callingAccountName} before ${burnName} burn, after getting ${callingAccMockUSDCBalanceBeforeBurnInUSDC}:`, callingAccMockUSDCBalanceBeforeBurnInUSDC);        
+  console.log(`mockUSDC balance of ${callingAccountName} before ${burnName} burn:`, callingAccMockUSDCBalanceBeforeBurnInUSDC);        
 
   const contractMockUSDCBalanceBeforeBurnBN = await mockUSDCTokenContract.balanceOf(ourTokenContract.address);
   const contractMockUSDCBalanceBeforeBurnInCents = fromWEItoCents(contractMockUSDCBalanceBeforeBurnBN);    
@@ -282,6 +282,7 @@ function calcMintVariables(nrOfTokensExisting, amountToMint) {
   console.log(`calcMintVariables: Price before fee (math curve response): `, purePriceForTokensMintingNowInUSDC);  
   console.log(`calcMintVariables: Total price in USDC (incl fee & rounded down cents): ` + inUSDCToPayTotal);
   console.log(`calcMintVariables: Mint fee in USDC is: ` + (mintFee / 100));
+  console.log(`========================Mint End====================================`);
 
   tokensShouldExistNowGlobalV = amountOfTokensAfterMint;
   mintPriceTotalInUSDCShouldBeNowGlobalV = inUSDCToPayTotal;
@@ -301,9 +302,10 @@ function calcBurnVariables(nrOfTokensExisting, amountToBurn) {
   const burnFee = burnFeeStarter - burnRoundingForFeeDifference;
   const inCentsToReceiveTotal = inCentsRoundedDownBurn - burnFee;
   const inUSDCToReceiveTotal = inCentsToReceiveTotal / 100;
-  console.log(`Return before fee (math curve response): ` + totalReturnForTokensBurningNowInUSDC);
-  console.log(`User receives (after fee & rounded down cents):  ` + inUSDCToReceiveTotal);
-  console.log(`Burn fee is: ` + (burnFee / 100));
+  console.log(`calcBurnVariables: Return before fee (math curve response): ` + totalReturnForTokensBurningNowInUSDC);
+  console.log(`calcBurnVariables: User receives (after fee & rounded down cents):  ` + inUSDCToReceiveTotal);
+  console.log(`calcBurnVariables: Burn fee is: ` + (burnFee / 100));
+  console.log(`========================Burn End====================================`);
    
   tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
   burnReturnTotalInUSDCShouldBeNowGlobalV = inCentsRoundedDownBurn/100;
@@ -406,7 +408,7 @@ describe("OurToken Test", function () {
     let burnCounter = 0;
 
     // running either minting or burning, this many loops: opCounter
-    for (opCounter = 1; opCounter <= 10; opCounter++) {
+    for (opCounter = 1; opCounter <= 1000; opCounter++) {
       // randomizing minting or burning
       randomMintOrBurn = Math.floor (Math.random() * 10);
       console.log('randomMintOrBurn', randomMintOrBurn); 
@@ -416,26 +418,31 @@ describe("OurToken Test", function () {
 
       // BURNING
       // if randomMintOrBurn = one of these: = 5,6,7,8, 9, burn.
-      // acc5 must have 10k tokens to be able to trigger burning
-      if (randomMintOrBurn > 5 && acc5TokenBalanceOperationStart > 10000){
+      // acc5 must have 20k tokens to be able to trigger burning
+      if (randomMintOrBurn > 5 && acc5TokenBalanceOperationStart > 20000){
         console.log(`operation nr: ${opCounter} is BURNING`); 
       
         // local function to check burning amount repeatedly until it's okay
         function checkBurningAmountOkay() {
-          if (burnReturnTotalInUSDCShouldBeNowGlobalV < 5000 || randomAmountBurning > acc5TokenBalanceOperationStart) {
 
-            if (burnReturnTotalInUSDCShouldBeNowGlobalV < 5000) {
-              console.log(`RERUN, burn call would be under $5`);   
+          let rerunCounter = 0;
+          if (rerunCounter < 10 && burnReturnTotalInUSDCShouldBeNowGlobalV < 5 || randomAmountBurning > acc5TokenBalanceOperationStart) {
+
+            if (burnReturnTotalInUSDCShouldBeNowGlobalV < 5) {
+              console.log(`RERUN, burn call would be under $5`);
+              randomAmountBurning = randomAmountBurning + 3000;
+              console.log(`RERUN tried to burn few tokens, now trying to burn: `, randomAmountBurning);
             }
             if (randomAmountBurning > acc5TokenBalanceOperationStart){
-              console.log(`RERUN, call would be too big for acc5 token balance`)   
+              console.log(`RERUN, call would be too big for acc5 token balance`)  
+              // creating a number lower than 1, multiplying it with tokens user has, i.e. never more than he has. then rounding down to full token
+              randomAmountBurning = ( Math.floor (Math.random() * acc5TokenBalanceOperationStart) ) ;
+              console.log(`RERUN tried to burn more tokens than he has, now trying to burn: `, randomAmountBurning);
             }            
-            // creating a number lower than 1, multiplying it with tokens user has, i.e. never more than he has. then rounding down to full token
-            randomAmountBurning = ( Math.floor (Math.random() * acc5TokenBalanceOperationStart) ) ;
-            console.log('RERUN randomAmountBurning', randomAmountBurning);
+                        
             calcBurnVariables(tokensExistingBeforeBurn, randomAmountBurning);  // this call will change burnReturnTotalInUSDCShouldBeNowGlobalV, so no endless loop
             checkBurningAmountOkay();
-                     
+            rerunCounter++;
           } 
         } 
 
@@ -446,6 +453,7 @@ describe("OurToken Test", function () {
         let tokensExistingBeforeBurn = bigNumberToNumber( await ourTokenContract.totalSupply() );        
         
         //calcBurnVariables(nrOfTokensExisting, amountToBurn);         
+
         calcBurnVariables(tokensExistingBeforeBurn, randomAmountBurning);
         
         checkBurningAmountOkay(); // checking if amount is okay
@@ -516,19 +524,39 @@ describe("OurToken Test", function () {
 
     const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address)) );
     console.log('protocol our contract USDC balance after test', protocolBalanceAfterTest);
+    const protocolBalanceAfterTestJSExactness = Number(protocolBalanceAfterTest*100);
+    //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
     
     const acc5MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[5].address)) );
     console.log('acc5 user USDC balance after test', acc5MockUSDCBalanceAfterTest);
-    
+    const acc5MockUSDCBalanceAfterTestJSExactness = Number(acc5MockUSDCBalanceAfterTest*100);
+    //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
+
     const feeReceiveracc1MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[1].address)) );
     console.log('feeReceiver acc1 USDC balance after test', feeReceiveracc1MockUSDCBalanceAfterTest);
+    const feeReceiveracc1MockUSDCBalanceAfterTestJSExactness = Number(feeReceiveracc1MockUSDCBalanceAfterTest*100);
+    //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
 
-    const inTotalUSDCExistafterTest = (Number(protocolBalanceAfterTest*100) + Number(acc5MockUSDCBalanceAfterTest*100) + Number(feeReceiveracc1MockUSDCBalanceAfterTest*100)) / 100 ; 
-    console.log('in total USDC exist after Test', inTotalUSDCExistafterTest);
+    const inTotalUSDCExistafterTest = protocolBalanceAfterTestJSExactness + acc5MockUSDCBalanceAfterTestJSExactness + feeReceiveracc1MockUSDCBalanceAfterTestJSExactness ; 
+    console.log('JS * 100 check', inTotalUSDCExistafterTest);
+
+    const jsExactnessResolved = inTotalUSDCExistafterTest / 100;
+    console.log('in total USDC exist after test', jsExactnessResolved);
 
     const callingAccEndTokenBalance = bigNumberToNumber( await ourTokenContract.balanceOf(accounts[5].address) );
     console.log('at the end of the test, acc 5 has this many tokens:', callingAccEndTokenBalance);
-    /*
+    
+
+    
+    
+
+  });  
+
+  it(`BigBrainTest2: User should burn all tokens that he has at the end`, async function () {  
+
+    const callingAccEndTokenBalance = bigNumberToNumber( await ourTokenContract.balanceOf(accounts[5].address) );
+    console.log('at the end of the test, acc 5 has this many tokens:', callingAccEndTokenBalance);
+
     await testBurning("burnAll", callingAccEndTokenBalance, accounts[5]);
 
     const protocolBalanceAfterBurnAll = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address)) );
@@ -541,16 +569,8 @@ describe("OurToken Test", function () {
     console.log('after burning all tokens, feeReceiver user USDC balance', feeReceiveracc1MockUSDCBalanceAfterBurnAll);
 
     const inTotalUSDCExistafterBurnAll = (Number(protocolBalanceAfterBurnAll*100) + Number(acc5MockUSDCBalanceAfterBurnAll*100) + Number(feeReceiveracc1MockUSDCBalanceAfterBurnAll*100)) / 100 ; 
-    console.log('after burning all tokens, total USDC exist:', inTotalUSDCExistafterBurnAll);
-    */
-    
-    
-
-    //await testMinting("first", 56484, 402793, accounts[2], 0);
-    //confirmMint(0, 56484);    
-  });  
-
-  
+    console.log('after burning all tokens, total USDC exist:', inTotalUSDCExistafterBurnAll); 
+  });
 
 
 
