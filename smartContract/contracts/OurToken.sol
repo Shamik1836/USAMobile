@@ -30,15 +30,13 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
         feeReceiver = _feeReceiver;
     }
 
-    /*
-  function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
-    mockUSDCToken.approve(_user, (_amountToReturn + 1000000000000000000));    
-    uint256 allowanceToGetReturn = mockUSDCToken.allowance(addressOfThisContract, _user);
-    //console.log(allowanceToGetReturn, 'allowanceToGetReturn in _specifiedAmountBurn, OTK');    
-    return true;
+  /* XXXXX
+    function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
+      mockUSDCToken.approve(_user, (_amountToReturn + 1000000000000000000));    
+      uint256 allowanceToGetReturn = mockUSDCToken.allowance(addressOfThisContract, _user);
+      //console.log(allowanceToGetReturn, 'allowanceToGetReturn in _specifiedAmountBurn, OTK');    
+      return true;
   }*/
-
-
 
   // add withdraw function for people sending ETH or MATIC etc? XXXX  
   
@@ -123,10 +121,13 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
     //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, OTK');   
      
     require(_amount > 0, "Amount to burn must be more than zero.");  
-    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");         
+    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");  
+           
     
     uint256 returnForBurning = calcSpecBurnReturn(_amount);
     //console.log(returnForBurning, 'returnForBurning in _specifiedAmountBurn, OTK');   
+
+    require (returnForBurning >= 5000000000000000000, "OTK, _specifiedAmountBurn: Minimum burning value is $5 USDC" );
 
     uint256 fee = returnForBurning / 100;
     //console.log(fee, 'fee in _specifiedAmountBurn, OTK');   

@@ -7,7 +7,7 @@ contract MockUSDCToken is ERC20, Ownable{
   
   uint256 mockUSDCscale = 10**18;
   
-  uint256 amountToGivePerCall = 20000 ;
+  uint256 amountToGivePerCall = 10000000 ;
 
   mapping (address => mapping (address => uint256)) private _allowances;
 
