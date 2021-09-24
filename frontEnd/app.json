@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "USAWallet",
-    "slug": "USAWallet",
-    "version": "0.1.1",
+    "name": "usawallet",
+    "slug": "usawallet",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "usawallet",
+    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",

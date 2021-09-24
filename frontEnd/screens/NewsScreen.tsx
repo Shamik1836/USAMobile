@@ -10,7 +10,7 @@ export default function NewsScreen({ navigation }: RootTabScreenProps<'News'>) {
     <View style={styles.container}>
       <Text style={styles.title}>News Cards Go Here.</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/NewsScreen.tsx" />
+      
     </View>
   );
 }

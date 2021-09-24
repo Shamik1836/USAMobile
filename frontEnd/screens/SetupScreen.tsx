@@ -10,7 +10,7 @@ export default function SetupScreen({ navigation }: RootTabScreenProps<'Setup'>)
     <View style={styles.container}>
       <Text style={styles.title}>Set Up Wallet Etc. Here.</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/SetupScreen.tsx" />
+      
     </View>
   );
 }

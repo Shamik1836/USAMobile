@@ -10,7 +10,7 @@ export default function WeatherScreen({ navigation }: RootTabScreenProps<'Weathe
     <View style={styles.container}>
       <Text style={styles.title}>Charts Go Here.</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/WeatherScreen.tsx" />
+      
     </View>
   );
 }
