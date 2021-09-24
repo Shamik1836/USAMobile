@@ -9,28 +9,28 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./OurCurve.sol";
 
-import "hardhat/console.sol"; 
+import "hardhat/console.sol";
 
-contract OurToken is OurCurve, Ownable, ERC20, Pausable  {
-  using SafeMath for uint256;
+contract OurToken is OurCurve, Ownable, ERC20, Pausable {
+    using SafeMath for uint256;
 
-  IERC20 public mockUSDCToken;  
-  address addressOfThisContract;
-  
-  address feeReceiver;
+    IERC20 public mockUSDCToken;
+    address addressOfThisContract;
 
+    address feeReceiver;
 
-  uint8 private _decimals;  
-  
-  constructor(address _mockUSDCTokenAddress, address _feeReceiver) ERC20("OurToken", "OTK"){  
-    _decimals = 0;
-    mockUSDCToken = IERC20(_mockUSDCTokenAddress);
-    addressOfThisContract = address(this);
-    feeReceiver = _feeReceiver;
-  }
-   
+    uint8 private _decimals;
 
-  /*
+    constructor(address _mockUSDCTokenAddress, address _feeReceiver)
+        ERC20("OurToken", "OTK")
+    {
+        _decimals = 0;
+        mockUSDCToken = IERC20(_mockUSDCTokenAddress);
+        addressOfThisContract = address(this);
+        feeReceiver = _feeReceiver;
+    }
+
+    /*
   function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
     mockUSDCToken.approve(_user, (_amountToReturn + 1000000000000000000));    
     uint256 allowanceToGetReturn = mockUSDCToken.allowance(addressOfThisContract, _user);
