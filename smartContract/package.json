@@ -1,13 +1,27 @@
 {
-  "name": "smartcontract",
-  "version": "1.0.0",
-  "description": "",
+  "name": "benjamins",
+  "version": "0.1.0",
+  "description": "USA Wallet utility token with bonding curve, AAVE deposit, etc.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orbitmechanic/USAMobile.git"
+  },
+  "keywords": [
+    "USAWallet",
+    "Utility",
+    "Token",
+    "Solidity",
+    "ERC20"
+  ],
+  "author": "ctrl030, orbitmechanic",
+  "license": "../LICENSE.txt",
+  "bugs": {
+    "url": "https://github.com/orbitmechanic/USAMobile/issues"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -16,6 +30,7 @@
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4"
   },
+  "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2"
   }
