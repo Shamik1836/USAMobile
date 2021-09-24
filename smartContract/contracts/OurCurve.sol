@@ -22,7 +22,7 @@ contract OurCurve {
     require(_tokensToMint > 0, "OurCurve: Must mint more than 0 tokens");  
 
     //console.log(_tokensToMint, '_tokensToMint in OC, calcPriceForTokenMint');  
-    console.log(_supply, ' _supply in OC, calcPriceForTokenMint');   
+    //console.log(_supply, ' _supply in OC, calcPriceForTokenMint');   
     
     uint256 _supplySquared = _supply*_supply;
     //console.log(_supplySquared, ' _supplySquared in OC, calcPriceForTokenMint');    

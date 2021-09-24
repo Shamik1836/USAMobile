@@ -81,12 +81,12 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
     //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountMint, OTK');   
 
     uint256 endPrice = priceForMinting + feeRoundedDown;
-    console.log(endPrice, 'endPrice in _specifiedAmountMint, OTK');       
+    //console.log(endPrice, 'endPrice in _specifiedAmountMint, OTK');       
 
     uint256 mockUSDCBalance = mockUSDCToken.balanceOf( _msgSender() ) ;
     //console.log(mockUSDCBalance, 'mockUSDCBalance in _specifiedAmountMint, OTK');
     uint256 mockUSDCAllowance = mockUSDCToken.allowance(_msgSender(), addressOfThisContract); 
-    console.log(mockUSDCAllowance, 'mockUSDCAllowance in _specifiedAmountMint, OTK' );
+    //console.log(mockUSDCAllowance, 'mockUSDCAllowance in _specifiedAmountMint, OTK' );
 
     require (endPrice <= mockUSDCBalance, "OTK, _specifiedAmountMint: Not enough mockUSDC"); 
     require (endPrice <= mockUSDCAllowance, "OTK, _specifiedAmountMint: Not enough allowance in mockUSDC for payment" );
@@ -136,16 +136,16 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
     //console.log(roundThisDown, 'roundThisDown in _specifiedAmountBurn, OTK');   
 
     uint256 feeRoundedDown = fee - roundThisDown;
-    console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountBurn, OTK');   
+    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountBurn, OTK');   
 
     uint256 endReturn = returnForBurning - feeRoundedDown;
-    console.log(endReturn, 'endReturn in _specifiedAmountBurn, OTK');   
+    //console.log(endReturn, 'endReturn in _specifiedAmountBurn, OTK');   
 
     uint256 toPayoutTotal =  feeRoundedDown + endReturn;  // XXXXXX
-    console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, OTK');    // XXXXXX
+    //console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, OTK');    // XXXXXX
 
     uint256 checkTheBalance = mockUSDCToken.balanceOf(addressOfThisContract);    // XXXXXX
-    console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, OTK');   // XXXXXX
+    //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, OTK');   // XXXXXX
 
     _burn(_msgSender(), _amount);        
     
@@ -159,8 +159,8 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
 
   function calcSpecBurnReturn(uint256 _amount) public view whenNotPaused returns (uint256 burnReturn) {
     
-    console.log("OTK, calcSpecBurnReturn, totalsupply:", totalSupply() );
-    console.log("OTK, calcSpecBurnReturn, _amount:", _amount );
+    //console.log("OTK, calcSpecBurnReturn, totalsupply:", totalSupply() );
+    //console.log("OTK, calcSpecBurnReturn, _amount:", _amount );
     return calcReturnForTokenBurn(totalSupply(), _amount); 
   }  
     
