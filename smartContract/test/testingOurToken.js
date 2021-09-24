@@ -109,7 +109,7 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   const callingAccMockUSDCBalanceBeforeMintBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceBeforeMintInCents = fromWEItoCents(callingAccMockUSDCBalanceBeforeMintBN);  
   const callingAccMockUSDCBalanceBeforeMintInUSDC = fromCentsToUSDC(callingAccMockUSDCBalanceBeforeMintInCents);
-  console.log(`mockUSDC balance of ${callingAccountName} before ${mintName} `, callingAccMockUSDCBalanceBeforeMintInUSDC);        
+  //console.log(`mockUSDC balance of ${callingAccountName} before ${mintName} `, callingAccMockUSDCBalanceBeforeMintInUSDC);        
 
   //mint, ${callingAccMockUSDCBalanceBeforeMintInUSDC}:`, callingAccMockUSDCBalanceBeforeMintInUSDC
 
@@ -144,7 +144,7 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
 
   const callingAccMockUSDCBalanceAfterMintBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceAfterMintInCents = fromWEItoCents(callingAccMockUSDCBalanceAfterMintBN);    
-  console.log(`mockUSDC balance of ${callingAccountName} after ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterMintInCents) );        
+  //console.log(`mockUSDC balance of ${callingAccountName} after ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterMintInCents) );        
 
   const contractMockUSDCBalanceAfterMintBN = await mockUSDCTokenContract.balanceOf(ourTokenContract.address);
   const contractMockUSDCBalanceAfterMintInCents = fromWEItoCents(contractMockUSDCBalanceAfterMintBN);    
@@ -158,14 +158,14 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   const contractUSDCdiffMintInCents = contractMockUSDCBalanceAfterMintInCents - contractMockUSDCBalanceBeforeMintInCents;
   const acc1ReceiverUSDCdiffMintInCents = acc1MockUSDCBalanceAfterMintInCents - acc1MockUSDCBalanceBeforeMintInCents;     
   
-  console.log(`ourTokenContract mockUSDC balance before ${mintName}:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeMintInCents));
-  console.log(`ourTokenContract mockUSDC balance after ${mintName}:`, fromCentsToUSDC(contractMockUSDCBalanceAfterMintInCents));
+  //console.log(`ourTokenContract mockUSDC balance before ${mintName}:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeMintInCents));
+  //console.log(`ourTokenContract mockUSDC balance after ${mintName}:`, fromCentsToUSDC(contractMockUSDCBalanceAfterMintInCents));
 
-  console.log(`${callingAccountName} mockUSDC balance before ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceBeforeMintInCents));
-  console.log(`${callingAccountName} mockUSDC balance after ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterMintInCents));    
+  //console.log(`${callingAccountName} mockUSDC balance before ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceBeforeMintInCents));
+  //console.log(`${callingAccountName} mockUSDC balance after ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterMintInCents));    
 
-  console.log(`feeReceiver acc1 mockUSDC balance before ${mintName}:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeMintInCents));
-  console.log(`feeReceiver acc1 mockUSDC balance after ${mintName}:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterMintInCents));
+  //console.log(`feeReceiver acc1 mockUSDC balance before ${mintName}:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeMintInCents));
+  //console.log(`feeReceiver acc1 mockUSDC balance after ${mintName}:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterMintInCents));
   
   console.log(`${callingAccountName} mint price paid in mockUSDC:`, fromCentsToUSDC(callingAccMintPricePaidInCents));
   console.log(`ourTokenContract return received in mockUSDC:`, fromCentsToUSDC(contractUSDCdiffMintInCents));
@@ -225,14 +225,14 @@ async function testBurning(burnName, amountToBurn, callingAcc) {
   const contractUSDCdiffBurnInCents = contractMockUSDCBalanceBeforeBurnInCents - contractMockUSDCBalanceAfterBurnInCents ;
   const acc1ReceiverUSDCdiffBurnInCents = acc1MockUSDCBalanceAfterBurnInCents - acc1MockUSDCBalanceBeforeBurnInCents;     
   
-  console.log(`ourTokenContract mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeBurnInCents));
-  console.log(`ourTokenContract mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceAfterBurnInCents));
+  //console.log(`ourTokenContract mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeBurnInCents));
+  //console.log(`ourTokenContract mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceAfterBurnInCents));
 
-  console.log(`${callingAccountName} mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(callingAccMockUSDCBalanceBeforeBurnInCents));
-  console.log(`${callingAccountName} mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterBurnInCents));    
+  //console.log(`${callingAccountName} mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(callingAccMockUSDCBalanceBeforeBurnInCents));
+  //console.log(`${callingAccountName} mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterBurnInCents));    
 
-  console.log(`feeReceiver acc1 mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeBurnInCents));
-  console.log(`feeReceiver acc1 mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterBurnInCents));
+  //console.log(`feeReceiver acc1 mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeBurnInCents));
+  //console.log(`feeReceiver acc1 mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterBurnInCents));
   
   console.log(`ourTokenContract paid out in mockUSDC:`, fromCentsToUSDC(contractUSDCdiffBurnInCents));
   console.log(`${callingAccountName} burn return received in mockUSDC:`, fromCentsToUSDC(callingAccBurnReturnReceivedInCents));  
@@ -407,7 +407,7 @@ async function runMintOrBurnLoop(loopsToRun) {
           }
           if ((mintAllowanceInUSDCCentsShouldBeNowGlobalV/100) > acc5MockUSDCBalanceOperationStart){
             console.log(`RERUN, mint call would be too big for acc5's USDC balance`)  
-            randomAmountMinting = randomAmountMinting * 0.5; 
+            randomAmountMinting = 1000; 
           }          
           
           console.log('RERUN randomAmountMinting', randomAmountMinting);
@@ -567,7 +567,9 @@ describe("OurToken Test", function () {
   });  
   */
 
-  it(`BigBrainPrep `, async function () { 
+  const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));  
+
+  it(`BigBrainPrep `, async function () {  
 
     await mockUSDCTokenContract.connect(accounts[5]).getmockUSDC(); 
 
@@ -577,66 +579,75 @@ describe("OurToken Test", function () {
   }); 
 
 
-  it(`BigBrainTest1. 100 loops  `, async function () {  
+  it(`BigBrainTest 1. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);
-    
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
+   
 
   });  
   
-  it(`BigBrainTest2. 100 loops  `, async function () {  
+  it(`BigBrainTest 2. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
+  });  
+
+  it(`BigBrainTest 3. 100 loops  `, async function () {  
+    
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
+
+  });  
+  
+  it(`BigBrainTest 4. 100 loops  `, async function () {  
+    
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest3. 100 loops  `, async function () {  
+  it(`BigBrainTest 5. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
-
-  });  
-  /*
-  it(`BigBrainTest4. 100 loops  `, async function () {  
-    
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest5. 100 loops  `, async function () {  
+  it(`BigBrainTest 6. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest6. 100 loops  `, async function () {  
+  it(`BigBrainTest 7. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest7. 100 loops  `, async function () {  
+  it(`BigBrainTest 8. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest8. 100 loops  `, async function () {  
+  it(`BigBrainTest 9. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
 
-  it(`BigBrainTest9. 100 loops  `, async function () {  
+  it(`BigBrainTest 10. 100 loops  `, async function () {  
     
-    await runMintOrBurnLoop(100);  
+    await waitFor(5000);
+    await runMintOrBurnLoop(100) 
 
   });  
-
-  it(`BigBrainTest10. 100 loops  `, async function () {  
-    
-    await runMintOrBurnLoop(100);  
-
-  });  */
 
 
 
