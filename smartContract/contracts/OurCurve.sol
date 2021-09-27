@@ -3,14 +3,17 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
- 
+import "@openzeppelin/contracts/access/Ownable.sol"; 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+
 /**
 * @title
 *
 * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements;
 * and to You under the Apache License, Version 2.0. "
 */
-contract OurCurve {   
+contract OurCurve is Ownable, Pausable{   
 
   uint256 mockUSDCscale = 10**18;  
 
@@ -107,5 +110,21 @@ contract OurCurve {
     
   }
   
+  // function for owner to withdraw any ERC20 token that has accumulated
+  function withdrawERC20 (address ERC20ContractAddress) public onlyOwner {
+    IERC20 ERC20Instance = IERC20(ERC20ContractAddress);    
+    uint256 accumulatedTokens = ERC20Instance.balanceOf(address(this));
+    ERC20Instance.transfer(_msgSender(), accumulatedTokens);         
+  }
+
+  // pausing funcionality from OpenZeppelin's Pausable
+  function pause() public onlyOwner {
+    _pause();
+  }
+
+  // unpausing funcionality from OpenZeppelin's Pausable
+  function unpause() public onlyOwner {
+    _unpause();
+  }
 
 }

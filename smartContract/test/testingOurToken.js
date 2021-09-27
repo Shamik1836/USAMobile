@@ -579,14 +579,14 @@ describe("OurToken Test", function () {
   }); 
 
 
-  it(`BigBrainTest 1. 100 loops  `, async function () {  
+  it(`BigBrainTest 1. 10 loops  `, async function () {  
     
     await waitFor(5000);
-    await runMintOrBurnLoop(100) 
+    await runMintOrBurnLoop(10) 
    
 
   });  
-  
+  /*
   it(`BigBrainTest 2. 100 loops  `, async function () {  
     
     await waitFor(5000);
@@ -647,9 +647,7 @@ describe("OurToken Test", function () {
     await waitFor(5000);
     await runMintOrBurnLoop(100) 
 
-  });  
-
-
+  });  */
 
 
 

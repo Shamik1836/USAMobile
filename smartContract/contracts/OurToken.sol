@@ -1,31 +1,27 @@
 // SPDX-License-Identifier: Apache License, Version 2.0
 pragma solidity ^0.8.0;
 
+import "./OurCurve.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol"; 
-// importing openzeppelin interface for ERC20 tokens
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./OurCurve.sol";
 
 import "hardhat/console.sol";
 
-contract OurToken is OurCurve, Ownable, ERC20, Pausable {
-    using SafeMath for uint256;
+contract OurToken is ERC20, OurCurve {
+  using SafeMath for uint256;
 
-    IERC20 public mockUSDCToken;
-    address addressOfThisContract;
+  IERC20 public mockUSDCToken;
+  address addressOfThisContract;
 
-    address feeReceiver;
+  address feeReceiver;
 
-    uint8 private _decimals;
+  uint8 private _decimals;
 
-    constructor(address _mockUSDCTokenAddress, address _feeReceiver)
-        ERC20("OurToken", "OTK")
-    {
-        _decimals = 0;
-        mockUSDCToken = IERC20(_mockUSDCTokenAddress);
+  constructor(address _mockUSDCTokenAddress, address _feeReceiver)
+    ERC20("OurToken", "OTK")
+  {
+    _decimals = 0;
+    mockUSDCToken = IERC20(_mockUSDCTokenAddress);
         addressOfThisContract = address(this);
         feeReceiver = _feeReceiver;
     }
@@ -36,20 +32,7 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
       uint256 allowanceToGetReturn = mockUSDCToken.allowance(addressOfThisContract, _user);
       //console.log(allowanceToGetReturn, 'allowanceToGetReturn in _specifiedAmountBurn, OTK');    
       return true;
-  }*/
-
-  // add withdraw function for people sending ETH or MATIC etc? XXXX  
-  
-
- // pausing funcionality from OpenZeppelin's Pausable
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  // unpausing funcionality from OpenZeppelin's Pausable
-  function unpause() public onlyOwner {
-    _unpause();
-  }
+  }*/      
 
   receive() external payable {   
   }
@@ -81,12 +64,12 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
     //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountMint, OTK');   
 
     uint256 endPrice = priceForMinting + feeRoundedDown;
-    //console.log(endPrice, 'endPrice in _specifiedAmountMint, OTK');       
+    console.log(endPrice, 'endPrice in _specifiedAmountMint, OTK');       
 
     uint256 mockUSDCBalance = mockUSDCToken.balanceOf( _msgSender() ) ;
     //console.log(mockUSDCBalance, 'mockUSDCBalance in _specifiedAmountMint, OTK');
     uint256 mockUSDCAllowance = mockUSDCToken.allowance(_msgSender(), addressOfThisContract); 
-    //console.log(mockUSDCAllowance, 'mockUSDCAllowance in _specifiedAmountMint, OTK' );
+    console.log(mockUSDCAllowance, 'mockUSDCAllowance in _specifiedAmountMint, OTK' );
 
     require (endPrice <= mockUSDCBalance, "OTK, _specifiedAmountMint: Not enough mockUSDC"); 
     require (endPrice <= mockUSDCAllowance, "OTK, _specifiedAmountMint: Not enough allowance in mockUSDC for payment" );
@@ -162,13 +145,6 @@ contract OurToken is OurCurve, Ownable, ERC20, Pausable {
     //console.log("OTK, calcSpecBurnReturn, totalsupply:", totalSupply() );
     //console.log("OTK, calcSpecBurnReturn, _amount:", _amount );
     return calcReturnForTokenBurn(totalSupply(), _amount); 
-  }  
-    
-  // function for owner to withdraw any ERC20 token that has accumulated
-  function withdrawERC20 (address ERC20ContractAddress) public onlyOwner {
-    IERC20 ERC20Instance = IERC20(ERC20ContractAddress);    
-    uint256 accumulatedTokens = ERC20Instance.balanceOf(address(this));
-    ERC20Instance.transfer(_msgSender(), accumulatedTokens);         
-  }
-
+  }      
+  
 }
