@@ -6,7 +6,7 @@ const emptyList = [];
 
 export const useTransactions = (props) => {
   const { isAuthenticated, Moralis, user } = useMoralis();
-  const { networkName } = useNetwork();
+  // const { networkName } = useNetwork();
   const address = user.attributes[props.chain + "Address"];
   const [Txs, setTxs] = useState(emptyList);
   const [isLoading, setIsLoading] = useState(1);
@@ -14,7 +14,7 @@ export const useTransactions = (props) => {
   useEffect(() => {
     if (isAuthenticated) {
       Moralis.Web3API.account
-        .getTransactions({ usePost: true, chain: networkName })
+        .getTransactions({ usePost: true })
         .then((userTrans) => {
           console.log("userTrans:", userTrans);
           let newTxs = userTrans.result.map((Tx) => {

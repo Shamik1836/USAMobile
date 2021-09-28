@@ -15,14 +15,14 @@ export const TopNavBar = (props) => {
   const colorMode = useColorMode();
   return (
     <HStack>
-      className="HeaderOuterFlex" mt="2%" ml="1vw" mr="10vw" width="78vw"
-      alignItems="center" justifyContent="space-between" >
       <Box boxSize="70px">
         <Image
           name="USAWalletEagle"
           src={USAWalletEagleLogo}
           bg={colorMode === "light" ? "white" : "grey.900"}
           mr={1}
+          mt={2}
+          boxShadow="light-lg"
         />
       </Box>
       <Text
@@ -30,6 +30,8 @@ export const TopNavBar = (props) => {
         fontSize="5xl"
         bgGradient="linear(to-b,white,#0000FF,black)"
         bgClip="text"
+        boxShadow="light-lg"
+        mt={1}
       >
         USA Wallet
       </Text>
