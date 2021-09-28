@@ -1,85 +1,87 @@
 import "./App.css";
-import { Grid, GridItem } from "@chakra-ui/react";
-import { useColorMode } from "@chakra-ui/react";
-import { TopNavBar } from "./Pages/TopNavBar";
-import { LeftGutter } from "./Pages/LeftGutter";
-import { MainStage } from "./Pages/MainStage";
-import { SideShow } from "./Pages/SideShow";
-import { RightGutter } from "./Pages/RightGutter";
-import { BottomFooter } from "./Pages/BottomFooter";
+import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+import { Button, VStack, HStack, useColorMode } from "@chakra-ui/react";
+import { EmailIcon, LinkIcon, RepeatIcon, ViewIcon } from "@chakra-ui/icons";
 
-import { ExpertsProvider } from "../contexts/expertsContext";
-import { ActionsProvider } from "../contexts/actionsContext";
-import { QuoteProvider } from "../contexts/quoteContext";
-import { ApprovalProvider } from "../contexts/approvalContext";
-import { NetworkProvider } from "../contexts/networkContext";
+import { useMoralis } from "react-moralis";
+
+import { TopNavBar } from "../components/Pages/TopNavBar";
+import { ExpertStage } from "../screens/ExpertStage";
+import { BuySell } from "../screens/BuySell";
+import { PortfolioPrices } from "../screens/PortfolioPrices";
+import { SendReceive } from "../screens/SendReceive";
+import { SwapTrade } from "../screens/SwapTrade";
+import { BottomFooter } from "../screens/BottomFooter";
+
+const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
+const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
 function App() {
   const { colorMode } = useColorMode();
+  const { isAuthenticated } = useMoralis();
 
+  var paddingLeft = { paddingLeft: "10px" };
   return (
-    <Grid
-      className={`AppOuterFlex ${colorMode === "light" ? "lightBG" : "darkBG"}`}
-      w="100vw"
-      h="100vh"
-      gap={3}
-      templateColumns="repeat(10,1fr)"
-      templateRows="repeat(10,1fr)"
+    <VStack
+      height="100vh"
+      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
-      <ExpertsProvider>
-        <GridItem
-          rowSpan={10}
-          colSpan={1}
-          borderWidth={1}
-          borderRadius="3xl"
-          borderColor={colorMode === "light" ? "darkgrey" : "darkblue"}
-        >
-          <LeftGutter />
-        </GridItem>
-        <NetworkProvider>
-          <GridItem colSpan={8} borderWidth={1} borderRadius="3xl">
-            <TopNavBar />
-          </GridItem>
-          <GridItem
-            rowSpan={10}
-            colSpan={1}
-            borderWidth={1}
-            borderRadius="3xl"
-            borderColor={colorMode === "light" ? "pink" : "darkred"}
-          >
-            <RightGutter />
-          </GridItem>
-          <ActionsProvider>
-            <QuoteProvider>
-              <ApprovalProvider>
-                <GridItem
-                  rowSpan={8}
-                  colSpan={5}
-                  borderWidth={3}
-                  borderRadius="3xl"
-                  borderColor="red"
-                >
-                  <MainStage />
-                </GridItem>
-                <GridItem
-                  rowSpan={8}
-                  colSpan={3}
-                  borderWidth={3}
-                  borderRadius="3xl"
-                  borderColor={colorMode === "light" ? "blue" : "white"}
-                >
-                  <SideShow />
-                </GridItem>
-              </ApprovalProvider>
-            </QuoteProvider>
-          </ActionsProvider>
-        </NetworkProvider>
-      </ExpertsProvider>
-
-      <GridItem colSpan={8} borderWidth={1} borderRadius="3xl">
+      <br />
+      <TopNavBar />
+      <ExpertStage />
+      {isAuthenticated ? (
+        <BrowserRouter>
+          <HStack>
+            <Link to="/PortfolioPrices" className="NavBar">
+              <Button
+                leftIcon={<ViewIcon />}
+                boxShadow="dark-lg"
+                variant={colorMode === "light" ? "outline" : "solid"}
+              >
+                Portfolio
+              </Button>
+            </Link>
+            <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
+              <Button
+                leftIcon={<RepeatIcon />}
+                boxShadow="dark-lg"
+                variant={colorMode === "light" ? "outline" : "solid"}
+              >
+                Trade
+              </Button>
+            </Link>
+            <Link to="/BuySell" className="NavBar" style={paddingLeft}>
+              <Button
+                leftIcon={<LinkIcon />}
+                boxShadow="dark-lg"
+                variant={colorMode === "light" ? "outline" : "solid"}
+              >
+                Convert USD
+              </Button>
+            </Link>
+            <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
+              <Button
+                leftIcon={<EmailIcon />}
+                boxShadow="dark-lg"
+                variant={colorMode === "light" ? "outline" : "solid"}
+              >
+                Send/Recieve
+              </Button>
+            </Link>
+          </HStack>
+          <br />
+          <Switch>
+            <Route exact path="/" component={PortfolioPrices} />
+            <Route path="/PortfolioPrices" component={PortfolioPrices} />
+            <Route path="/SwapTrade" component={SwapTrade} />
+            <Route path="/BuySell" component={BuySell} />
+            <Route path="/SendRecieve" component={SendReceive} />
+          </Switch>
+        </BrowserRouter>
+      ) : (
         <BottomFooter />
-      </GridItem>
-    </Grid>
+      )}
+    </VStack>
   );
 }
 

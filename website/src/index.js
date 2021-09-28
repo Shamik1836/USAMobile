@@ -4,11 +4,12 @@ import App from "./components/App";
 import reportWebVitals from "./components/Support/reportWebVitals";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { MoralisProvider } from "react-moralis";
-import { BrowserRouter } from "react-router-dom";
+import { ExpertsProvider } from "./contexts/expertsContext";
 
 const theme = extendTheme({
   config: {
     initialColorMode: "dark",
+    useSystemColorMode: false,
   },
 });
 
@@ -17,13 +18,13 @@ const serverUrl = "https://qvgfrpeymufw.bigmoralis.com:2053/server";
 
 ReactDOM.render(
   <React.StrictMode>
-    <MoralisProvider appId={appId} serverUrl={serverUrl}>
-      <ChakraProvider theme={theme}>
-        <BrowserRouter>
+    <ChakraProvider theme={theme}>
+      <MoralisProvider appId={appId} serverUrl={serverUrl}>
+        <ExpertsProvider>
           <App />
-        </BrowserRouter>
-      </ChakraProvider>
-    </MoralisProvider>
+        </ExpertsProvider>
+      </MoralisProvider>
+    </ChakraProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
