@@ -1,4 +1,4 @@
-import { Box, Flex, Image, Spacer, Text, useColorMode } from "@chakra-ui/react";
+import { Box, Image, HStack, Text, useColorMode } from "@chakra-ui/react";
 
 import { ExpertButton } from "../Bits/ExpertButton";
 import { LightSwitch } from "../Bits/LightSwitch";
@@ -14,15 +14,9 @@ export const TopNavBar = (props) => {
   const { isAuthenticated } = useMoralis();
   const colorMode = useColorMode();
   return (
-    <Flex
-      className="HeaderOuterFlex"
-      mt="2%"
-      ml="1vw"
-      mr="10vw"
-      width="78vw"
-      alignItems="center"
-      justifyContent="space-between"
-    >
+    <HStack>
+      className="HeaderOuterFlex" mt="2%" ml="1vw" mr="10vw" width="78vw"
+      alignItems="center" justifyContent="space-between" >
       <Box boxSize="70px">
         <Image
           name="USAWalletEagle"
@@ -39,12 +33,11 @@ export const TopNavBar = (props) => {
       >
         USA Wallet
       </Text>
-      <Spacer />
       {isAuthenticated && <ExpertButton />}
-      <NetworkSelect />
+      {/* <NetworkSelect /> */}
       <LightSwitch />
       <AuthButton />
       {isAuthenticated && <ProfileAvatar />}
-    </Flex>
+    </HStack>
   );
 };

@@ -9,10 +9,12 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  IconButton,
   useColorMode,
   useDisclosure,
   Tooltip,
 } from "@chakra-ui/react";
+import { LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { useMoralis } from "react-moralis";
 import { AuthDrawer } from "./AuthDrawer";
 
@@ -25,28 +27,28 @@ export const AuthButton = () => {
     <>
       {isAuthenticated ? (
         <Tooltip label="Log out of USA Wallet.">
-          <Button
-            fontFamily="P22-Typewriter"
+          <IconButton
+            aria-label="Log Out"
+            icon={<UnlockIcon />}
             boxShadow="dark-lg"
             mr={2}
             mt={-2}
+            variant={colorMode === "light" ? "outline" : "solid"}
             onClick={() => logout()}
-          >
-            Log Out
-          </Button>
+          />
         </Tooltip>
       ) : (
         <>
           <Tooltip label="Log into USA Wallet.">
-            <Button
-              fontFamily="P22-Typewriter"
+            <IconButton
+              aria-label="Log In"
+              icon={<LockIcon />}
               boxShadow="dark-lg"
               mr={2}
               mt={-2}
+              variant={colorMode === "light" ? "outline" : "solid"}
               onClick={onOpen}
-            >
-              Log In
-            </Button>
+            />
           </Tooltip>
           <Drawer
             isOpen={isOpen}

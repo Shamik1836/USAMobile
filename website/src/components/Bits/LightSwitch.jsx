@@ -11,7 +11,8 @@ export const LightSwitch = () => {
         mt={-2}
         aria-label="Toggle Darkmode"
         icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
-        boxShadow={colorMode === "light" ? "dark-lg" : "light-lg"}
+        boxShadow="dark-lg"
+        variant={colorMode === "light" ? "outline" : "solid"}
         onClick={toggleColorMode}
       />
     </Tooltip>
