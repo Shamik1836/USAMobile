@@ -4,6 +4,7 @@ import {
   FormControl,
   FormErrorMessage,
   Tooltip,
+  useColorMode,
 } from "@chakra-ui/react";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
@@ -24,6 +25,7 @@ export const RequestQuote = () => {
     setEstimatedGas,
   } = useQuote();
   const { setDialog } = useExperts();
+  const { colorMode } = useColorMode();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -84,6 +86,7 @@ export const RequestQuote = () => {
         <Tooltip label="Preview token transmission.">
           <Button
             enabled={txAmount > 0 ? "true" : "false"}
+            variant={colorMode === "light" ? "outline" : "solid"}
             boxShadow="dark-lg"
             onClick={handlePress}
           >

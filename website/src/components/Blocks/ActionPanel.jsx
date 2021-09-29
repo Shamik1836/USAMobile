@@ -1,23 +1,21 @@
-import { HStack, VStack, Text } from "@chakra-ui/react";
+import { HStack, VStack, useColorMode } from "@chakra-ui/react";
 
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
-import { ModeSelect } from "../Bits/ModeSelect";
 
 // Swap mode.
 import { ToSelect } from "../Bits/ToSelect";
 import { RequestQuote } from "../Bits/RequestQuote";
 
-// Send mode.
-import { ToAddress } from "../Bits/ToAddress";
-import { StartSend } from "../Bits/StartSend";
+const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
+const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
 export const ActionPanel = () => {
-  const { actionMode } = useExperts("none");
   const { txAmount, fromSymbol, toSymbol, toAddress } = useActions();
+  const { colorMode } = useColorMode();
 
   return (
     <VStack
@@ -30,29 +28,18 @@ export const ActionPanel = () => {
       paddingTop={5}
       paddingBottom={5}
       spacing={6}
+      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
-      <Text>Create Action</Text>
       <FromSelect />
       {fromSymbol !== "" && (
         <>
           <HStack>
-            <Text>Select amount: </Text>
             <AmountSelect />
-          </HStack>
-          {txAmount !== 0 && <ModeSelect />}
-
-          {txAmount !== 0 && actionMode === "swap" && (
-            <HStack>
+            {txAmount && (
               <ToSelect visible={fromSymbol === "" ? "hidden" : "visible"} />
-              {toSymbol !== "" && <RequestQuote />}
-            </HStack>
-          )}
-          {txAmount !== 0 && actionMode === "send" && (
-            <HStack>
-              <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
-              <StartSend visible={toAddress === "" ? "hidden" : "visible"} />
-            </HStack>
-          )}
+            )}
+          </HStack>
+          {toSymbol && <RequestQuote />}
         </>
       )}
     </VStack>
