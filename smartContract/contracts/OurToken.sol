@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: Apache License, Version 2.0
 pragma solidity ^0.8.0;
 
 import "./OurCurve.sol";
+import "./IStakingContract.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -10,6 +10,9 @@ import "hardhat/console.sol";
 contract OurToken is ERC20, OurCurve {
   using SafeMath for uint256;
 
+
+  IStakingContract public ourStakingContractInterface;
+
   IERC20 public mockUSDCToken;
   address addressOfThisContract;
 
@@ -17,14 +20,13 @@ contract OurToken is ERC20, OurCurve {
 
   uint8 private _decimals;
 
-  constructor(address _mockUSDCTokenAddress, address _feeReceiver)
-    ERC20("OurToken", "OTK")
-  {
+  constructor(address _mockUSDCTokenAddress, address _feeReceiver, address _ourStakingContractInterfaceAddress ) ERC20("OurToken", "OTK") {
     _decimals = 0;
     mockUSDCToken = IERC20(_mockUSDCTokenAddress);
-        addressOfThisContract = address(this);
-        feeReceiver = _feeReceiver;
-    }
+    addressOfThisContract = address(this);
+    feeReceiver = _feeReceiver;
+    ourStakingContractInterface = IStakingContract(_ourStakingContractInterfaceAddress);
+  }
 
   /* XXXXX
     function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
@@ -34,10 +36,20 @@ contract OurToken is ERC20, OurCurve {
       return true;
   }*/      
 
+  function callDepositStake() public onlyOwner {
+    ourStakingContractInterface.depositStake();
+  }
+
+  function callWithdrawStake() public onlyOwner {
+    ourStakingContractInterface.withdrawStake();
+  }
+
+  
+
   receive() external payable {   
   }
 
- function decimals() public view override returns (uint8) {
+  function decimals() public view override returns (uint8) {
     return 0;
   }
 

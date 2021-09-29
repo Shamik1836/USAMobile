@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: Apache License, Version 2.0
-
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
@@ -10,8 +8,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 /**
 * @title
 *
-* Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements;
-* and to You under the Apache License, Version 2.0. "
+* 
 */
 contract OurCurve is Ownable, Pausable{   
 
