@@ -36,8 +36,24 @@ contract OurToken is ERC20, OurCurve {
       return true;
   }*/      
 
-  function callDepositStake() public onlyOwner {
-    ourStakingContractInterface.depositStake();
+  function callDepositStake( uint256 _amountOfTokensToStake) public {
+    uint256 tokenBalance = balanceOf( _msgSender() ) ;
+    console.log(tokenBalance, 'tokenBalance in callDepositStake, OTK');
+
+    // args: address owner, address spender
+    uint256 allowance = allowance(_msgSender(), addressOfThisContract); 
+    console.log(allowance, 'allowance in callDepositStake, OTK');
+
+    require (_amountOfTokensToStake <= tokenBalance, 'OTK, callDepositStake: Not enough tokens'); 
+
+    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, OTK'); 
+    // args: address sender,address recipient,uint256 amount
+    transfer(address(ourStakingContractInterface), _amountOfTokensToStake ); 
+
+    /*bool sentSuccess =*/ 
+    /*console.log()*/
+
+    //ourStakingContractInterface.depositStake();
   }
 
   function callWithdrawStake() public onlyOwner {

@@ -510,22 +510,19 @@ describe("OurToken Test", function () {
     // deploying the ourToken smart contract to Hardhat testnet
     _ourTokenInstance = await ethers.getContractFactory('OurToken'); 
     // arguments: address _mockUSDCTokenAddress, address _feeReceiver, address _ourStakingContractInterfaceAddress
-    ourTokenContract = await _ourTokenInstance.deploy(mockUSDCTokenContract.address, accounts[1].address, stakingContract.address );    
-
-     
+    ourTokenContract = await _ourTokenInstance.deploy( mockUSDCTokenContract.address, accounts[1].address, stakingContract.address );         
 
   })    
-  
-  
+    
   it("1. Should show deployment went as expected", async function () {
     
     // after deployment, querying ourToken balance of accounts[0], logging as number and from WEI to ETH
-    const startingBalanceInContToken = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
+    const startingBalanceInOurToken = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
     //console.log("accounts[0] has this many OurToken after deployment: ", startingBalanceInContToken);
 
     // after deployment, querying ourToken total supply
     const totalSupplyAfterDeploy = bigNumberToNumber(await ourTokenContract.totalSupply()) ;
-    //console.log("OurToken total supply after deployment: ", totalSupplyAfterDeploy);    
+    //console.log("OurToken total supply after deployment: ", totalSupplyAfterDeploy);   
       
   });  
 
@@ -542,20 +539,63 @@ describe("OurToken Test", function () {
 
     // REVERT: using setOperator as non-owner is reverted in staking contract
     await expect( stakingContract.connect(accounts[3]).setOperator(accounts[0].address) ).to.be.revertedWith(
-      "Ownable: caller is not the owner"
+      "Ownable: caller is not the owner"      
     );  
 
-    await ourTokenContract.callDepositStake();
+    
+
+  });
+
+  it("3. Staking prep", async function () {
+    await mockUSDCTokenContract.getmockUSDC(); 
+
+    const acc0MockUSDCBalanceAfterGetting10MStart = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[0].address)) );
+    console.log('acc0MockUSDCBalanceAfterBigMint', acc0MockUSDCBalanceAfterGetting10MStart);   
+
+    await testMinting("first", 10000, 12625, accounts[0], 1);
+    confirmMint(0, 10000); 
+
+    
+
+  });
+
+  it("4. Staking test", async function () {    
+
+    const acc0BeforeStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
+    console.log("accounts[0] has this many ourToken before staking: ", acc0BeforeStakingTokens);
+
+    const stakingContractBeforeStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(stakingContract.address));    
+    console.log("the staking contract has this many ourToken before staking: ", stakingContractBeforeStakingTokens);
+
+   
+
+    const tokensToStake = 800;
+
+    console.log('accounts[0].address', accounts[0].address);
+
+    console.log('ourTokenContract.address', ourTokenContract.address);
+
+    
+
+    await ourTokenContract.callDepositStake(tokensToStake);
+
+    const acc0AfterStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
+    console.log("accounts[0] has this many ourToken after staking: ", acc0AfterStakingTokens);
+
+    const stakingContractAfterStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(stakingContract.address));    
+    console.log("the staking contract has this many ourToken before staking: ", stakingContractAfterStakingTokens);
 
     await ourTokenContract.callWithdrawStake();
-
-    // REVERT: using callDepositStake as non-owner is reverted in staking contract
+    /*
+    // REVERT: using callDepositStake as non-owner is reverted in ourToken contract
     await expect( ourTokenContract.connect(accounts[3]).callDepositStake() ).to.be.revertedWith(
       "Ownable: caller is not the owner"
     );  
 
+    // REVERT: using depositStake directly as non-perator is reverted in staking contract
+    await expect( stakingContract.connect(accounts[3]).depositStake() ).to.be.revertedWith(
+      "StakingContract: caller is not the operator"
+    );  */
+
   });
-
-
-
 }); 
