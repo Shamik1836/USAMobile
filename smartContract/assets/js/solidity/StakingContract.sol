@@ -17,7 +17,7 @@ contract StakingContract is Ownable, Pausable{
   struct stake {
     address stakingAddress;
     uint256 amount;
-    uint256 stakingTimestamp; 
+    uint256 stakeCreatedTimestamp; 
   }
 
   event OperatorRoleTransferred(address oldOperator, address newOperator);

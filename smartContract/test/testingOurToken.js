@@ -498,19 +498,15 @@ describe("OurToken Test", function () {
     // deploying the mockUSDCToken smart contract to Hardhat testnet
     _mockUSDCTokenInstance = await ethers.getContractFactory('MockUSDCToken');    
     mockUSDCTokenContract = await _mockUSDCTokenInstance.deploy();   
-
-    // deploying the StakingContract smart contract to Hardhat testnet
-    _stakingContractInstance = await ethers.getContractFactory('StakingContract');    
-    stakingContract = await _stakingContractInstance.deploy();  
-
+    
     // deploying the OurCurve smart contract to Hardhat testnet
     _OurCurveInstance = await ethers.getContractFactory('OurCurve');
     ourCurveContract = await _OurCurveInstance.deploy();  
 
     // deploying the ourToken smart contract to Hardhat testnet
     _ourTokenInstance = await ethers.getContractFactory('OurToken'); 
-    // arguments: address _mockUSDCTokenAddress, address _feeReceiver, address _ourStakingContractInterfaceAddress
-    ourTokenContract = await _ourTokenInstance.deploy( mockUSDCTokenContract.address, accounts[1].address, stakingContract.address );         
+    // arguments: address _mockUSDCTokenAddress, address _feeReceiver
+    ourTokenContract = await _ourTokenInstance.deploy( mockUSDCTokenContract.address, accounts[1].address );         
 
   })    
     
@@ -525,7 +521,7 @@ describe("OurToken Test", function () {
     //console.log("OurToken total supply after deployment: ", totalSupplyAfterDeploy);   
       
   });  
-
+  /*
   it(`2. Staking contract, original operator and changing operator `, async function () {  
 
     const operatorAfterDeploy = findAccountForHHAddress( await stakingContract.operator() ) ; 
@@ -539,53 +535,58 @@ describe("OurToken Test", function () {
 
     // REVERT: using setOperator as non-owner is reverted in staking contract
     await expect( stakingContract.connect(accounts[3]).setOperator(accounts[0].address) ).to.be.revertedWith(
-      "Ownable: caller is not the owner"      
+      "Ownable: caller is not the owner"   
     );  
 
-    
+  });*/
 
-  });
-
-  it("3. Staking prep", async function () {
+  it("3. Minting and staking", async function () {
     await mockUSDCTokenContract.getmockUSDC(); 
 
     const acc0MockUSDCBalanceAfterGetting10MStart = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[0].address)) );
     console.log('acc0MockUSDCBalanceAfterBigMint', acc0MockUSDCBalanceAfterGetting10MStart);   
 
+    const acc0BeforeStakingTokens = bigNumberToNumber(await ourTokenContract.checkOwnedBenjamins(accounts[0].address));    
+    console.log("accounts[0] has this many ourToken before staking: ", acc0BeforeStakingTokens);
+
+    const ourTokenContractBeforeStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(ourTokenContract.address));    
+    console.log("ourTokenContract manages this many ourToken before staking: ", ourTokenContractBeforeStakingTokens);
+
     await testMinting("first", 10000, 12625, accounts[0], 1);
     confirmMint(0, 10000); 
+
+    const acc0AfterStakingTokens = bigNumberToNumber(await ourTokenContract.checkOwnedBenjamins(accounts[0].address));    
+    console.log("accounts[0] has this many ourToken after staking: ", acc0AfterStakingTokens);
+
+    const ourTokenContractAfterStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(ourTokenContract.address));    
+    console.log("ourTokenContract manages this many ourToken before staking: ", ourTokenContractAfterStakingTokens);
+
 
     
 
   });
 
-  it("4. Staking test", async function () {    
+  it("4. Staking results test", async function () {    
 
-    const acc0BeforeStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
-    console.log("accounts[0] has this many ourToken before staking: ", acc0BeforeStakingTokens);
+    
+    const acc0Staked = bigNumberToNumber( await ourTokenContract.checkStakedBenjamins(accounts[0].address));
+    console.log("accounts[0] is staking in total: ", acc0Staked);
 
-    const stakingContractBeforeStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(stakingContract.address));    
-    console.log("the staking contract has this many ourToken before staking: ", stakingContractBeforeStakingTokens);
-
-   
-
-    const tokensToStake = 800;
-
-    console.log('accounts[0].address', accounts[0].address);
-
-    console.log('ourTokenContract.address', ourTokenContract.address);
+    const acc0StakedArray = await ourTokenContract.checkStakedArrayOfUser(accounts[0].address);
+    //console.log("accounts[0]'s staking array: ", acc0StakedArray);
 
     
 
-    await ourTokenContract.callDepositStake(tokensToStake);
+    //console.log('accounts[0].address', accounts[0].address);
 
-    const acc0AfterStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(accounts[0].address));    
-    console.log("accounts[0] has this many ourToken after staking: ", acc0AfterStakingTokens);
+    //console.log('ourTokenContract.address', ourTokenContract.address);
 
-    const stakingContractAfterStakingTokens = bigNumberToNumber(await ourTokenContract.balanceOf(stakingContract.address));    
-    console.log("the staking contract has this many ourToken before staking: ", stakingContractAfterStakingTokens);
+    
 
-    await ourTokenContract.callWithdrawStake();
+    //await ourTokenContract.callDepositStake(tokensToStake);
+
+    
+    //await ourTokenContract.callWithdrawStake();
     /*
     // REVERT: using callDepositStake as non-owner is reverted in ourToken contract
     await expect( ourTokenContract.connect(accounts[3]).callDepositStake() ).to.be.revertedWith(

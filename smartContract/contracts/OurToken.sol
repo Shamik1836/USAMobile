@@ -1,17 +1,29 @@
 pragma solidity ^0.8.0;
 
 import "./OurCurve.sol";
-import "./IStakingContract.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
-contract OurToken is ERC20, OurCurve {
+contract OurToken is ERC20, OurCurve, ReentrancyGuard {
   using SafeMath for uint256;
 
+  mapping (address => uint256) ownedBenjamins;
 
-  IStakingContract public ourStakingContractInterface;
+  address[] private stakers;
+  mapping (address => bool) public isOnStakingList;
+  mapping (address => Stake[]) public usersStakingPositions;
+  mapping (address => uint256) public totalStakedByUser;
+
+  struct Stake {
+    address stakingAddress;
+    uint256 amount;
+    uint256 stakeCreatedTimestamp; 
+    bool deleted;
+  }
+
 
   IERC20 public mockUSDCToken;
   address addressOfThisContract;
@@ -20,12 +32,11 @@ contract OurToken is ERC20, OurCurve {
 
   uint8 private _decimals;
 
-  constructor(address _mockUSDCTokenAddress, address _feeReceiver, address _ourStakingContractInterfaceAddress ) ERC20("OurToken", "OTK") {
+  constructor(address _mockUSDCTokenAddress, address _feeReceiver) ERC20("OurToken", "OTK") {
     _decimals = 0;
     mockUSDCToken = IERC20(_mockUSDCTokenAddress);
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
-    ourStakingContractInterface = IStakingContract(_ourStakingContractInterfaceAddress);
   }
 
   /* XXXXX
@@ -36,29 +47,7 @@ contract OurToken is ERC20, OurCurve {
       return true;
   }*/      
 
-  function callDepositStake( uint256 _amountOfTokensToStake) public {
-    uint256 tokenBalance = balanceOf( _msgSender() ) ;
-    console.log(tokenBalance, 'tokenBalance in callDepositStake, OTK');
-
-    // args: address owner, address spender
-    uint256 allowance = allowance(_msgSender(), addressOfThisContract); 
-    console.log(allowance, 'allowance in callDepositStake, OTK');
-
-    require (_amountOfTokensToStake <= tokenBalance, 'OTK, callDepositStake: Not enough tokens'); 
-
-    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, OTK'); 
-    // args: address sender,address recipient,uint256 amount
-    transfer(address(ourStakingContractInterface), _amountOfTokensToStake ); 
-
-    /*bool sentSuccess =*/ 
-    /*console.log()*/
-
-    //ourStakingContractInterface.depositStake();
-  }
-
-  function callWithdrawStake() public onlyOwner {
-    ourStakingContractInterface.withdrawStake();
-  }
+  
 
   
 
@@ -75,7 +64,7 @@ contract OurToken is ERC20, OurCurve {
     _specifiedAmountMint(_tokenAmountToMint);
   }
 
-  function _specifiedAmountMint(uint256 _amount) internal whenNotPaused returns (uint256) {
+  function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
     //console.log('OTK, _specifiedAmountMint: _amount', _amount);
     require(_amount > 0, "Amount must be more than zero.");       
     
@@ -106,13 +95,92 @@ contract OurToken is ERC20, OurCurve {
     
     mockUSDCToken.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
 
-    mockUSDCToken.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   
+    mockUSDCToken.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
   
-    _mint(_msgSender(), _amount);
-    emit SpecifiedMintEvent(_msgSender(), _amount, priceForMinting);
+    // minting to Benjamins contract itself
+    _mint(addressOfThisContract, _amount);
+    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMinting);
+
+    // this is the user's balance of tokens
+    ownedBenjamins[_msgSender()] += _amount;
+
+    _stakeTokens(_msgSender(), _amount);
+
     return priceForMinting;   
   }
 
+  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
+    uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
+    console.log(tokensOwned, 'tokensOwned in _stakeTokens, OTK');
+
+    require (_amountOfTokensToStake <= tokensOwned, 'OTK, _stakeTokens: Not enough tokens'); 
+
+    if (!isOnStakingList[_stakingUserAddress]) {
+      stakers.push(_stakingUserAddress);
+      isOnStakingList[_stakingUserAddress] = true;
+    }
+
+    Stake memory newStake = Stake({ 
+      stakingAddress: address(_stakingUserAddress),
+      amount: uint256(_amountOfTokensToStake),
+      stakeCreatedTimestamp: uint256(block.timestamp),
+      deleted: false       
+    });        
+
+    usersStakingPositions[_stakingUserAddress].push(newStake);
+
+    totalStakedByUser[_stakingUserAddress] += _amountOfTokensToStake;
+
+
+  }
+
+  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJMNs){
+    return ownedBenjamins[userToCheck];
+  }
+
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJMNs){
+    uint256 usersTotalStake = totalStakedByUser[userToCheck];
+    console.log("OTK,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
+    return usersTotalStake;
+  }
+
+  function checkStakedArrayOfUser(address userToCheck) public view returns (Stake[] memory stakeArray){
+    Stake[] memory usersStakeArray = usersStakingPositions[userToCheck];
+
+    for (uint256 index = 0; index < usersStakeArray.length; index++) {      
+      console.log("OTK,checkStakedArrayOfUser: the checked users array at position: ", index, "is:");
+      console.log("OTK,checkStakedArrayOfUser: stakingAddress: ", usersStakeArray[index].stakingAddress);
+      console.log("OTK,checkStakedArrayOfUser: amount: ", usersStakeArray[index].amount);
+      console.log("OTK,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
+      console.log("OTK,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
+    }
+    
+    return usersStakeArray;
+  }
+
+  /*
+  function callDepositStake( uint256 _amountOfTokensToStake) public {
+    
+
+    // args: address owner, address spender
+    //uint256 allowance = allowance(_msgSender(), addressOfThisContract); 
+    //console.log(allowance, 'allowance in callDepositStake, OTK');
+
+    
+    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, OTK'); 
+    // args: address sender,address recipient,uint256 amount
+    transfer(address(ourStakingContractInterface), _amountOfTokensToStake ); 
+
+    //*bool sentSuccess =
+    //console.log()
+
+    //ourStakingContractInterface.depositStake();
+  }/*
+  /*
+    function callWithdrawStake() public onlyOwner {
+      ourStakingContractInterface.withdrawStake();
+    }
+  */
   function calcSpecMintReturn(uint256 _amount) public view whenNotPaused returns (uint256 mintPrice) {
     return calcPriceForTokenMint(totalSupply(), _amount); 
   }  
@@ -120,11 +188,11 @@ contract OurToken is ERC20, OurCurve {
  
   event SpecifiedBurnEvent (address sender, uint256 tokenAmount, uint256 returnForBurning);  
 
-  function specifiedBurn( uint256 _tokenAmountToBurn) public payable whenNotPaused{    
+  function specifiedBurn( uint256 _tokenAmountToBurn) public payable whenNotPaused {    
     _specifiedAmountBurn(_tokenAmountToBurn);
   }
 
-  function _specifiedAmountBurn(uint256 _amount) internal whenNotPaused returns (uint256) {
+  function _specifiedAmountBurn(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
     //console.log('OTK, _specifiedAmountBurn: _amount', _amount);
 
     uint256 tokenBalance = balanceOf(_msgSender());
