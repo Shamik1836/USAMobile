@@ -6,7 +6,6 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { useActions } from "../../contexts/actionsContext";
-// import { useSwap } from "../../hooks/useSwap";
 
 export const StartSend = () => {
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
