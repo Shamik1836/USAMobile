@@ -5,6 +5,8 @@ import reportWebVitals from "./components/Support/reportWebVitals";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { MoralisProvider } from "react-moralis";
 import { ExpertsProvider } from "./contexts/expertsContext";
+import { ActionsProvider } from "./contexts/actionsContext";
+import { QuoteProvider } from "./contexts/quoteContext";
 
 const theme = extendTheme({
   config: {
@@ -21,7 +23,11 @@ ReactDOM.render(
     <ChakraProvider theme={theme}>
       <MoralisProvider appId={appId} serverUrl={serverUrl}>
         <ExpertsProvider>
-          <App />
+          <ActionsProvider>
+            <QuoteProvider>
+              <App />
+            </QuoteProvider>
+          </ActionsProvider>
         </ExpertsProvider>
       </MoralisProvider>
     </ChakraProvider>

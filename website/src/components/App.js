@@ -56,7 +56,7 @@ function App() {
                 boxShadow="dark-lg"
                 variant={colorMode === "light" ? "outline" : "solid"}
               >
-                Convert USD
+                Buy Crypto
               </Button>
             </Link>
             <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>

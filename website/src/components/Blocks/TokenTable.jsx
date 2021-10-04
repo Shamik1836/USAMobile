@@ -1,4 +1,11 @@
-import { Avatar, Box, Flex, Text, VStack } from "@chakra-ui/react";
+import {
+  Avatar,
+  Box,
+  Flex,
+  Text,
+  useColorMode,
+  VStack,
+} from "@chakra-ui/react";
 import {
   Accordion,
   AccordionItem,
@@ -8,13 +15,22 @@ import {
 } from "@chakra-ui/react";
 import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
-// import { TokenShiftList } from "./TokenShiftList";
+
+const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
+const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
 export const TokenTable = () => {
+  const { colorMode } = useColorMode();
   const { positions, isLoading, totalValue } = usePositions();
 
   return (
-    <VStack borderWidth={4} borderRadius="3xl" width="100%" padding={5}>
+    <VStack
+      borderWidth={4}
+      borderRadius="3xl"
+      width="100%"
+      padding={5}
+      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+    >
       {!isLoading && (
         <Text>Total Value: ${parseFloat(totalValue).toFixed(2)}</Text>
       )}

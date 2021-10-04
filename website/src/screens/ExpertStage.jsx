@@ -1,7 +1,7 @@
 import { Container, HStack, Text, useColorMode } from "@chakra-ui/react";
-import { MetaMask } from "../components/Guides/MetaMask";
-import { PayPal } from "../components/Guides/PayPal";
-import { UniSwap } from "../components/Guides/UniSwap";
+import { MetaMask } from "../components/Guides/Metamask";
+import { PayPal } from "../components/Guides/Paypal";
+import { UniSwap } from "../components/Guides/Uniswap";
 import { useExperts } from "../contexts/expertsContext";
 
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
