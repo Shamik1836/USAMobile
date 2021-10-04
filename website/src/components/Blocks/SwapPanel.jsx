@@ -13,8 +13,8 @@ import { RequestQuote } from "../Bits/RequestQuote";
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
 const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
-export const ActionPanel = () => {
-  const { txAmount, fromSymbol, toSymbol, toAddress } = useActions();
+export const SwapPanel = () => {
+  const { txAmount, fromSymbol, toSymbol } = useActions();
   const { colorMode } = useColorMode();
 
   return (

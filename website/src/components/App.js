@@ -56,7 +56,7 @@ function App() {
                 boxShadow="dark-lg"
                 variant={colorMode === "light" ? "outline" : "solid"}
               >
-                Buy/Sell
+                Buy Crypto
               </Button>
             </Link>
             <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>

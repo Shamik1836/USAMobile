@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Skeleton } from "@chakra-ui/react";
+import { Skeleton } from "@chakra-ui/react";
 
 export const IFrame = ({ source, title }) => {
   // prevent useless re-rendering
@@ -12,9 +12,11 @@ export const IFrame = ({ source, title }) => {
       <iframe
         title={frameTitle}
         src={src}
-        width="600px"
-        height="500px"
-        bordreRadius="20px"
+        width="525px"
+        height="600px"
+        frameborder="yes"
+        bordrerRadius="20px"
+        allow="accelerometer; autoplay; camera; gyroscope; payment;"
       />
     </Skeleton>
   );
