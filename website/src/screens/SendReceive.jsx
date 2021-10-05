@@ -15,17 +15,7 @@ const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
 export const SendReceive = () => {
   const { colorMode } = useColorMode();
-  const { mode, setMode } = useState("none");
-
-  const handleSendMode = (e) => {
-    setMode("send");
-    alert("Send mode!");
-  };
-
-  const handleReceiveMode = (e) => {
-    setMode("receive");
-    alert("Send mode!");
-  };
+  const [localMode, setLocalMode] = useState("none");
 
   return (
     <Box align="center">
@@ -44,18 +34,18 @@ export const SendReceive = () => {
         bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
       >
         <HStack>
-          <Button onPress={handleSendMode} boxShadow="dark-lg">
+          <Button onClick={() => setLocalMode("send")} boxShadow="dark-lg">
             Send
           </Button>
-          <Button onPress={handleReceiveMode} boxShadow="dark-lg">
+          <Button onClick={() => setLocalMode("receive")} boxShadow="dark-lg">
             Receive
           </Button>
         </HStack>
       </VStack>
       <br />
-      <SendPanel />
+      {localMode === "send" && <SendPanel />}
       <br />
-      <AddressPanel />
+      {localMode === "receive" && <AddressPanel />}
     </Box>
   );
 };
