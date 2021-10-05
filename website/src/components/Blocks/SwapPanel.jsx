@@ -1,7 +1,6 @@
 import { HStack, VStack, useColorMode } from "@chakra-ui/react";
 
 import { useActions } from "../../contexts/actionsContext";
-import { useExperts } from "../../contexts/expertsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";

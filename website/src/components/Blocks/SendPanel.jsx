@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { HStack, VStack, useColorMode } from "@chakra-ui/react";
 
 import { useActions } from "../../contexts/actionsContext";
@@ -15,7 +16,13 @@ const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
 export const SendPanel = () => {
   const { txAmount, fromSymbol, toAddress } = useActions();
+  const { setActionMode, setDialog } = useExperts();
   const { colorMode } = useColorMode();
+
+  useEffect(() => {
+    setActionMode("send");
+    setDialog("Select a token to send.");
+  });
 
   return (
     <VStack

@@ -4,7 +4,6 @@ import { ExpertButton } from "../Bits/ExpertButton";
 import { LightSwitch } from "../Bits/LightSwitch";
 import { AuthButton } from "../Bits/AuthButton";
 import { ProfileAvatar } from "../Bits/ProfileAvatar";
-import { NetworkSelect } from "../Bits/NetworkSelect";
 import { useMoralis } from "react-moralis";
 import "./TopNavBar.css";
 
