@@ -1,7 +1,7 @@
 import { Container, HStack, Text, useColorMode } from "@chakra-ui/react";
-import { MetaMask } from "../components/Guides/Metamask";
-import { PayPal } from "../components/Guides/Paypal";
-import { UniSwap } from "../components/Guides/Uniswap";
+import { LibertyFox } from "../components/Guides/LibertyFox";
+import { SamEagle } from "../components/Guides/SamEagle";
+import { Benicorn } from "../components/Guides/Benicorn";
 import { useExperts } from "../contexts/expertsContext";
 
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
@@ -29,10 +29,17 @@ export const ExpertStage = () => {
             <Text text-align="center">{dialog}</Text>
           </Container>
           <Container>
-            {actionMode === "idle" && <UniSwap />}
-            {actionMode === "portfolio" && <PayPal />}
-            {actionMode === "buy" && <MetaMask />}
-            {actionMode === "send" && <MetaMask />}
+            {actionMode === "" && <Benicorn />}
+            {actionMode === "idle" && <Benicorn />}
+            {actionMode === "portfolio" && <SamEagle />}
+            {actionMode === "chart" && <SamEagle />}
+            {actionMode === "trade" && <Benicorn />}
+            {actionMode === "swap" && <Benicorn />}
+            {actionMode === "buy" && <LibertyFox />}
+            {actionMode === "sell" && <LibertyFox />}
+            {actionMode === "send" && <LibertyFox />}
+            {actionMode === "receive" && <LibertyFox />}
+            {actionMode === "gallery" && <LibertyFox />}
           </Container>
         </HStack>
         <br />

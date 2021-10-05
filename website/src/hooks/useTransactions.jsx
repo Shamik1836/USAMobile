@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useMoralis } from "react-moralis";
-import { useNetwork } from "../contexts/networkContext";
 
 const emptyList = [];
 
