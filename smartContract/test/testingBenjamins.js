@@ -1,5 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { fixture } = deployments;
+
 
 // Customized helpers
 
@@ -486,9 +488,15 @@ describe("Benjamins Test", function () {
 
   // setting instances of contracts
   before(async function() {
+
+    ({ deployer } = await getNamedAccounts());
+    deployerSigner = await ethers.provider.getSigner(deployer);
+    
+    // Deploy contract
+    await fixture(["Benjamins"]);
+    aaveLendingTester = await ethers.getContract("Benjamins"); 
    
-    // get all accounts from Hardhat
-    accounts = await ethers.getSigners();
+    
 
     // making a copy of the account addresses to accountToHHAddressArray
     for (let accIndex = 0; accIndex < accounts.length ; accIndex++) {
@@ -506,7 +514,7 @@ describe("Benjamins Test", function () {
     // deploying the benjamins smart contract to Hardhat testnet
     _benjaminsInstance = await ethers.getContractFactory('Benjamins'); 
     // arguments: address _feeReceiver
-    benjaminsContract = await _benjaminsInstance.deploy( accounts[1].address );         
+    benjaminsContract = await _benjaminsInstance.deploy( deployer );         
 
   })    
     

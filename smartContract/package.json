@@ -23,13 +23,17 @@
     "url": "https://github.com/orbitmechanic/USAMobile/issues"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "chai": "^4.3.4",
+    "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4",
+    "hardhat-deploy": "^0.9.3",
+    "hardhat-gas-reporter": "^1.0.4",
+    "is-core-module": "^2.7.0",
     "web3": "^1.5.3"
   },
   "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",
