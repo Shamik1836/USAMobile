@@ -35,21 +35,21 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 largestUint = type(uint256).max;
 
 
-  ILendingPool public lendingPool;
-  IERC20 public _USDCToken;
+  ILendingPool public polygonLendingPool;
+  IERC20 public polygonUSDC;
   
 
   constructor(address _feeReceiver) ERC20("Benjamins", "BNJI") {
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
     _decimals = 0;
-    _USDCToken = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);
-    lendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);        
+    polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
+    polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
     _approveLendingPool(largestUint);
   }
 
   function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
-    _USDCToken.approve(address(lendingPool), _amountToApprove);
+    polygonUSDC.approve(address(polygonLendingPool), _amountToApprove);
   }
 
   receive() external payable {   
@@ -84,9 +84,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 endPrice = priceForMinting + feeRoundedDown;
     console.log(endPrice, 'endPrice in _specifiedAmountMint, BNJ');       
 
-    uint256 _USDCBalance = _USDCToken.balanceOf( _msgSender() ) ;
+    uint256 _USDCBalance = polygonUSDC.balanceOf( _msgSender() ) ;
     //console.log(_USDCBalance, '_USDCBalance in _specifiedAmountMint, BNJ');
-    uint256 _USDCAllowance = _USDCToken.allowance(_msgSender(), addressOfThisContract); 
+    uint256 _USDCAllowance = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
     console.log(_USDCAllowance, '_USDCAllowance in _specifiedAmountMint, BNJ' );
 
     require (endPrice <= _USDCBalance, "BNJ, _specifiedAmountMint: Not enough USDC"); 
@@ -94,9 +94,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     require (priceForMinting >= 5000000000000000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
 
     
-    _USDCToken.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
+    polygonUSDC.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
 
-    _USDCToken.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
+    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
@@ -224,13 +224,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 toPayoutTotal =  feeRoundedDown + endReturn;  // XXXXXX
     //console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, BNJ');    // XXXXXX
 
-    uint256 checkTheBalance = _USDCToken.balanceOf(addressOfThisContract);    // XXXXXX
+    uint256 checkTheBalance = polygonUSDC.balanceOf(addressOfThisContract);    // XXXXXX
     //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, BNJ');   // XXXXXX
 
     _burn(_msgSender(), _amount);        
     
-    _USDCToken.transfer(feeReceiver, feeRoundedDown);
-    _USDCToken.transfer(_msgSender(), endReturn);     
+    polygonUSDC.transfer(feeReceiver, feeRoundedDown);
+    polygonUSDC.transfer(_msgSender(), endReturn);     
     
     emit SpecifiedBurnEvent(_msgSender(), _amount, returnForBurning);
 

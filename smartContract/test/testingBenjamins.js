@@ -8,7 +8,7 @@ const { fixture } = deployments;
 // this array will receive the generated Hardhat addresses,
 // i.e. accountToHHAddressArray[0] will hold the address of accounts[0]
 // can be queried by findAccountForHHAddress
-let accountToHHAddressArray = [];
+//let accountToHHAddressArray = [];
 
 let tokensShouldExistNowGlobalV;
 let mintPriceTotalInUSDCShouldBeNowGlobalV; 
@@ -20,6 +20,7 @@ let mintPriceTotalInUSDCWasPaidNowGlobalV;
 let mintAllowanceInUSDCCentsWasNowGlobalV;
 let burnReturnTotalInUSDCWasPaidNowGlobalV;
 
+let scale6digits = 1000000;
 
 let loopCounterTotal = 0;
 let mintCounterTotal = 0;
@@ -28,6 +29,18 @@ let burnCounterTotal = 0;
 let totalSpent = 0;
 let totalReturned = 0;
 
+let benjaminsContract;
+
+let polygonUSDC;
+const polgonUSDCaddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+
+let polygonLendingPool;
+const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
+
+let polygonAmUSDC;
+const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
+
+/*
 // helper function to console.log for testing/debugging: looking up the accounts[] variable for an address 
 function findAccountForHHAddress(addressToLookup){
   for (let findInd = 0; findInd < accountToHHAddressArray.length; findInd++) {
@@ -37,7 +50,7 @@ function findAccountForHHAddress(addressToLookup){
       return "Zero address: 0x0000000000000000000000000000000000000000 => it was burnt"      
     }   
   }  
-}; 
+};*/ 
 
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
@@ -104,21 +117,21 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   /*
   // accounts[0] gets mockUSDC to pay minting
   for (let faucetCall = 0; faucetCall < nrOfFaucetCalls ; faucetCall++) {    
-    await mockUSDCTokenContract.connect(callingAcc).getmockUSDC();    
+    await polygonUSDC.connect(callingAcc).getmockUSDC();    
   }   */
   
-  const callingAccMockUSDCBalanceBeforeMintBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
+  const callingAccMockUSDCBalanceBeforeMintBN = await polygonUSDC.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceBeforeMintInCents = fromWEItoCents(callingAccMockUSDCBalanceBeforeMintBN);  
   const callingAccMockUSDCBalanceBeforeMintInUSDC = fromCentsToUSDC(callingAccMockUSDCBalanceBeforeMintInCents);
   //console.log(`mockUSDC balance of ${callingAccountName} before ${mintName} `, callingAccMockUSDCBalanceBeforeMintInUSDC);        
 
   //mint, ${callingAccMockUSDCBalanceBeforeMintInUSDC}:`, callingAccMockUSDCBalanceBeforeMintInUSDC
 
-  const contractMockUSDCBalanceBeforeMintBN = await mockUSDCTokenContract.balanceOf(benjaminsContract.address);
+  const contractMockUSDCBalanceBeforeMintBN = await polygonUSDC.balanceOf(benjaminsContract.address);
   const contractMockUSDCBalanceBeforeMintInCents = fromWEItoCents(contractMockUSDCBalanceBeforeMintBN);    
   //console.log(`benjaminsContract mockUSDC balance before ${mintName} mint:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeFirstMintInCents));
 
-  const acc1MockUSDCBalanceBeforeMintBN = await mockUSDCTokenContract.balanceOf(accounts[1].address);
+  const acc1MockUSDCBalanceBeforeMintBN = await polygonUSDC.balanceOf(accounts[1].address);
   const acc1MockUSDCBalanceBeforeMintInCents = fromWEItoCents(acc1MockUSDCBalanceBeforeMintBN);    
   //console.log(`feeReceiver acc1 mockUSDC balance before ${mintName} mint:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeFirstMintInCents));
 
@@ -130,7 +143,7 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   */    
 
   // allowing benjaminsContract to handle mockUSDC for ${callingAcc}    
-  await mockUSDCTokenContract.connect(callingAcc).approve(benjaminsContract.address, ammountToApproveInWEI);
+  await polygonUSDC.connect(callingAcc).approve(benjaminsContract.address, ammountToApproveInWEI);
 
   // minting ${amountOfTokensForFirstSpecifiedMint} tokens
   await benjaminsContract.connect(callingAcc).specifiedMint(amountToMint);
@@ -143,15 +156,15 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
 
 
-  const callingAccMockUSDCBalanceAfterMintBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
+  const callingAccMockUSDCBalanceAfterMintBN = await polygonUSDC.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceAfterMintInCents = fromWEItoCents(callingAccMockUSDCBalanceAfterMintBN);    
   //console.log(`mockUSDC balance of ${callingAccountName} after ${mintName}:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterMintInCents) );        
 
-  const contractMockUSDCBalanceAfterMintBN = await mockUSDCTokenContract.balanceOf(benjaminsContract.address);
+  const contractMockUSDCBalanceAfterMintBN = await polygonUSDC.balanceOf(benjaminsContract.address);
   const contractMockUSDCBalanceAfterMintInCents = fromWEItoCents(contractMockUSDCBalanceAfterMintBN);    
   //console.log(`benjaminsContract mockUSDC balance after ${mintName} mint:`, fromCentsToUSDC(contractMockUSDCBalanceAfterMintInCents));
 
-  const acc1MockUSDCBalanceAfterMintBN = await mockUSDCTokenContract.balanceOf(accounts[1].address);
+  const acc1MockUSDCBalanceAfterMintBN = await polygonUSDC.balanceOf(accounts[1].address);
   const acc1MockUSDCBalanceAfterMintInCents = fromWEItoCents(acc1MockUSDCBalanceAfterMintBN);    
   //console.log(`feeReceiver acc1 mockUSDC balance after ${mintName} mint:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterMintInCents));       
 
@@ -186,16 +199,16 @@ async function testBurning(burnName, amountToBurn, callingAcc) {
 
   const callingAccountName = findAccountForHHAddress(callingAcc.address);
  
-  const callingAccMockUSDCBalanceBeforeBurnBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
+  const callingAccMockUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceBeforeBurnInCents = fromWEItoCents(callingAccMockUSDCBalanceBeforeBurnBN);  
   const callingAccMockUSDCBalanceBeforeBurnInUSDC = fromCentsToUSDC(callingAccMockUSDCBalanceBeforeBurnInCents);
   console.log(`mockUSDC balance of ${callingAccountName} before ${burnName} burn:`, callingAccMockUSDCBalanceBeforeBurnInUSDC);        
 
-  const contractMockUSDCBalanceBeforeBurnBN = await mockUSDCTokenContract.balanceOf(benjaminsContract.address);
+  const contractMockUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(benjaminsContract.address);
   const contractMockUSDCBalanceBeforeBurnInCents = fromWEItoCents(contractMockUSDCBalanceBeforeBurnBN);    
   //console.log(`benjaminsContract mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceBeforeFirstBurnInCents));
 
-  const acc1MockUSDCBalanceBeforeBurnBN = await mockUSDCTokenContract.balanceOf(accounts[1].address);
+  const acc1MockUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(accounts[1].address);
   const acc1MockUSDCBalanceBeforeBurnInCents = fromWEItoCents(acc1MockUSDCBalanceBeforeBurnBN);    
   //console.log(`feeReceiver acc1 mockUSDC balance before ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceBeforeFirstBurnInCents));
 
@@ -210,15 +223,15 @@ async function testBurning(burnName, amountToBurn, callingAcc) {
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );    
   
 
-  const callingAccMockUSDCBalanceAfterBurnBN = await mockUSDCTokenContract.balanceOf(callingAcc.address);
+  const callingAccMockUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(callingAcc.address);
   const callingAccMockUSDCBalanceAfterBurnInCents = fromWEItoCents(callingAccMockUSDCBalanceAfterBurnBN);    
   console.log(`mockUSDC balance of ${callingAccountName} after ${burnName} burn:`, fromCentsToUSDC(callingAccMockUSDCBalanceAfterBurnInCents) );        
 
-  const contractMockUSDCBalanceAfterBurnBN = await mockUSDCTokenContract.balanceOf(benjaminsContract.address);
+  const contractMockUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(benjaminsContract.address);
   const contractMockUSDCBalanceAfterBurnInCents = fromWEItoCents(contractMockUSDCBalanceAfterBurnBN);    
   //console.log(`benjaminsContract mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(contractMockUSDCBalanceAfterBurnInCents));
 
-  const acc1MockUSDCBalanceAfterBurnBN = await mockUSDCTokenContract.balanceOf(accounts[1].address);
+  const acc1MockUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(accounts[1].address);
   const acc1MockUSDCBalanceAfterBurnInCents = fromWEItoCents(acc1MockUSDCBalanceAfterBurnBN);    
   //console.log(`feeReceiver acc1 mockUSDC balance after ${burnName} burn:`, fromCentsToUSDC(acc1MockUSDCBalanceAfterBurnInCents));       
 
@@ -396,7 +409,7 @@ async function runMintOrBurnLoop(loopsToRun) {
     else {
       console.log(`operation nr: ${opCounter} is MINTING`);
 
-      const acc5MockUSDCBalanceOperationStart = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[5].address)) );
+      const acc5MockUSDCBalanceOperationStart = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(accounts[5].address)) );
       console.log(`acc5 has this many USDC before operation nr: ${opCounter} :`, acc5MockUSDCBalanceOperationStart);           
 
       // local function to check minting amount repeatedly until it's okay
@@ -452,17 +465,17 @@ async function runMintOrBurnLoop(loopsToRun) {
 
   
 
-  const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(benjaminsContract.address)) );
+  const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(benjaminsContract.address)) );
   console.log('protocol our contract USDC balance at the end of all loops so far', protocolBalanceAfterTest);
   const protocolBalanceAfterTestJSExactness = Number(protocolBalanceAfterTest*100);
   //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
   
-  const acc5MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[5].address)) );
+  const acc5MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(accounts[5].address)) );
   console.log('acc5 user USDC balance at the end of all loops so far', acc5MockUSDCBalanceAfterTest);
   const acc5MockUSDCBalanceAfterTestJSExactness = Number(acc5MockUSDCBalanceAfterTest*100);
   //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
 
-  const feeReceiveracc1MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[1].address)) );
+  const feeReceiveracc1MockUSDCBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(accounts[1].address)) );
   console.log('feeReceiver acc1 USDC balance at the end of all loops so far', feeReceiveracc1MockUSDCBalanceAfterTest);
   const feeReceiveracc1MockUSDCBalanceAfterTestJSExactness = Number(feeReceiveracc1MockUSDCBalanceAfterTest*100);
   //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
@@ -489,23 +502,52 @@ describe("Benjamins Test", function () {
   before(async function() {
 
     ({ deployer } = await getNamedAccounts());
-    deployerSigner = await ethers.provider.getSigner(deployer);
+    deployerSigner = await ethers.provider.getSigner(deployer);    
     
     // Deploy contract
     await fixture(["Benjamins"]);
-    aaveLendingTester = await ethers.getContract("Benjamins"); 
+    benjaminsContract = await ethers.getContract("Benjamins");    
+
+    polygonUSDC = new ethers.Contract(
+      polgonUSDCaddress,
+      [
+        'function approve(address spender, uint256 amount) external returns (bool)',
+        'function allowance(address owner, address spender) external view returns (uint256)',
+        'function balanceOf(address account) external view returns (uint256)',
+        'function transfer(address recipient, uint256 amount) external returns (bool)',
+      ], 
+      deployerSigner
+    );
+
+    polygonAmUSDC = new ethers.Contract(
+      polygonAmUSDCAddress,
+      [
+        'function approve(address spender, uint256 amount) external returns (bool)',
+        'function allowance(address owner, address spender) external view returns (uint256)',
+        'function balanceOf(address account) external view returns (uint256)',
+        'function transfer(address recipient, uint256 amount) external returns (bool)',
+      ], 
+      deployerSigner
+    );  
+    
+    polygonLendingPool = new ethers.Contract(
+      polygonLendingPoolAddress,
+      [
+        'function getUserAccountData(address user) external view returns ( uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)',
+      ], 
+      deployerSigner
+    );   
    
     
-
+    /*
     // making a copy of the account addresses to accountToHHAddressArray
     for (let accIndex = 0; accIndex < accounts.length ; accIndex++) {
       accountToHHAddressArray[accIndex] = accounts[accIndex].address;        
     }  
+    */
+
     
-    // deploying the mockUSDCToken smart contract to Hardhat testnet
-    _mockUSDCTokenInstance = await ethers.getContractFactory('MockUSDCToken');    
-    mockUSDCTokenContract = await _mockUSDCTokenInstance.deploy();   
-    
+    /*
     // deploying the BNJICurve smart contract to Hardhat testnet
     _BNJICurveInstance = await ethers.getContractFactory('BNJICurve');
     bnjiCurveContract = await _BNJICurveInstance.deploy();  
@@ -513,19 +555,19 @@ describe("Benjamins Test", function () {
     // deploying the benjamins smart contract to Hardhat testnet
     _benjaminsInstance = await ethers.getContractFactory('Benjamins'); 
     // arguments: address _feeReceiver
-    benjaminsContract = await _benjaminsInstance.deploy( deployer );         
+    benjaminsContract = await _benjaminsInstance.deploy( deployer );      */   
 
   })    
     
   it("1. Should show deployment went as expected", async function () {
     
     // after deployment, querying benjamins balance of accounts[0], logging as number and from WEI to ETH
-    const startingBalanceInbenjamins = bigNumberToNumber(await benjaminsContract.balanceOf(accounts[0].address));    
-    //console.log("accounts[0] has this many benjamins after deployment: ", startingBalanceInContToken);
+    const startingBalanceInbenjamins = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
+    console.log("deployer has this many benjamins after deployment: ", startingBalanceInbenjamins);
 
     // after deployment, querying benjamins total supply
     const totalSupplyAfterDeploy = bigNumberToNumber(await benjaminsContract.totalSupply()) ;
-    //console.log("benjamins total supply after deployment: ", totalSupplyAfterDeploy);   
+    console.log("benjamins total supply after deployment: ", totalSupplyAfterDeploy);   
       
   });  
   /*
@@ -541,19 +583,19 @@ describe("Benjamins Test", function () {
     console.log("benjaminsContract.address: ", benjaminsContract.address);
 
     // REVERT: using setOperator as non-owner is reverted in staking contract
-    await expect( stakingContract.connect(accounts[3]).setOperator(accounts[0].address) ).to.be.revertedWith(
+    await expect( stakingContract.connect(accounts[3]).setOperator(deployer) ).to.be.revertedWith(
       "Ownable: caller is not the owner"   
     );  
 
   });*/
 
   it("3. Minting and staking", async function () {
-    await mockUSDCTokenContract.getmockUSDC(); 
+    //await polygonUSDC.getmockUSDC(); 
 
-    const acc0MockUSDCBalanceAfterGetting10MStart = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[0].address)) );
+    const acc0MockUSDCBalanceAfterGetting10MStart = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('acc0MockUSDCBalanceAfterBigMint', acc0MockUSDCBalanceAfterGetting10MStart);   
 
-    const acc0BeforeStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(accounts[0].address));    
+    const acc0BeforeStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
     console.log("accounts[0] has this many benjamins locked up before staking: ", acc0BeforeStakingTokens);
 
     const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
@@ -562,7 +604,7 @@ describe("Benjamins Test", function () {
     await testMinting("first", 10000, 12625, accounts[0], 1);
     confirmMint(0, 10000); 
 
-    const acc0AfterStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(accounts[0].address));    
+    const acc0AfterStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
     console.log("accounts[0] has this many benjamins locked up after staking: ", acc0AfterStakingTokens);
 
     const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
@@ -576,15 +618,15 @@ describe("Benjamins Test", function () {
   it("4. Staking results test", async function () {    
 
     
-    const acc0Staked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(accounts[0].address));
+    const acc0Staked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
     console.log("accounts[0] is staking in total: ", acc0Staked);
 
-    const acc0StakedArray = await benjaminsContract.checkStakedArrayOfUser(accounts[0].address);
+    const acc0StakedArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
     //console.log("accounts[0]'s staking array: ", acc0StakedArray);
 
     
 
-    //console.log('accounts[0].address', accounts[0].address);
+    //console.log('deployer', deployer);
 
     //console.log('benjaminsContract.address', benjaminsContract.address);
 
