@@ -1,4 +1,6 @@
 import {
+  Heading,
+  Button,
   IconButton,
   Text,
   HStack,
@@ -9,8 +11,11 @@ import { useMoralis } from "react-moralis";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useState, useEffect } from "react";
 import { useExperts } from "../../contexts/expertsContext";
+import { useActions } from "../../contexts/actionsContext";
 import { CopyIcon } from "@chakra-ui/icons";
-import EthereumQRPlugin from "ethereum-qr-code";
+import { ToSelect } from "../Bits/ToSelect";
+import { AmountSelect } from "../Bits/AmountSelect";
+import QRCode from "react-qr-code";
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
 const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
 
@@ -18,11 +23,11 @@ export const AddressPanel = () => {
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
   const { setActionMode, setDialog } = useExperts();
+  const { toSymbol, toAddress, txAmount } = useActions();
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState("0x0");
   const user = Moralis.User.current();
   const ethAddress = user?.attributes.ethAddress;
-  const qr = new EthereumQRPlugin();
 
   useEffect(() => {
     if (copied) {
@@ -37,7 +42,7 @@ export const AddressPanel = () => {
       setCopied(false);
     } else {
       if (isAuthenticated) {
-        setData(user?.attributes["ethAddress"]);
+        setData("ethereum:" + user?.attributes["ethAddress"] + "?chainID:137");
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,7 +61,8 @@ export const AddressPanel = () => {
       spacing={6}
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
-      <Text>Your Address:</Text>
+      <Heading>Your Address:</Heading>
+      <QRCode value={ethAddress} />
       <HStack>
         <Text>{ethAddress}</Text>
         <CopyToClipboard text={data} onCopy={() => setCopied(true)}>
@@ -68,6 +74,9 @@ export const AddressPanel = () => {
           />
         </CopyToClipboard>
       </HStack>
+      {/* <Text>Configure Request:</Text>
+      <ToSelect />
+      <AmountSelect /> */}
     </VStack>
   );
 };
