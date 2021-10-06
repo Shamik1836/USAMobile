@@ -633,12 +633,15 @@ describe("Benjamins Test", function () {
     polygonQuickswapRouter = new ethers.Contract(
       polygonQuickswapRouterAddress,
       [
-        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external virtual override payable ensure(deadline) returns (uint[] memory amounts)',       
+       'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',      
+       'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)' 
       ], 
       deployerSigner
     );
     
-    await polygonQuickswapRouter.swapExactETHForTokens( ethers.utils.parseEther("5000000"), [0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270, 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174], deployer, 1665102928 );
+    let amountMATICToSwapToUSDCInWEI = bigNumberToNumber (ethers.utils.parseEther("5000000"));   
+    console.log('amountMATICToSwapToUSDCInWEI:', amountMATICToSwapToUSDCInWEI); 
+    await polygonQuickswapRouter.swapExactTokensForTokens( amountMATICToSwapToUSDCInWEI, 5000000 , [polygonWMATICAddress, polygonUSDCaddress], deployer, 1665102928 );
            
     const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
