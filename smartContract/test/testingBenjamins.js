@@ -42,6 +42,9 @@ const polygonMaticAddress = '0x0000000000000000000000000000000000001010';
 let polygonWMATIC;
 const polygonWMATICAddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 
+let polygonQuickswapRouter;
+const polygonQuickswapRouterAddress = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
+
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
   let convertedNumber = (ethers.utils.formatUnits(bignumber, 0)).toString();  
@@ -583,7 +586,7 @@ describe("Benjamins Test", function () {
     
   });  
 
-  it("3. Deployer should exchange MATIC for USDC on polygon via QuickSwap", async function () {
+  it("3. Deployer should wrap MATIC into WMATIC", async function () {
 
     quickswapFactory = new ethers.Contract(
       quickswapFactoryAddress,
@@ -613,32 +616,39 @@ describe("Benjamins Test", function () {
     await polygonWMATIC.deposit( {value: ethers.utils.parseEther("5000000")} );
 
     const deployerMaticAfterWrapping = await getMaticBalance(deployer);
-    console.log('deployer has this many MATIC after wrapping:', deployerMaticAfterWrapping); 
-
-    /*
-    const deployerMaticBeforeExchange = await getMaticBalance(deployer);
-    console.log('deployer has this many MATIC before using DEX:', deployerMaticBeforeExchange);    
-
-    const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC before using DEX:', deployerUSDCbalStart2);   
-    */
-
-    
-    //function approve(address spender, uint value) external returns (bool);
-    //function transfer(address to, uint value) external returns (bool);
-    
-
-    /*
-    const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);   
-     
-    const deployerMaticAfterExchange = await getMaticBalance(deployer);
-    console.log('deployer has this many MATIC after using DEX:', deployerMaticAfterExchange);     
-      */
+    console.log('deployer has this many MATIC after wrapping:', deployerMaticAfterWrapping);
+   
   });    
 
+  it("4. Deployer should exchange MATIC for USDC on polygon via QuickSwap", async function () {
+    
+    //function approve(address spender, uint value) external returns (bool);
+    await polygonWMATIC.approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
+
+      
+    const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC before using DEX:', deployerUSDCbalStart2);   
+        
+
+    polygonQuickswapRouter = new ethers.Contract(
+      polygonQuickswapRouterAddress,
+      [
+        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external virtual override payable ensure(deadline) returns (uint[] memory amounts)',       
+      ], 
+      deployerSigner
+    );
+    
+    await polygonQuickswapRouter.swapExactETHForTokens( ethers.utils.parseEther("5000000"), [0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270, 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174], deployer, 1665102928 );
+           
+    const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
+     
+      
+  });    
+
+  
   /*
-  it("4. Minting and staking", async function () {    
+  it("5. Minting and staking", async function () {    
 
     const deployerUSDCbalStart3 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC before minting/staking:', deployerUSDCbalStart3);   
