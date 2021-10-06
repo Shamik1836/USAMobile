@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import OnramperWidget from "@onramper/widget";
 import { useColorMode } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import { useExperts } from "../contexts/expertsContext";
@@ -24,22 +23,6 @@ export const BuySell = () => {
         borderRadius: "10px",
         margin: "auto",
       }}
-    >
-      <OnramperWidget
-        defaultAddrs={{
-          ETH: { address: { ethAddress } },
-        }}
-        defaultCrypto={"USDC"}
-        defaultAmount={500}
-        API_KEY="pk_test_ass3gtLSWQpI11IWUZLJdrfyQhj7bTw_3xwLvhEvH6Q0"
-        filters={
-          {
-            // onlyCryptos: ["USDC"],
-          }
-        }
-        color={colorMode === "light" ? "#e89999" : "#720a0a"}
-        fontFamily={"typewriter"}
-      />
-    </div>
+    ></div>
   );
 };

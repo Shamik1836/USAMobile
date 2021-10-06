@@ -39,7 +39,7 @@ export const SendPanel = () => {
     >
       <FromSelect />
       {fromSymbol !== "" && (
-        <>
+        <VStack>
           <HStack>
             <AmountSelect />
             {txAmount && (
@@ -47,8 +47,9 @@ export const SendPanel = () => {
             )}
           </HStack>
           {toAddress && <StartSend />}
-        </>
+        </VStack>
       )}
+      <br />
     </VStack>
   );
 };
