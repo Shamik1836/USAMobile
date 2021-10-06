@@ -482,7 +482,7 @@ async function runMintOrBurnLoop(loopsToRun) {
 } 
 
 
-describe("benjamins Test", function () {
+describe("Benjamins Test", function () {
 
   // setting instances of contracts
   before(async function() {
@@ -505,8 +505,8 @@ describe("benjamins Test", function () {
 
     // deploying the benjamins smart contract to Hardhat testnet
     _benjaminsInstance = await ethers.getContractFactory('Benjamins'); 
-    // arguments: address _mockUSDCTokenAddress, address _feeReceiver
-    benjaminsContract = await _benjaminsInstance.deploy( mockUSDCTokenContract.address, accounts[1].address );         
+    // arguments: address _feeReceiver
+    benjaminsContract = await _benjaminsInstance.deploy( accounts[1].address );         
 
   })    
     

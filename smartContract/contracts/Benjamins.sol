@@ -1,49 +1,55 @@
 pragma solidity ^0.8.0;
 
 import "./BNJICurve.sol";
+import "./ILendingPool.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
 
 contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   using SafeMath for uint256;
+ 
+  address public addressOfThisContract;
+
+  address private feeReceiver;  
+
+  address[] private stakers;
 
   mapping (address => uint256) ownedBenjamins;
 
-  address[] private stakers;
-  mapping (address => bool) public isOnStakingList;
-  mapping (address => Stake[]) public usersStakingPositions;
-  mapping (address => uint256) public totalStakedByUser;
+  mapping (address => bool) private isOnStakingList;
+  mapping (address => Stake[]) private usersStakingPositions;
+  mapping (address => uint256) private totalStakedByUser;
 
   struct Stake {
     address stakingAddress;
-    uint256 tokenAmount;
-    uint256 stakeInUSDCcents;
+    uint256 tokenAmount;    
     uint256 stakeCreatedTimestamp; 
     bool deleted;
   }
 
+  uint8 private _decimals;
   uint256 largestUint = type(uint256).max;
 
+
+  ILendingPool public lendingPool;
   IERC20 public _USDCToken;
-  address addressOfThisContract;
+  
 
-  address feeReceiver;
-
-  uint8 private _decimals;
-
-  constructor(address _USDCTokenAddress, address _feeReceiver) ERC20("Benjamins", "BNJI") {
-    _decimals = 0;
-    _USDCToken = IERC20(_USDCTokenAddress);
+  constructor(address _feeReceiver) ERC20("Benjamins", "BNJI") {
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
+    _decimals = 0;
+    _USDCToken = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);
+    lendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);        
     _approveLendingPool(largestUint);
   }
 
   function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
-
+    _USDCToken.approve(address(lendingPool), _amountToApprove);
   }
 
   receive() external payable {   
@@ -64,9 +70,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     require(_amount > 0, "Amount must be more than zero.");       
     
     uint256 priceForMinting = calcSpecMintReturn(_amount);
-    //console.log(priceForMinting, 'priceForMinting in _specifiedAmountMint, BNJ');   
-
-    uint256 stakeInUSDCcents = priceForMinting / 10000000000000000;
+    //console.log(priceForMinting, 'priceForMinting in _specifiedAmountMint, BNJ');     
 
     uint256 fee = priceForMinting / 100;
     //console.log(fee, 'fee in _specifiedAmountMint, BNJ');   
@@ -85,8 +89,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 _USDCAllowance = _USDCToken.allowance(_msgSender(), addressOfThisContract); 
     console.log(_USDCAllowance, '_USDCAllowance in _specifiedAmountMint, BNJ' );
 
-    require (endPrice <= _USDCBalance, "BNJ, _specifiedAmountMint: Not enough _USDC"); 
-    require (endPrice <= _USDCAllowance, "BNJ, _specifiedAmountMint: Not enough allowance in _USDC for payment" );
+    require (endPrice <= _USDCBalance, "BNJ, _specifiedAmountMint: Not enough USDC"); 
+    require (endPrice <= _USDCAllowance, "BNJ, _specifiedAmountMint: Not enough allowance in USDC for payment" );
     require (priceForMinting >= 5000000000000000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
 
     
@@ -101,12 +105,12 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     // this is the user's balance of tokens
     ownedBenjamins[_msgSender()] += _amount;
 
-    _stakeTokens(_msgSender(), _amount, stakeInUSDCcents);
+    _stakeTokens(_msgSender(), _amount);
 
     return priceForMinting;   
   }
 
-  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake, uint256 _stakeInUSDCcents) private {
+  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
     uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
     console.log(tokensOwned, 'tokensOwned in _stakeTokens, BNJ');
 
@@ -119,8 +123,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     Stake memory newStake = Stake({ 
       stakingAddress: address(_stakingUserAddress),
-      tokenAmount: uint256(_amountOfTokensToStake),
-      stakeInUSDCcents: uint256(_stakeInUSDCcents),
+      tokenAmount: uint256(_amountOfTokensToStake),      
       stakeCreatedTimestamp: uint256(block.timestamp),
       deleted: false       
     });        
@@ -148,8 +151,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     for (uint256 index = 0; index < usersStakeArray.length; index++) {      
       console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
       console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
-      console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);
-      console.log("BNJ,checkStakedArrayOfUser: stakeInUSDCcents:", usersStakeArray[index].stakeInUSDCcents);
+      console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
       console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
       console.log("BNJ,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
     }
