@@ -4,7 +4,15 @@
   "description": "USA Wallet utility token with bonding curve, AAVE deposit, etc.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "coverage": "hardhat coverage",
+    "deploy": "hardhat deploy --tags Benjamins --write true",
+    "testnet:deploy": "hardhat deploy --tags Benjamins --network rinkeby",
+    "mainnet:deploy": "hardhat deploy --tags Benjamins --network mainnet",
+    "t:verify": "hardhat --network rinkeby etherscan-verify --sleep",
+    "m:verify": "hardhat --network mainnet etherscan-verify --sleep",
+    "prettier": "prettier --write 'contracts/**/*.sol'"
   },
   "repository": {
     "type": "git",
@@ -17,27 +25,29 @@
     "Solidity",
     "ERC20"
   ],
-  "author": "ctrl030, orbitmechanic",
-  "license": "../LICENSE.txt",
   "bugs": {
     "url": "https://github.com/orbitmechanic/USAMobile/issues"
   },
+  "author": "ctrl030, orbitmechanic",
+  "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",  
+  "license": "../LICENSE.txt",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-etherscan": "2.1.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@nomiclabs/hardhat-web3": "^2.0.0",
-    "chai": "^4.3.4",
-    "dotenv": "^10.0.0",
-    "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.4.7",
-    "hardhat": "^2.6.4",
-    "hardhat-deploy": "^0.9.3",
+    "chai": "4.3.4",
+    "ethereum-waffle": "3.4.0",
+    "ethers": "5.4.6",
+    "hardhat": "2.4.3",
+    "hardhat-deploy": "0.8.6",
     "hardhat-gas-reporter": "^1.0.4",
-    "is-core-module": "^2.7.0",
-    "web3": "^1.5.3"
+    "prettier": "2.2.1",
+    "prettier-plugin-solidity": "1.0.0-beta.8",
+    "solidity-coverage": "^0.7.17"
   },
-  "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.3.2"
+    "@openzeppelin/contracts": "4.1.0",
+    "@openzeppelin/contracts-upgradeable": "4.3.2",
+    "dotenv": "8.2.0"
   }
 }

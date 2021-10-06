@@ -2,7 +2,6 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { fixture } = deployments;
 
-
 // Customized helpers
 
 // helper variable, to check addresses in a format that is easier to read

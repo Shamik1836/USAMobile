@@ -43,8 +43,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
     _decimals = 0;
-    _USDCToken = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
-    lendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
+    _USDCToken = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);
+    lendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);        
     _approveLendingPool(largestUint);
   }
 

@@ -5,11 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-/**
-* @title
-*
-* 
-*/
 contract BNJICurve is Ownable, Pausable{   
 
   uint256 _USDCscale = 10**18;  
