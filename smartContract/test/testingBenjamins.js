@@ -528,7 +528,7 @@ describe("Benjamins Test", function () {
       
   });    
 
-  it("2. Should impersonate USDC-heavy account and send USDC to deployer ", async function () {
+  it("2. Should impersonate MATIC-heavy account and send MATIC to deployer ", async function () {
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -549,41 +549,57 @@ describe("Benjamins Test", function () {
     );    
 
     const whaleSignerAddress = whaleSigner.address;
-    console.log('whaleSignerAddress:', whaleSignerAddress);   
-
-
+    console.log('whaleSignerAddress:', whaleSignerAddress);  
 
     const whaleMaticBefore = await getMaticBalance(whaleSignerAddress);
     console.log('whaleMaticBefore:', whaleMaticBefore);     
 
     const deployerMaticBefore = await getMaticBalance(deployer);
-    console.log('deployerMaticBefore:', deployerMaticBefore);     
+    console.log('deployerMaticBefore:', deployerMaticBefore);    
 
       
     await whaleSigner.sendTransaction({
       to: deployer,
-      value: ethers.utils.parseEther("10000") // 10 Matic
+      value: ethers.utils.parseEther("5000000") // 5,000,000 Matic
     })
+
+    await hre.network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: ["0x986a2fCa9eDa0e06fBf7839B89BfC006eE2a23Dd"],
+    });
 
     const whaleMaticAfter = await getMaticBalance(whaleSignerAddress);
     console.log('whaleMaticAfter:', whaleMaticAfter); 
 
     const deployerMaticAfter = await getMaticBalance(deployer);
-    console.log('deployerMaticAfter:', deployerMaticAfter);     
+    console.log('deployerMaticAfter:', deployerMaticAfter);    
 
+   
+
+    /*
+    const deployerMaticAfter2 = await getMaticBalance(deployer);
+    console.log('deployerMaticAfter:', deployerMaticAfter2);  */  
+    
+    //function approve(address spender, uint value) external returns (bool);
     
     //await polygonUSDCWhaleSignedIn.connect(whaleSignerAddress).transfer(deployer, (100000 /* *scale6digits */ ));
     /*
     const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC before getting sent USDC:', deployerUSDCbalStart2);   
 
-
     const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC after getting sent USDC:', deployerUSDCbalEnd2);   
     */
   });  
+
+  it("3. Deployer should exchange MATIC for USDC on polygon", async function () {
+    
+     
+      
+  });    
+
   /*
-  it("3. Minting and staking", async function () {    
+  it("4. Minting and staking", async function () {    
 
     const deployerUSDCbalStart3 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC before minting/staking:', deployerUSDCbalStart3);   
@@ -615,7 +631,7 @@ describe("Benjamins Test", function () {
 
   });
   
-  it("4. Staking results test", async function () {    
+  it("5. Staking results test", async function () {    
 
     
     const acc0Staked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
