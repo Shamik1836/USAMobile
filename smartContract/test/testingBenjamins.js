@@ -70,6 +70,12 @@ function fromCentstoWEI (numberInCents) {
   return numberInWEI;    
 }
 
+async function getMaticBalance(adress) {    
+  const balanceInWEI = await ethers.provider.getBalance(adress); 
+  const balanceInMATIC = Number(balanceInWEI / (10**18) );        
+  return balanceInMATIC;
+}
+
 /* // querying address' ETH balance
   // querying address' ETH balance and converting from WEI to ETH and into normal number
   async function getETHbalance(adress) {    
@@ -540,16 +546,31 @@ describe("Benjamins Test", function () {
         'function transfer(address recipient, uint256 amount) external returns (bool)',
       ], 
       whaleSigner
-    );
+    );    
 
     const whaleSignerAddress = whaleSigner.address;
-    
     console.log('whaleSignerAddress:', whaleSignerAddress);   
 
+
+
+    const whaleMaticBefore = await getMaticBalance(whaleSignerAddress);
+    console.log('whaleMaticBefore:', whaleMaticBefore);     
+
+    const deployerMaticBefore = await getMaticBalance(deployer);
+    console.log('deployerMaticBefore:', deployerMaticBefore);     
+
+      
     await whaleSigner.sendTransaction({
       to: deployer,
-      value: ethers.utils.parseEther("10") // 10 ether
+      value: ethers.utils.parseEther("10000") // 10 Matic
     })
+
+    const whaleMaticAfter = await getMaticBalance(whaleSignerAddress);
+    console.log('whaleMaticAfter:', whaleMaticAfter); 
+
+    const deployerMaticAfter = await getMaticBalance(deployer);
+    console.log('deployerMaticAfter:', deployerMaticAfter);     
+
     
     //await polygonUSDCWhaleSignedIn.connect(whaleSignerAddress).transfer(deployer, (100000 /* *scale6digits */ ));
     /*
