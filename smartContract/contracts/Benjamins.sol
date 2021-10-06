@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
-import "./OurCurve.sol";
+import "./BNJICurve.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
-contract OurToken is ERC20, OurCurve, ReentrancyGuard {
+contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   using SafeMath for uint256;
 
   mapping (address => uint256) ownedBenjamins;
@@ -19,37 +19,32 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
 
   struct Stake {
     address stakingAddress;
-    uint256 amount;
+    uint256 tokenAmount;
+    uint256 stakeInUSDCcents;
     uint256 stakeCreatedTimestamp; 
     bool deleted;
   }
 
+  uint256 largestUint = type(uint256).max;
 
-  IERC20 public mockUSDCToken;
+  IERC20 public _USDCToken;
   address addressOfThisContract;
 
   address feeReceiver;
 
   uint8 private _decimals;
 
-  constructor(address _mockUSDCTokenAddress, address _feeReceiver) ERC20("OurToken", "OTK") {
+  constructor(address _USDCTokenAddress, address _feeReceiver) ERC20("Benjamins", "BNJI") {
     _decimals = 0;
-    mockUSDCToken = IERC20(_mockUSDCTokenAddress);
+    _USDCToken = IERC20(_USDCTokenAddress);
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
+    _approveLendingPool(largestUint);
   }
 
-  /* XXXXX
-    function handleApproval(uint256 _amountToReturn, address _user) internal returns (bool approvedSuccess) {
-      mockUSDCToken.approve(_user, (_amountToReturn + 1000000000000000000));    
-      uint256 allowanceToGetReturn = mockUSDCToken.allowance(addressOfThisContract, _user);
-      //console.log(allowanceToGetReturn, 'allowanceToGetReturn in _specifiedAmountBurn, OTK');    
-      return true;
-  }*/      
+  function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
 
-  
-
-  
+  }
 
   receive() external payable {   
   }
@@ -65,37 +60,39 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
   }
 
   function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
-    //console.log('OTK, _specifiedAmountMint: _amount', _amount);
+    //console.log('BNJ, _specifiedAmountMint: _amount', _amount);
     require(_amount > 0, "Amount must be more than zero.");       
     
     uint256 priceForMinting = calcSpecMintReturn(_amount);
-    //console.log(priceForMinting, 'priceForMinting in _specifiedAmountMint, OTK');   
+    //console.log(priceForMinting, 'priceForMinting in _specifiedAmountMint, BNJ');   
+
+    uint256 stakeInUSDCcents = priceForMinting / 10000000000000000;
 
     uint256 fee = priceForMinting / 100;
-    //console.log(fee, 'fee in _specifiedAmountMint, OTK');   
+    //console.log(fee, 'fee in _specifiedAmountMint, BNJ');   
 
     uint256 roundThisDown = fee % (10**16);
-    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountMint, OTK');   
+    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountMint, BNJ');   
 
     uint256 feeRoundedDown = fee - roundThisDown;
-    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountMint, OTK');   
+    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountMint, BNJ');   
 
     uint256 endPrice = priceForMinting + feeRoundedDown;
-    console.log(endPrice, 'endPrice in _specifiedAmountMint, OTK');       
+    console.log(endPrice, 'endPrice in _specifiedAmountMint, BNJ');       
 
-    uint256 mockUSDCBalance = mockUSDCToken.balanceOf( _msgSender() ) ;
-    //console.log(mockUSDCBalance, 'mockUSDCBalance in _specifiedAmountMint, OTK');
-    uint256 mockUSDCAllowance = mockUSDCToken.allowance(_msgSender(), addressOfThisContract); 
-    console.log(mockUSDCAllowance, 'mockUSDCAllowance in _specifiedAmountMint, OTK' );
+    uint256 _USDCBalance = _USDCToken.balanceOf( _msgSender() ) ;
+    //console.log(_USDCBalance, '_USDCBalance in _specifiedAmountMint, BNJ');
+    uint256 _USDCAllowance = _USDCToken.allowance(_msgSender(), addressOfThisContract); 
+    console.log(_USDCAllowance, '_USDCAllowance in _specifiedAmountMint, BNJ' );
 
-    require (endPrice <= mockUSDCBalance, "OTK, _specifiedAmountMint: Not enough mockUSDC"); 
-    require (endPrice <= mockUSDCAllowance, "OTK, _specifiedAmountMint: Not enough allowance in mockUSDC for payment" );
-    require (priceForMinting >= 5000000000000000000, "OTK, _specifiedAmountMint: Minimum minting value of $5 USDC" );
+    require (endPrice <= _USDCBalance, "BNJ, _specifiedAmountMint: Not enough _USDC"); 
+    require (endPrice <= _USDCAllowance, "BNJ, _specifiedAmountMint: Not enough allowance in _USDC for payment" );
+    require (priceForMinting >= 5000000000000000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
 
     
-    mockUSDCToken.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
+    _USDCToken.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
 
-    mockUSDCToken.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
+    _USDCToken.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
@@ -104,16 +101,16 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
     // this is the user's balance of tokens
     ownedBenjamins[_msgSender()] += _amount;
 
-    _stakeTokens(_msgSender(), _amount);
+    _stakeTokens(_msgSender(), _amount, stakeInUSDCcents);
 
     return priceForMinting;   
   }
 
-  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
+  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake, uint256 _stakeInUSDCcents) private {
     uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
-    console.log(tokensOwned, 'tokensOwned in _stakeTokens, OTK');
+    console.log(tokensOwned, 'tokensOwned in _stakeTokens, BNJ');
 
-    require (_amountOfTokensToStake <= tokensOwned, 'OTK, _stakeTokens: Not enough tokens'); 
+    require (_amountOfTokensToStake <= tokensOwned, 'BNJ, _stakeTokens: Not enough tokens'); 
 
     if (!isOnStakingList[_stakingUserAddress]) {
       stakers.push(_stakingUserAddress);
@@ -122,7 +119,8 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
 
     Stake memory newStake = Stake({ 
       stakingAddress: address(_stakingUserAddress),
-      amount: uint256(_amountOfTokensToStake),
+      tokenAmount: uint256(_amountOfTokensToStake),
+      stakeInUSDCcents: uint256(_stakeInUSDCcents),
       stakeCreatedTimestamp: uint256(block.timestamp),
       deleted: false       
     });        
@@ -140,7 +138,7 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
 
   function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJMNs){
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
-    console.log("OTK,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
+    console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
     return usersTotalStake;
   }
 
@@ -148,11 +146,12 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
     Stake[] memory usersStakeArray = usersStakingPositions[userToCheck];
 
     for (uint256 index = 0; index < usersStakeArray.length; index++) {      
-      console.log("OTK,checkStakedArrayOfUser: the checked users array at position: ", index, "is:");
-      console.log("OTK,checkStakedArrayOfUser: stakingAddress: ", usersStakeArray[index].stakingAddress);
-      console.log("OTK,checkStakedArrayOfUser: amount: ", usersStakeArray[index].amount);
-      console.log("OTK,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
-      console.log("OTK,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
+      console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
+      console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
+      console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);
+      console.log("BNJ,checkStakedArrayOfUser: stakeInUSDCcents:", usersStakeArray[index].stakeInUSDCcents);
+      console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
+      console.log("BNJ,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
     }
     
     return usersStakeArray;
@@ -164,10 +163,10 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
 
     // args: address owner, address spender
     //uint256 allowance = allowance(_msgSender(), addressOfThisContract); 
-    //console.log(allowance, 'allowance in callDepositStake, OTK');
+    //console.log(allowance, 'allowance in callDepositStake, BNJ');
 
     
-    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, OTK'); 
+    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, BNJ'); 
     // args: address sender,address recipient,uint256 amount
     transfer(address(ourStakingContractInterface), _amountOfTokensToStake ); 
 
@@ -193,43 +192,43 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
   }
 
   function _specifiedAmountBurn(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
-    //console.log('OTK, _specifiedAmountBurn: _amount', _amount);
+    //console.log('BNJ, _specifiedAmountBurn: _amount', _amount);
 
     uint256 tokenBalance = balanceOf(_msgSender());
-    //console.log(_amount, '_amount in _specifiedAmountBurn, OTK');   
-    //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, OTK');   
+    //console.log(_amount, '_amount in _specifiedAmountBurn, BNJ');   
+    //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, BNJ');   
      
     require(_amount > 0, "Amount to burn must be more than zero.");  
     require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");  
            
     
     uint256 returnForBurning = calcSpecBurnReturn(_amount);
-    //console.log(returnForBurning, 'returnForBurning in _specifiedAmountBurn, OTK');   
+    //console.log(returnForBurning, 'returnForBurning in _specifiedAmountBurn, BNJ');   
 
-    require (returnForBurning >= 5000000000000000000, "OTK, _specifiedAmountBurn: Minimum burning value is $5 USDC" );
+    require (returnForBurning >= 5000000000000000000, "BNJ, _specifiedAmountBurn: Minimum burning value is $5 USDC" );
 
     uint256 fee = returnForBurning / 100;
-    //console.log(fee, 'fee in _specifiedAmountBurn, OTK');   
+    //console.log(fee, 'fee in _specifiedAmountBurn, BNJ');   
 
     uint256 roundThisDown = fee % (10**16);
-    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountBurn, OTK');   
+    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountBurn, BNJ');   
 
     uint256 feeRoundedDown = fee - roundThisDown;
-    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountBurn, OTK');   
+    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountBurn, BNJ');   
 
     uint256 endReturn = returnForBurning - feeRoundedDown;
-    //console.log(endReturn, 'endReturn in _specifiedAmountBurn, OTK');   
+    //console.log(endReturn, 'endReturn in _specifiedAmountBurn, BNJ');   
 
     uint256 toPayoutTotal =  feeRoundedDown + endReturn;  // XXXXXX
-    //console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, OTK');    // XXXXXX
+    //console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, BNJ');    // XXXXXX
 
-    uint256 checkTheBalance = mockUSDCToken.balanceOf(addressOfThisContract);    // XXXXXX
-    //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, OTK');   // XXXXXX
+    uint256 checkTheBalance = _USDCToken.balanceOf(addressOfThisContract);    // XXXXXX
+    //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, BNJ');   // XXXXXX
 
     _burn(_msgSender(), _amount);        
     
-    mockUSDCToken.transfer(feeReceiver, feeRoundedDown);
-    mockUSDCToken.transfer(_msgSender(), endReturn);     
+    _USDCToken.transfer(feeReceiver, feeRoundedDown);
+    _USDCToken.transfer(_msgSender(), endReturn);     
     
     emit SpecifiedBurnEvent(_msgSender(), _amount, returnForBurning);
 
@@ -238,8 +237,8 @@ contract OurToken is ERC20, OurCurve, ReentrancyGuard {
 
   function calcSpecBurnReturn(uint256 _amount) public view whenNotPaused returns (uint256 burnReturn) {
     
-    //console.log("OTK, calcSpecBurnReturn, totalsupply:", totalSupply() );
-    //console.log("OTK, calcSpecBurnReturn, _amount:", _amount );
+    //console.log("BNJ, calcSpecBurnReturn, totalsupply:", totalSupply() );
+    //console.log("BNJ, calcSpecBurnReturn, _amount:", _amount );
     return calcReturnForTokenBurn(totalSupply(), _amount); 
   }      
   
