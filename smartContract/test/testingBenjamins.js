@@ -26,7 +26,7 @@ let totalReturned = 0;
 let benjaminsContract;
 
 let polygonUSDC;
-const polgonUSDCaddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+const polygonUSDCaddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
 
 let polygonLendingPool;
 const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
@@ -475,7 +475,7 @@ describe("Benjamins Test", function () {
     benjaminsContract = await ethers.getContract("Benjamins");    
 
     polygonUSDC = new ethers.Contract(
-      polgonUSDCaddress,
+      polygonUSDCaddress,
       [
         'function approve(address spender, uint256 amount) external returns (bool)',
         'function allowance(address owner, address spender) external view returns (uint256)',
@@ -520,52 +520,80 @@ describe("Benjamins Test", function () {
     console.log("polygonLendingPool address: ", polygonLendingPool.address);  
     console.log("polygonAmUSDC address: ", polygonAmUSDC.address);    
       
+  });    
+
+  it("2. Should impersonate USDC-heavy account and send USDC to deployer ", async function () {
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: ["0x986a2fCa9eDa0e06fBf7839B89BfC006eE2a23Dd"],
+    });
+
+    const whaleSigner = await ethers.getSigner("0x986a2fCa9eDa0e06fBf7839B89BfC006eE2a23Dd");
+
+    polygonUSDCWhaleSignedIn = new ethers.Contract(
+      polygonUSDCaddress,
+      [
+        'function approve(address spender, uint256 amount) external returns (bool)',
+        'function allowance(address owner, address spender) external view returns (uint256)',
+        'function balanceOf(address account) external view returns (uint256)',
+        'function transfer(address recipient, uint256 amount) external returns (bool)',
+      ], 
+      whaleSigner
+    );
+
+    const whaleSignerAddress = whaleSigner.address;
+    
+    console.log('whaleSignerAddress:', whaleSignerAddress);   
+
+    await whaleSigner.sendTransaction({
+      to: deployer,
+      value: ethers.utils.parseEther("10") // 10 ether
+    })
+    
+    //await polygonUSDCWhaleSignedIn.connect(whaleSignerAddress).transfer(deployer, (100000 /* *scale6digits */ ));
+    /*
+    const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC before getting sent USDC:', deployerUSDCbalStart2);   
+
+
+    const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC after getting sent USDC:', deployerUSDCbalEnd2);   
+    */
   });  
   /*
-  it(`2. Staking contract, original operator and changing operator `, async function () {  
-
-    const operatorAfterDeploy = await stakingContract.operator() ; 
-    console.log("operatorAfterDeploy: ", operatorAfterDeploy);
-  
-    await stakingContract.setOperator(benjaminsContract.address);
-  
-    const operatorChangedTobenjaminsContract = await stakingContract.operator() ; 
-    console.log("operatorChangedTobenjaminsContract: ", operatorChangedTobenjaminsContract);
-    console.log("benjaminsContract.address: ", benjaminsContract.address);
-
-    // REVERT: using setOperator as non-owner is reverted in staking contract
-    await expect( stakingContract.connect(normUserAddress).setOperator(deployer) ).to.be.revertedWith(
-      "Ownable: caller is not the owner"   
-    );  
-
-  });*/
-
   it("3. Minting and staking", async function () {    
 
-    const acc0USDCBalanceAfterGetting10MStart = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('acc0USDCBalanceAfterBigMint', acc0USDCBalanceAfterGetting10MStart);   
+    const deployerUSDCbalStart3 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC before minting/staking:', deployerUSDCbalStart3);   
 
-    const acc0BeforeStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer has this many benjamins locked up before staking: ", acc0BeforeStakingTokens);
+    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
+    console.log("deployer directly owns/controls this many BNJI before minting/staking:", deployerBNJIbalStart3);
+
+    const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
+    console.log("deployer is staking this many BNJI before minting/staking:", deployerBNJIstakedStart3);
 
     const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins before staking: ", benjaminsContractBeforeStakingTokens);
+    console.log("benjaminsContract owns/manages this many benjamins before anybody staked:", benjaminsContractBeforeStakingTokens);
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     //await testMinting("first", 10000, 12625, deployer, 1);
     //confirmMint(0, 10000); 
 
-    const acc0AfterStakingTokens = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer has this many benjamins locked up after staking: ", acc0AfterStakingTokens);
+    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
+    console.log("deployer directly owns/controls this many BNJI after minting/staking:", deployerBNJIbalEnd3);
+
+    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
+    console.log("deployer is staking this many BNJI after minting/staking:", deployerBNJIstakedEnd3);
 
     const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins before staking: ", benjaminsContractAfterStakingTokens);
+    console.log("benjaminsContract owns/manages this many benjamins before staking:", benjaminsContractAfterStakingTokens);
 
 
     
 
   });
-
+  
   it("4. Staking results test", async function () {    
 
     
@@ -587,16 +615,16 @@ describe("Benjamins Test", function () {
 
     
     //await benjaminsContract.callWithdrawStake();
-    /*
+    
     // REVERT: using callDepositStake as non-owner is reverted in benjamins contract
-    await expect( benjaminsContract.connect(normUserAddress).callDepositStake() ).to.be.revertedWith(
-      "Ownable: caller is not the owner"
-    );  
+    //await expect( benjaminsContract.connect(normUserAddress).callDepositStake() ).to.be.revertedWith(
+    //  "Ownable: caller is not the owner"
+    //);  
 
     // REVERT: using depositStake directly as non-perator is reverted in staking contract
-    await expect( stakingContract.connect(normUserAddress).depositStake() ).to.be.revertedWith(
-      "StakingContract: caller is not the operator"
-    );  */
+    //await expect( stakingContract.connect(normUserAddress).depositStake() ).to.be.revertedWith(
+    //  "StakingContract: caller is not the operator"
+    //);  
 
-  });
+  });*/
 }); 
