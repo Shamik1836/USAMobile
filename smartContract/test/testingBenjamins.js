@@ -34,6 +34,14 @@ const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
 let polygonAmUSDC;
 const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
+let quickswapFactory;
+const quickswapFactoryAddress = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
+
+const polygonMaticAddress = '0x0000000000000000000000000000000000001010';
+
+let polygonWMATIC;
+const polygonWMATICAddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
+
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
   let convertedNumber = (ethers.utils.formatUnits(bignumber, 0)).toString();  
@@ -552,11 +560,10 @@ describe("Benjamins Test", function () {
     console.log('whaleSignerAddress:', whaleSignerAddress);  
 
     const whaleMaticBefore = await getMaticBalance(whaleSignerAddress);
-    console.log('whaleMaticBefore:', whaleMaticBefore);     
+    console.log('whale has this many MATIC before sending whale transfer:', whaleMaticBefore);   
 
     const deployerMaticBefore = await getMaticBalance(deployer);
-    console.log('deployerMaticBefore:', deployerMaticBefore);    
-
+    console.log('deployer has this many MATIC before getting whale transfer:', deployerMaticBefore);   
       
     await whaleSigner.sendTransaction({
       to: deployer,
@@ -569,33 +576,65 @@ describe("Benjamins Test", function () {
     });
 
     const whaleMaticAfter = await getMaticBalance(whaleSignerAddress);
-    console.log('whaleMaticAfter:', whaleMaticAfter); 
+    console.log('whale has this many MATIC after sending whale transfer:', whaleMaticAfter); 
 
     const deployerMaticAfter = await getMaticBalance(deployer);
-    console.log('deployerMaticAfter:', deployerMaticAfter);    
-
-   
-
-    /*
-    const deployerMaticAfter2 = await getMaticBalance(deployer);
-    console.log('deployerMaticAfter:', deployerMaticAfter2);  */  
+    console.log('deployer has this many MATIC after getting whale transfer:', deployerMaticAfter);   
     
-    //function approve(address spender, uint value) external returns (bool);
-    
-    //await polygonUSDCWhaleSignedIn.connect(whaleSignerAddress).transfer(deployer, (100000 /* *scale6digits */ ));
-    /*
-    const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC before getting sent USDC:', deployerUSDCbalStart2);   
-
-    const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC after getting sent USDC:', deployerUSDCbalEnd2);   
-    */
   });  
 
-  it("3. Deployer should exchange MATIC for USDC on polygon", async function () {
+  it("3. Deployer should exchange MATIC for USDC on polygon via QuickSwap", async function () {
+
+    quickswapFactory = new ethers.Contract(
+      quickswapFactoryAddress,
+      [
+        'function getPair(address tokenA, address tokenB) external view returns (address pair)',
+      ], 
+      deployerSigner
+    );
+
+    //function getPair(address tokenA, address tokenB) external view returns (address pair);
+    const maticUSDCpairAddress = await quickswapFactory.getPair(polygonMaticAddress, polygonUSDCaddress);
+    console.log('maticUSDCpairAddress:', maticUSDCpairAddress);     
+
+    polygonWMATIC = new ethers.Contract(
+      polygonWMATICAddress,
+      [
+        'function approve(address guy, uint wad) public returns (bool)',
+        'function transfer(address dst, uint wad) public returns (bool)',
+        'function deposit() public payable',        
+      ], 
+      deployerSigner
+    );
+
+    const deployerMaticBeforeWrapping = await getMaticBalance(deployer);
+    console.log('deployer has this many MATIC before wrapping:', deployerMaticBeforeWrapping);       
+
+    await polygonWMATIC.deposit( {value: ethers.utils.parseEther("5000000")} );
+
+    const deployerMaticAfterWrapping = await getMaticBalance(deployer);
+    console.log('deployer has this many MATIC after wrapping:', deployerMaticAfterWrapping); 
+
+    /*
+    const deployerMaticBeforeExchange = await getMaticBalance(deployer);
+    console.log('deployer has this many MATIC before using DEX:', deployerMaticBeforeExchange);    
+
+    const deployerUSDCbalStart2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC before using DEX:', deployerUSDCbalStart2);   
+    */
+
     
+    //function approve(address spender, uint value) external returns (bool);
+    //function transfer(address to, uint value) external returns (bool);
+    
+
+    /*
+    const deployerUSDCbalEnd2 = fromWEItoUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
+    console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);   
      
-      
+    const deployerMaticAfterExchange = await getMaticBalance(deployer);
+    console.log('deployer has this many MATIC after using DEX:', deployerMaticAfterExchange);     
+      */
   });    
 
   /*
