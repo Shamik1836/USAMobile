@@ -2,14 +2,14 @@ const CONTRACT_NAME = "Benjamins";
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
+  const { deployer, feeReceiverAddress } = await getNamedAccounts();
 
   console.log("Deploying now with the acc:", deployer); 
 
   // Upgradeable Proxy
   await deploy("Benjamins", {
     from: deployer,
-    args: [deployer],
+    args: [feeReceiverAddress],
     log: true,      
   });
 };

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract BNJICurve is Ownable, Pausable{   
 
-  uint256 _USDCscale = 10**18;  
+  uint256 _USDCscale = 10**6;  
 
   function calcPriceForTokenMint(
     uint256 _supply,    
@@ -16,32 +16,32 @@ contract BNJICurve is Ownable, Pausable{
     // validate input
     require(_tokensToMint > 0, "BNJICurve: Must mint more than 0 tokens");  
 
-    //console.log(_tokensToMint, '_tokensToMint in BCRV, calcPriceForTokenMint');  
-    //console.log(_supply, ' _supply in BCRV, calcPriceForTokenMint');   
+    console.log(_tokensToMint, '_tokensToMint in BCRV, calcPriceForTokenMint');  
+    console.log(_supply, ' _supply in BCRV, calcPriceForTokenMint');   
     
     uint256 _supplySquared = _supply*_supply;
-    //console.log(_supplySquared, ' _supplySquared in BCRV, calcPriceForTokenMint');    
+    console.log(_supplySquared, ' _supplySquared in BCRV, calcPriceForTokenMint');    
 
     uint256 _supplyAfterMint = _supply + _tokensToMint;    
     uint256 _supplyAfterMintSquared = _supplyAfterMint * _supplyAfterMint; 
 
     uint256 _step1 = _supplyAfterMintSquared - _supplySquared; 
-    //console.log(_step1, '_step1 in BCRV, calcPriceForTokenMint');
+    console.log(_step1, '_step1 in BCRV, calcPriceForTokenMint');
 
     uint256 _step2 = _step1 * _USDCscale;
-    //console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
+    console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
 
-    uint256 _totalPriceForTokensMintingNowInUSDC_WEI = _step2 / 800000;  
-    //console.log(_totalPriceForTokensMintingNowInUSDC_WEI, '_totalPriceForTokensMintingNowInUSDC_WEI in BCRV, calcPriceForTokenMint');
+    uint256 _totalPriceForTokensMintingNowInUSDC_6digits = _step2 / 800000;  
+    console.log(_totalPriceForTokensMintingNowInUSDC_6digits, '_totalPriceForTokensMintingNowInUSDC_6digits in BCRV, calcPriceForTokenMint');
     
-    uint256 takeOffFactor = 10 ** 16;
-    //console.log(takeOffFactor, 'takeOff in BCRV, calcPriceForTokenMint');
+    uint256 takeOffFactor = 10 ** 4;
+    console.log(takeOffFactor, 'takeOff in BCRV, calcPriceForTokenMint');
 
-    uint256 rest = _totalPriceForTokensMintingNowInUSDC_WEI % takeOffFactor;
-    //console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
+    uint256 rest = _totalPriceForTokensMintingNowInUSDC_6digits % takeOffFactor;
+    console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
 
-    uint256 mintResultWithCentsroundedDown = _totalPriceForTokensMintingNowInUSDC_WEI - rest;
-    //console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in BCRV, calcPriceForTokenMint');
+    uint256 mintResultWithCentsroundedDown = _totalPriceForTokensMintingNowInUSDC_6digits - rest;
+    console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in BCRV, calcPriceForTokenMint');
 
     // returning price for specified token amount
     return mintResultWithCentsroundedDown;        
@@ -58,7 +58,7 @@ contract BNJICurve is Ownable, Pausable{
    * @param _supply              Benjamins total supply 
    * @param _tokensToBurn          sell amount, in Benjamins
    *
-   * @return price in USDC_WEI
+   * @return price in USDC_6digits
   */
   function calcReturnForTokenBurn(
     uint256 _supply,    
@@ -86,16 +86,16 @@ contract BNJICurve is Ownable, Pausable{
     uint256 _step2 = _step1 * _USDCscale ;
     //console.log('BCRV, calcReturnForTokenBurn: _step2', _step2);
 
-    uint256 _returnForTokenBurnInUSDC_WEI = _step2/ 800000 ;
+    uint256 _returnForTokenBurnInUSDC_6digits = _step2/ 800000 ;
     //console.log('BCRV, calcReturnForTokenBurn: _result', _result);
 
-    uint256 takeOffFactor = 10 ** 16;
+    uint256 takeOffFactor = 10 ** 4;
     //console.log(takeOffFactor, 'takeOff in BCRV, calcReturnForTokenBurn');
 
-    uint256 rest = _returnForTokenBurnInUSDC_WEI % takeOffFactor;
+    uint256 rest = _returnForTokenBurnInUSDC_6digits % takeOffFactor;
     //console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
 
-    uint256 burnResultWithCentsroundedDown = _returnForTokenBurnInUSDC_WEI - rest;
+    uint256 burnResultWithCentsroundedDown = _returnForTokenBurnInUSDC_6digits - rest;
     //console.log(burnResultWithCentsroundedDown, 'burnResultWithCentsroundedDown in BCRV, calcReturnForTokenBurn');
 
     return burnResultWithCentsroundedDown ;

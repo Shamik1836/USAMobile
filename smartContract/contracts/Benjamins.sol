@@ -34,6 +34,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint8 private _decimals;
   uint256 largestUint = type(uint256).max;
 
+  uint256 centsScale4digits = 10000;
+  uint256 dollarScale6digits = 1000000;
 
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
@@ -59,55 +61,63 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return 0;
   }
 
-  event SpecifiedMintEvent (address sender, uint256 tokenAmount, uint256 priceForMinting);  
+  event SpecifiedMintEvent (address sender, uint256 tokenAmount, uint256 priceForMintingIn6digits);  
 
   function specifiedMint( uint256 _tokenAmountToMint) public whenNotPaused {    
     _specifiedAmountMint(_tokenAmountToMint);
   }
 
   function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
+    //console.log('msg.sender in _specifiedAmountMint, BNJ:', msg.sender );
     //console.log('BNJ, _specifiedAmountMint: _amount', _amount);
     require(_amount > 0, "Amount must be more than zero.");       
     
-    uint256 priceForMinting = calcSpecMintReturn(_amount);
+    uint256 priceForMintingIn6digits = calcSpecMintReturn(_amount);
     //console.log(priceForMinting, 'priceForMinting in _specifiedAmountMint, BNJ');     
 
-    uint256 fee = priceForMinting / 100;
+    uint256 fee = priceForMintingIn6digits / 100;
     //console.log(fee, 'fee in _specifiedAmountMint, BNJ');   
 
-    uint256 roundThisDown = fee % (10**16);
+    uint256 roundThisDown = fee % (10**4);
     //console.log(roundThisDown, 'roundThisDown in _specifiedAmountMint, BNJ');   
 
     uint256 feeRoundedDown = fee - roundThisDown;
     //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountMint, BNJ');   
 
-    uint256 endPrice = priceForMinting + feeRoundedDown;
+    uint256 endPrice = priceForMintingIn6digits + feeRoundedDown;
     console.log(endPrice, 'endPrice in _specifiedAmountMint, BNJ');       
 
-    uint256 _USDCBalance = polygonUSDC.balanceOf( _msgSender() ) ;
-    //console.log(_USDCBalance, '_USDCBalance in _specifiedAmountMint, BNJ');
-    uint256 _USDCAllowance = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
-    console.log(_USDCAllowance, '_USDCAllowance in _specifiedAmountMint, BNJ' );
+    uint256 polygonUSDCin6decimals = polygonUSDC.balanceOf( _msgSender() ) ;
+    console.log(polygonUSDCin6decimals, 'polygonUSDCin6decimals in _specifiedAmountMint, BNJ');
 
-    require (endPrice <= _USDCBalance, "BNJ, _specifiedAmountMint: Not enough USDC"); 
-    require (endPrice <= _USDCAllowance, "BNJ, _specifiedAmountMint: Not enough allowance in USDC for payment" );
-    require (priceForMinting >= 5000000000000000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
+    //uint256 polygonUSDCbalInCents = polygonUSDCin6decimals / centsScale4digits;
+    //console.log(polygonUSDCbalInCents, 'polygonUSDCbalInCents in _specifiedAmountMint, BNJ');
+
+    uint256 _USDCAllowancein6decimals = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
+    console.log(_USDCAllowancein6decimals, '_USDCAllowancein6decimals in _specifiedAmountMint, BNJ');
+
+    //uint256 _USDCAllowanceinCents = _USDCAllowancein6decimals / centsScale4digits;
+    //console.log(_USDCAllowanceinCents, '_USDCAllowance in _specifiedAmountMint, BNJ' );
+    
+    require (endPrice <= polygonUSDCin6decimals, "BNJ, _specifiedAmountMint: Not enough USDC"); 
+    require (endPrice <= _USDCAllowancein6decimals, "BNJ, _specifiedAmountMint: Not enough allowance in USDC for payment" );
+    require (priceForMintingIn6digits >= 5000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
 
     
     polygonUSDC.transferFrom(_msgSender(), feeReceiver, feeRoundedDown);   
 
-    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMinting);   // <=== make this Aave
+    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMintingIn6digits);   // <=== make this Aave
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
-    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMinting);
+    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6digits);
 
     // this is the user's balance of tokens
     ownedBenjamins[_msgSender()] += _amount;
 
     _stakeTokens(_msgSender(), _amount);
 
-    return priceForMinting;   
+    return priceForMintingIn6digits;   
   }
 
   function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
@@ -212,7 +222,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 fee = returnForBurning / 100;
     //console.log(fee, 'fee in _specifiedAmountBurn, BNJ');   
 
-    uint256 roundThisDown = fee % (10**16);
+    uint256 roundThisDown = fee % (10**4);
     //console.log(roundThisDown, 'roundThisDown in _specifiedAmountBurn, BNJ');   
 
     uint256 feeRoundedDown = fee - roundThisDown;

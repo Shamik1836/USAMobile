@@ -36,6 +36,7 @@ module.exports = {
   },  
   namedAccounts: {
     deployer: `${process.env.DEPLOYER_ACC}`,    
+    feeReceiverAddress: `${process.env.FEE_RECEIVER_ACC}`,
   },
   gasReporter: {
     currency: "MATIC",
