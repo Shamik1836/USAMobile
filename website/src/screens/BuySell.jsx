@@ -15,14 +15,11 @@ export const BuySell = () => {
   });
 
   return (
-    <div
-      style={{
-        width: "440px",
-        height: "595px",
-        boxShadow: "0 2px 10px 0 rgba(0, 0, 0, 0.1)",
-        borderRadius: "10px",
-        margin: "auto",
-      }}
-    ></div>
+    <iframe
+      src="https://global.transak.com/"
+      title="transak"
+      width="550px"
+      height="650px"
+    />
   );
 };
