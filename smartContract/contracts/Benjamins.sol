@@ -142,11 +142,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     totalStakedByUser[_stakingUserAddress] += _amountOfTokensToStake;
   }
 
-  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJMNs){
+  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJIs){
     return ownedBenjamins[userToCheck];
   }
 
-  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJMNs){
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
     console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
     return usersTotalStake;

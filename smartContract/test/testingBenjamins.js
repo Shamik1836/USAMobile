@@ -720,7 +720,7 @@ describe("Benjamins Test", function () {
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("first mint", 281439, 9999997, deployer);
-    //confirmMint(0, 10000); 
+    confirmMint(0, 281439); 
 
     const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
     console.log("deployer directly owns/controls this many BNJI after minting/staking:", deployerBNJIbalEnd3);
@@ -753,7 +753,7 @@ describe("Benjamins Test", function () {
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("second mint", 116576, 10000013, deployer);
-    //confirmMint(0, 10000); 
+    confirmMint(281439, 116576); 
 
     const deployerBNJIbalEnd6 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
     console.log("deployer directly owns/controls this many BNJI after second minting/staking:", deployerBNJIbalEnd6);
@@ -764,8 +764,8 @@ describe("Benjamins Test", function () {
     const benjaminsContractAfter2ndStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
     console.log("benjaminsContract owns/manages this many benjamins after second minting/staking:", benjaminsContractAfter2ndStakingTokens);
 
-    const acc0Staked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
-    console.log("deployer is staking in total: ", acc0Staked);
+    const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
+    console.log("deployer is staking in total: ", deployerStaked);
 
     const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
 
@@ -773,15 +773,15 @@ describe("Benjamins Test", function () {
 
   });
 
-  /*
-  it("7. Staking results test", async function () {    
+  
+  it("7. First burn", async function () {    
 
     
-    const acc0Staked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
-    console.log("deployer is staking in total: ", acc0Staked);
+    const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
+    console.log("deployer is staking in total: ", deployerStaked);
 
-    const acc0StakedArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
-    //console.log("deployer's staking array: ", acc0StakedArray);
+    const deployerStakedArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
+    //console.log("deployer's staking array: ", deployerStakedArray);
 
     
 
@@ -806,5 +806,5 @@ describe("Benjamins Test", function () {
     //  "StakingContract: caller is not the operator"
     //);  
 
-  });*/
+  })
 }); 
