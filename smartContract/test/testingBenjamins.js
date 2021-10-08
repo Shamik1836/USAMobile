@@ -552,12 +552,20 @@ describe("Benjamins Test", function () {
     const totalSupplyAfterDeploy = bigNumberToNumber(await benjaminsContract.totalSupply()) ;
     console.log("benjamins total supply after deployment: ", totalSupplyAfterDeploy);   
 
+    // after deployment, checking allowance between BenjaminsContract and LendingPool
+    const contractAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(benjaminsContract.address, polygonLendingPool.address)) ;
+    const deployerAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(deployer, polygonLendingPool.address)) ;
+    console.log(" = = = = = = = = = = = = = contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
+    console.log(" = = = = = = = = == = = = = deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
+
+   
+
     console.log("polygonUSDC address: ", polygonUSDC.address);   
     console.log("polygonLendingPool address: ", polygonLendingPool.address);  
     console.log("polygonAmUSDC address: ", polygonAmUSDC.address);    
       
   });    
-
+  /*
   it("Test 2. Should impersonate MATIC-heavy account and send MATIC to deployer ", async function () {    
 
     await hre.network.provider.request({
@@ -622,7 +630,7 @@ describe("Benjamins Test", function () {
     const maticUSDCpairAddress = await quickswapFactory.getPair(polygonMATICaddress, polygonUSDCaddress);
     console.log('maticUSDCpairAddress:', maticUSDCpairAddress);     
     */
-    
+    /*
     polygonWMATIC = new ethers.Contract(
       polygonWMATICaddress,
       [
@@ -696,7 +704,7 @@ describe("Benjamins Test", function () {
 
     await polygonQuickswapRouter.swapExactTokensForTokens( (ethers.utils.parseEther("1400")), (1000000 * (10**6)) , [polygonWETHaddress, polygonUSDCaddress], deployer, 1633624819);
     */
-
+/*
     const deployerUSDCbalEnd2 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
       
@@ -710,7 +718,7 @@ describe("Benjamins Test", function () {
     const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));      
     const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
     const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceBefore = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
+    const amUSDCBalanceBefore = divideFrom6digToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("first mint", 281439, 9999997, deployer);
@@ -720,7 +728,7 @@ describe("Benjamins Test", function () {
     const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
     const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
     const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceAfter = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
+    const amUSDCBalanceAfter = divideFrom6digToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
 
     console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
     console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
@@ -734,22 +742,22 @@ describe("Benjamins Test", function () {
     console.log(benjaminsContractBeforeStakingTokens, "benjaminsContract owns/manages this many benjamins before anybody staked");
     console.log(benjaminsContractAfterStakingTokens, "benjaminsContract owns/manages this many benjamins after minting/staking");
 
-    console.log(amUSDCBalanceBefore, "aaveLendingTester has this many amUSDC before testDeposit");
-    console.log(amUSDCBalanceAfter, "aaveLendingTester has this many amUSDC after testDeposit");
+    console.log(amUSDCBalanceBefore, "benjaminsContract has this many amUSDC before testDeposit");
+    console.log(amUSDCBalanceAfter, "benjaminsContract has this many amUSDC after testDeposit");
 
     const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
     decipherStakesArray(deployerStakesArray);
 
   });
 
-
+  /*
   it("6. Second minting and staking", async function () {       
 
     const deployerUSDCbalStart3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
     const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));      
     const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
     const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceBefore = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
+    const amUSDCBalanceBefore = divideFrom6digToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("second mint", 116576, 10000013, deployer);
@@ -759,7 +767,7 @@ describe("Benjamins Test", function () {
     const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
     const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
     const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceAfter = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
+    const amUSDCBalanceAfter = divideFrom6digToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
 
     console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
     console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
@@ -814,5 +822,5 @@ describe("Benjamins Test", function () {
     //  "StakingContract: caller is not the operator"
     //);  
 
-  })
+  })*/
 }); 
