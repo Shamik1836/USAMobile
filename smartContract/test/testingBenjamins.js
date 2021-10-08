@@ -25,6 +25,9 @@ let totalReturned = 0;
 
 let benjaminsContract;
 
+const polygonMATICaddress = '0x0000000000000000000000000000000000001010';
+
+
 let polygonUSDC;
 const polygonUSDCaddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
 
@@ -36,8 +39,6 @@ const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
 let quickswapFactory;
 const quickswapFactoryAddress = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
-
-const polygonMATICaddress = '0x0000000000000000000000000000000000001010';
 
 let polygonETH;
 const polygonWETHaddress = '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619';
@@ -329,7 +330,7 @@ function calcBurnVariables(nrOfTokensExisting, amountToBurn) {
   //console.log(`calcBurnVariables: Return before fee (math curve response): ` + totalReturnForTokensBurningNowInUSDC);
   //console.log(`calcBurnVariables: User receives (after fee & rounded down cents):  ` + inUSDCToReceiveTotal);
   //console.log(`calcBurnVariables: Burn fee is: ` + (burnFee / 100));
-  //console.log(`========================Burn End====================================`);
+  //console.log(`Burn End====================================`);
    
   tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
   burnReturnTotalInUSDCShouldBeNowGlobalV = inCentsRoundedDownBurn/100;
@@ -552,13 +553,13 @@ describe("Benjamins Test", function () {
     const totalSupplyAfterDeploy = bigNumberToNumber(await benjaminsContract.totalSupply()) ;
     console.log("benjamins total supply after deployment: ", totalSupplyAfterDeploy);   
 
+    /*
     // after deployment, checking allowance between BenjaminsContract and LendingPool
     const contractAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(benjaminsContract.address, polygonLendingPool.address)) ;
     const deployerAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(deployer, polygonLendingPool.address)) ;
-    console.log(" = = = = = = = = = = = = = contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
-    console.log(" = = = = = = = = == = = = = deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
-
-   
+    console.log("contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
+    console.log("deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
+    */   
 
     console.log("polygonUSDC address: ", polygonUSDC.address);   
     console.log("polygonLendingPool address: ", polygonLendingPool.address);  
