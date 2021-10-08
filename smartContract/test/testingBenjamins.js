@@ -706,69 +706,77 @@ describe("Benjamins Test", function () {
   
   it("5. First minting and staking", async function () {    
 
-    const deployerUSDCbalStart3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC before minting/staking:', deployerUSDCbalStart3);   
-
-    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
-    console.log("deployer directly owns/controls this many BNJI before minting/staking:", deployerBNJIbalStart3);
-
-    const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer is staking this many BNJI before minting/staking:", deployerBNJIstakedStart3);
-
-    const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins before anybody staked:", benjaminsContractBeforeStakingTokens);
+    const deployerUSDCbalStart3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
+    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));      
+    const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
+    const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+    const amUSDCBalanceBefore = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("first mint", 281439, 9999997, deployer);
     confirmMint(0, 281439); 
 
-    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
-    console.log("deployer directly owns/controls this many BNJI after minting/staking:", deployerBNJIbalEnd3);
+    const deployerUSDCbalEnd3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
+    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
+    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
+    const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+    const amUSDCBalanceAfter = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
 
-    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer is staking this many BNJI after minting/staking:", deployerBNJIstakedEnd3);
+    console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
+    console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
 
-    const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins after minting/staking:", benjaminsContractAfterStakingTokens);
+    console.log(deployerBNJIbalStart3, "deployer's balanceOf for BNJIs before minting/staking");
+    console.log(deployerBNJIbalEnd3, "deployers balanceOf for BNJIs after minting/staking");
 
-
+    console.log(deployerBNJIstakedStart3, "deployer is staking this many BNJI before minting/staking");
+    console.log(deployerBNJIstakedEnd3, "deployer is staking this many BNJI after minting/staking");
     
+    console.log(benjaminsContractBeforeStakingTokens, "benjaminsContract owns/manages this many benjamins before anybody staked");
+    console.log(benjaminsContractAfterStakingTokens, "benjaminsContract owns/manages this many benjamins after minting/staking");
+
+    console.log(amUSDCBalanceBefore, "aaveLendingTester has this many amUSDC before testDeposit");
+    console.log(amUSDCBalanceAfter, "aaveLendingTester has this many amUSDC after testDeposit");
+
+    const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
+    decipherStakesArray(deployerStakesArray);
 
   });
 
 
-  it("6. Second minting and staking", async function () {
-    
-    const deployerUSDCbalStart6 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
-    console.log('deployer has this many USDC before second minting/staking:', deployerUSDCbalStart6);   
+  it("6. Second minting and staking", async function () {       
 
-    const deployerBNJIbalStart6 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
-    console.log("deployer directly owns/controls this many BNJI before second minting/staking:", deployerBNJIbalStart6);
-
-    const deployerBNJIstakedStart6 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer is staking this many BNJI before second minting/staking:", deployerBNJIstakedStart6);
-
-    const benjaminsContractBefore2ndStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins before second mint/stake:", benjaminsContractBefore2ndStakingTokens);
+    const deployerUSDCbalStart3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
+    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));      
+    const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
+    const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+    const amUSDCBalanceBefore = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
 
     // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
     await testMinting("second mint", 116576, 10000013, deployer);
-    confirmMint(281439, 116576); 
+    confirmMint(281439, 116576);
 
-    const deployerBNJIbalEnd6 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));    
-    console.log("deployer directly owns/controls this many BNJI after second minting/staking:", deployerBNJIbalEnd6);
+    const deployerUSDCbalEnd3 = divideFrom6digToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
+    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
+    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
+    const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+    const amUSDCBalanceAfter = bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address));
 
-    const deployerBNJIstakedEnd6 = bigNumberToNumber(await benjaminsContract.checkOwnedBenjamins(deployer));    
-    console.log("deployer is staking this many BNJI after second minting/staking:", deployerBNJIstakedEnd6);
+    console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
+    console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
 
-    const benjaminsContractAfter2ndStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address));    
-    console.log("benjaminsContract owns/manages this many benjamins after second minting/staking:", benjaminsContractAfter2ndStakingTokens);
+    console.log(deployerBNJIbalStart3, "deployer's balanceOf for BNJIs before minting/staking");
+    console.log(deployerBNJIbalEnd3, "deployers balanceOf for BNJIs after minting/staking");
 
-    const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
-    console.log("deployer is staking in total: ", deployerStaked);
+    console.log(deployerBNJIstakedStart3, "deployer is staking this many BNJI before minting/staking");
+    console.log(deployerBNJIstakedEnd3, "deployer is staking this many BNJI after minting/staking");
+    
+    console.log(benjaminsContractBeforeStakingTokens, "benjaminsContract owns/manages this many benjamins before 2nd minting/staking");
+    console.log(benjaminsContractAfterStakingTokens, "benjaminsContract owns/manages this many benjamins after 2nd minting/staking");
+
+    console.log(amUSDCBalanceBefore, "aaveLendingTester has this many amUSDC before testDeposit");
+    console.log(amUSDCBalanceAfter, "aaveLendingTester has this many amUSDC after testDeposit");    
 
     const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
-
     decipherStakesArray(deployerStakesArray);
 
   });

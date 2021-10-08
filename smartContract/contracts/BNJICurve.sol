@@ -103,10 +103,9 @@ contract BNJICurve is Ownable, Pausable{
   }
   
   // function for owner to withdraw any ERC20 token that has accumulated
-  function withdrawERC20 (address ERC20ContractAddress) public onlyOwner {
-    IERC20 ERC20Instance = IERC20(ERC20ContractAddress);    
-    uint256 accumulatedTokens = ERC20Instance.balanceOf(address(this));
-    ERC20Instance.transfer(_msgSender(), accumulatedTokens);         
+  function withdrawERC20 (address ERC20ContractAddress, uint256 amount) public onlyOwner {
+    IERC20 ERC20Instance = IERC20(ERC20ContractAddress);        
+    ERC20Instance.transfer(_msgSender(), amount);         
   }
 
   // pausing funcionality from OpenZeppelin's Pausable

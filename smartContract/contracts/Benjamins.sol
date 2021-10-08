@@ -14,7 +14,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
  
   address public addressOfThisContract;
 
-  address private feeReceiver;  
+  address private feeReceiver; 
+  address private accumulatedReceiver;   
 
   address[] private stakers;
 
@@ -39,15 +40,25 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
+  IERC20 public polygonAMUSDC;
+
+
+  event SpecifiedMintEvent (address sender, uint256 tokenAmount, uint256 priceForMintingIn6dec);  
+
+  event SpecifiedBurnEvent (address sender, uint256 tokenAmount, uint256 returnForBurning);  
+
+  event LendingPoolDeposit (uint256 amount);
   
+  event LendingPoolWithdrawal (uint256 amount);
 
   constructor(address _feeReceiver) ERC20("Benjamins", "BNJI") {
     addressOfThisContract = address(this);
     feeReceiver = _feeReceiver;
     _decimals = 0;
     polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
+    polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
     polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
-    _approveLendingPool(largestUint);
+    _approveLendingPool(largestUint);    
   }
 
   function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
@@ -61,8 +72,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return 0;
   }
 
-  event SpecifiedMintEvent (address sender, uint256 tokenAmount, uint256 priceForMintingIn6dec);  
-
+  
   function specifiedMint( uint256 _tokenAmountToMint) public whenNotPaused {    
     _specifiedAmountMint(_tokenAmountToMint);
   }
@@ -117,84 +127,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     _stakeTokens(_msgSender(), _amount);
 
     return priceForMintingIn6dec;   
-  }
+  }  
 
-  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
-    uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
-    console.log(tokensOwned, 'tokensOwned in _stakeTokens, BNJ');
-
-    require (_amountOfTokensToStake <= tokensOwned, 'BNJ, _stakeTokens: Not enough tokens'); 
-
-    if (!isOnStakingList[_stakingUserAddress]) {
-      stakers.push(_stakingUserAddress);
-      isOnStakingList[_stakingUserAddress] = true;
-    }
-
-    Stake memory newStake = Stake({ 
-      stakingAddress: address(_stakingUserAddress),
-      tokenAmount: uint256(_amountOfTokensToStake),      
-      stakeCreatedTimestamp: uint256(block.timestamp),
-      deleted: false       
-    });        
-
-    usersStakingPositions[_stakingUserAddress].push(newStake);
-
-    totalStakedByUser[_stakingUserAddress] += _amountOfTokensToStake;
-  }
-
-  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJIs){
-    return ownedBenjamins[userToCheck];
-  }
-
-  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){
-    uint256 usersTotalStake = totalStakedByUser[userToCheck];
-    console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
-    return usersTotalStake;
-  }
-
-  function checkStakedArrayOfUser(address userToCheck) public view returns (Stake[] memory stakeArray){
-    Stake[] memory usersStakeArray = usersStakingPositions[userToCheck];
-
-    for (uint256 index = 0; index < usersStakeArray.length; index++) {      
-      console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
-      console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
-      console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
-      console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
-      console.log("BNJ,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
-    }
-    
-    return usersStakeArray;
-  }
-
-  /*
-  function callDepositStake( uint256 _amountOfTokensToStake) public {
-    
-
-    // args: address owner, address spender
-    //uint256 allowance = allowance(_msgSender(), addressOfThisContract); 
-    //console.log(allowance, 'allowance in callDepositStake, BNJ');
-
-    
-    console.log(_amountOfTokensToStake, '_amountOfTokensToStake in callDepositStake, BNJ'); 
-    // args: address sender,address recipient,uint256 amount
-    transfer(address(ourStakingContractInterface), _amountOfTokensToStake ); 
-
-    //*bool sentSuccess =
-    //console.log()
-
-    //ourStakingContractInterface.depositStake();
-  }/*
-  /*
-    function callWithdrawStake() public onlyOwner {
-      ourStakingContractInterface.withdrawStake();
-    }
-  */
   function calcSpecMintReturn(uint256 _amount) public view whenNotPaused returns (uint256 mintPrice) {
     return calcPriceForTokenMint(totalSupply(), _amount); 
   }  
  
- 
-  event SpecifiedBurnEvent (address sender, uint256 tokenAmount, uint256 returnForBurning);  
+  
 
   function specifiedBurn( uint256 _tokenAmountToBurn) public payable whenNotPaused {    
     _specifiedAmountBurn(_tokenAmountToBurn);
@@ -250,5 +189,82 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     //console.log("BNJ, calcSpecBurnReturn, _amount:", _amount );
     return calcReturnForTokenBurn(totalSupply(), _amount); 
   }      
+
+  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
+    uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
+    console.log(tokensOwned, 'tokensOwned in _stakeTokens, BNJ');
+
+    require (_amountOfTokensToStake <= tokensOwned, 'BNJ, _stakeTokens: Not enough tokens'); 
+
+    if (!isOnStakingList[_stakingUserAddress]) {
+      stakers.push(_stakingUserAddress);
+      isOnStakingList[_stakingUserAddress] = true;
+    }
+
+    Stake memory newStake = Stake({ 
+      stakingAddress: address(_stakingUserAddress),
+      tokenAmount: uint256(_amountOfTokensToStake),      
+      stakeCreatedTimestamp: uint256(block.timestamp),
+      deleted: false       
+    });        
+
+    usersStakingPositions[_stakingUserAddress].push(newStake);
+
+    totalStakedByUser[_stakingUserAddress] += _amountOfTokensToStake;
+  }
+
+  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJIs){
+    return ownedBenjamins[userToCheck];
+  }
+
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){
+    uint256 usersTotalStake = totalStakedByUser[userToCheck];
+    console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
+    return usersTotalStake;
+  }
+
+  function checkStakedArrayOfUser(address userToCheck) public view returns (Stake[] memory stakeArray){
+    Stake[] memory usersStakeArray = usersStakingPositions[userToCheck];
+
+    for (uint256 index = 0; index < usersStakeArray.length; index++) {      
+      console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
+      console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
+      console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
+      console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
+      console.log("BNJ,checkStakedArrayOfUser: deleted:", usersStakeArray[index].deleted);
+    }
+    
+    return usersStakeArray;
+  }   
+
+  function _depositIntoLendingPool(uint256 amount) private whenNotPaused {
+		polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
+    emit LendingPoolDeposit(amount);
+	}
+
+	function _withdrawFromLendingPool(uint256 amount) private whenNotPaused {
+		polygonLendingPool.withdraw(address(polygonUSDC), amount, addressOfThisContract);
+    emit LendingPoolWithdrawal(amount);
+	}
+ 
+  
+  function calcAccumulated() public view onlyOwner returns (uint256 accumulated) {
+    uint256 allTokensValue = calcAllTokensValue();
+    uint256 allTokensValueBuffered = (allTokensValue * 97) / 100;
+
+    uint256 allAMUSDC = polygonAMUSDC.balanceOf(addressOfThisContract);
+
+    uint256 _accumulated = allTokensValueBuffered - allAMUSDC;
+    return _accumulated;
+
+  }   
+
+  function withdrawAccumulated(uint256 amount) public onlyOwner {
+    polygonAMUSDC.transfer(accumulatedReceiver, amount);
+  } 
+
+  function calcAllTokensValue() public view onlyOwner returns (uint256 allTokensReturn) {
+    return calcReturnForTokenBurn(totalSupply(), totalSupply()); 
+  }
   
 }
