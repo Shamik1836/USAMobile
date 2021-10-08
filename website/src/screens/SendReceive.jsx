@@ -43,18 +43,7 @@ export const SendReceive = () => {
     <Box align="center">
       <Heading>Transfer Cryptocurrency</Heading>
       <br />
-      <VStack
-        alignItems="center"
-        justifyContent="center"
-        borderWidth={2}
-        borderRadius="3xl"
-        paddingLeft={10}
-        paddingRight={10}
-        paddingTop={5}
-        paddingBottom={5}
-        spacing={6}
-        bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
-      >
+      <VStack>
         <HStack>
           <Button onClick={handleSendMode} boxShadow="dark-lg">
             Send
