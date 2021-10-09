@@ -49,6 +49,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return tier_0_fee;
   }
 
+  
 
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
@@ -87,21 +88,27 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return 0;
   }
 
+  function buyLevels(uint256 amountOfLevels) public {
+    _specifiedAmountMint(amountOfLevels * 20);
+  }
   
+  /*
   function specifiedMint( uint256 _tokenAmountToMint) public whenNotPaused {        
     _specifiedAmountMint(_tokenAmountToMint);
   }
+  */
 
   function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {   
     //console.log('BNJ, _specifiedAmountMint: _amount', _amount);
-    require(_amount > 0, "Amount must be more than zero.");       
+    //require(_amount > 0, "BNJ, _specifiedAmountMint: Amount must be more than zero."); 
+    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be dvisible by 20");       
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
 
-    uint256 usersFee = findUsersAccTier( _msgSender() ); 
+    uint256 usersFeeModifier = findUsersAccTier( _msgSender() ); 
 
-    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFee) /100) / 100;
+    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) / 100;
     console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
     
     uint256 roundThisDown = feeIn6dec % (10**4);
@@ -142,7 +149,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     // this is the user's balance of tokens
     ownedBenjamins[_msgSender()] += _amount;
 
-    _stakeTokens(_msgSender(), _amount);
+    uint256 amountOfLevelsToBuy = _amount / 20;
+
+    for (uint256 index = 0; index < amountOfLevelsToBuy; index++) {
+      _stakeTokens(_msgSender(), 20);
+    }     
 
     return priceForMintingIn6dec;   
   }  
