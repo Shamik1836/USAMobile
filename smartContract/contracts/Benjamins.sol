@@ -38,6 +38,18 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 centsScale4digits = 10000;
   uint256 dollarScale6dec = 1000000;
 
+  uint256 tier_0_fee = 100;
+  uint256 tier_1_fee = 95;
+  uint256 tier_2_fee = 85;
+  uint256 tier_3_fee = 70;
+  uint256 tier_4_fee = 50;
+  uint256 tier_5_fee = 25;
+
+  function findUsersAccTier (address user) private view returns (uint256 _usersFee) {
+    return tier_0_fee;
+  }
+
+
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
   IERC20 public polygonAMUSDC;
@@ -87,17 +99,19 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
 
-    uint256 feeIn6dec = priceForMintingIn6dec / 100;
-    //console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
+    uint256 usersFee = findUsersAccTier( _msgSender() ); 
 
+    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFee) /100) / 100;
+    console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
+    
     uint256 roundThisDown = feeIn6dec % (10**4);
     //console.log(roundThisDown, 'roundThisDown in _specifiedAmountMint, BNJ');   
 
     uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-    //console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec in _specifiedAmountMint, BNJ');   
+    console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec in _specifiedAmountMint, BNJ');   
 
     uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
-    //console.log(endPriceIn6dec, 'endPriceIn6dec in _specifiedAmountMint, BNJ');       
+    console.log(endPriceIn6dec, 'endPriceIn6dec in _specifiedAmountMint, BNJ');       
 
     uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( _msgSender() ) ;
     //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in _specifiedAmountMint, BNJ');
@@ -106,7 +120,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     //console.log(polygonUSDCbalInCents, 'polygonUSDCbalInCents in _specifiedAmountMint, BNJ');
 
     uint256 _USDCAllowancein6dec = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
-    //console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in _specifiedAmountMint, BNJ');
+    console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in _specifiedAmountMint, BNJ');
 
     //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
     //console.log(_USDCAllowanceinCents, '_USDCAllowance in _specifiedAmountMint, BNJ' );
