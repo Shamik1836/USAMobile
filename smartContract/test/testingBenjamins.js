@@ -27,7 +27,6 @@ let benjaminsContract;
 
 const polygonMATICaddress = '0x0000000000000000000000000000000000001010';
 
-
 let polygonUSDC;
 const polygonUSDCaddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
 
@@ -115,38 +114,100 @@ function decipherStakesArray (stakesArray) {
   }
 }
 
-// hardcoded to mint for deployerSigner atm
-async function testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) {
- 
+async function internalMint(amountToMint, amountToApproveInCents) {
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const callingAccUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  const callingAccUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(deployer))); 
   //const contractUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
   const feeReceiverUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
-  const contractAMUSDCbalanceBefore = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-  const callingAccBNJIstakedBefore = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractAMUSDCbalanceBefore = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedBefore = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
   const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
-  // allowing benjaminsContract to handle USDC for ${callingAcc}   
-  const ammountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(ammountToApproveInCents);  
-  console.log('ammountToApproveIn6dec:', bigNumberToNumber(ammountToApproveIn6dec));     
-  await polygonUSDC.approve(benjaminsContract.address, ammountToApproveIn6dec);
-  // minting ${amountToMint} tokens
-  await benjaminsContract.connect(deployerSigner).specifiedMint(amountToMint);  
+  // allowing benjaminsContract to handle USDC for deployer   
+  const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
+  console.log( bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec');     
+  await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
+  // internal minting  
+  await benjaminsContract.connect(deployerSigner).internalMint(amountToMint);  
   
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(deployer))); 
   //const contractUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
   const feeReceiverUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
-  const contractAMUSDCbalanceAfter = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-  const callingAccBNJIstakedAfter = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractAMUSDCbalanceAfter = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedAfter = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
   const contractBNJIbalAfter = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
   const callingAccMintPricePaidInCents = callingAccUSDCBalanceBeforeMintInCents - callingAccUSDCBalanceAfterMintInCents;
   const contractAMUSDCdiffMintInCents = contractAMUSDCbalanceAfter - contractAMUSDCbalanceBefore;
   const feeReceiverUSDCdiffMintInCents = feeReceiverUSDCBalanceAfterMintInCents - feeReceiverUSDCBalanceBeforeMintInCents;     
   
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceBefore), `benjaminsContract amUSDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfter), `benjaminsContract amUSDC balance after ${mintName}`);
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceBefore), `benjaminsContract amUSDC balance before internalMint`);
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfter), `benjaminsContract amUSDC balance after internalMint`);
+
+  console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `deployer USDC balance before internalMint`);
+  console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `deployer USDC balance after internalMint`);    
+
+  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before internalMint`);
+  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after internalMint`);
+  
+  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `deployer mint price paid in USDC`);
+  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract return received in USDC`);
+
+  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
+
+  console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
+  console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
+
+  console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before internalMint`);
+  console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after internalMint`);
+
+  console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before minting/staking`);
+  console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after minting/staking`);
+
+  const callingAccStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
+  decipherStakesArray(callingAccStakesArray);
+
+  mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
+  tokensExistQueriedGlobalV = totalSupplyAfterMint;
+  mintAllowanceInUSDCCentsWasNowGlobalV = amountToApproveInCents;
+}
+
+
+async function testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) {
+ 
+  const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
+  const callingAccUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  //const contractUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
+  const feeReceiverUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
+  const contractAMUSDCbalanceBeforeMintInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedBefore = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+
+  // allowing benjaminsContract to handle USDC for ${callingAcc}   
+  const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
+  console.log('amountToApproveIn6dec:', bigNumberToNumber(amountToApproveIn6dec));     
+  await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
+
+  // buying levels, includes minting and staking ${amountToMint} tokens
+  const levelsToBuy = amountToMint / 20;
+  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+  await benjaminsContract.connect(callingAccSigner).buyLevels(levelsToBuy);  
+  
+  const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
+  const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  //const contractUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
+  const feeReceiverUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
+  const contractAMUSDCbalanceAfterMintInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedAfter = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractBNJIbalAfter = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
+
+  const callingAccMintPricePaidInCents = callingAccUSDCBalanceBeforeMintInCents - callingAccUSDCBalanceAfterMintInCents;
+  const contractAMUSDCdiffMintInCents = contractAMUSDCbalanceAfterMintInCents - contractAMUSDCbalanceBeforeMintInCents;
+  const feeReceiverUSDCdiffMintInCents = feeReceiverUSDCBalanceAfterMintInCents - feeReceiverUSDCBalanceBeforeMintInCents;     
+  
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
 
   console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${callingAccAddress} USDC balance before ${mintName}`);
   console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${callingAccAddress} USDC balance after ${mintName}`);    
@@ -155,10 +216,10 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
   
   console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
-  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract return received in USDC`);
+  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract return received in amUSDC`);
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `fee received should be in USDC`);  
+  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
+  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `fee received should be in USDC`); 
 
   console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
   console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
@@ -174,7 +235,7 @@ async function testMinting(mintName, amountToMint, ammountToApproveInCents, call
 
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
-  mintAllowanceInUSDCCentsWasNowGlobalV = ammountToApproveInCents;
+  mintAllowanceInUSDCCentsWasNowGlobalV = amountToApproveInCents;
 
 };
 
@@ -426,7 +487,7 @@ async function runMintOrBurnLoop(loopsToRun) {
 
       mintCounter++;
 
-      //testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress)
+      //testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
       await testMinting(`operation nr: ${opCounter}, minting`, randomAmountMinting, mintAllowanceInUSDCCentsShouldBeNowGlobalV, normUserAddress, 0);
 
       totalSpent += mintPriceTotalInUSDCWasPaidNowGlobalV;
@@ -435,8 +496,6 @@ async function runMintOrBurnLoop(loopsToRun) {
       confirmMint(tokensExistingNow, randomAmountMinting); 
 
     } 
-
-
     
   }
 
@@ -677,39 +736,10 @@ describe("Benjamins Test", function () {
 
   
   
-  it("5. First minting and staking", async function () {    
+  it("5. Setting up: Internal minting and staking", async function () {        
 
-    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));       
-    
-    const amUSDCBalanceBefore = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
-    // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
-    await testMinting("first mint", 281439, 9999997, deployer);
-    confirmMint(0, 281439); 
-
-    const deployerUSDCbalEnd3 = divideFrom6decToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
-    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
-    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
-    const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceAfter = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
-    console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
-    console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
-
-    console.log(deployerBNJIbalStart3, "deployer's balanceOf for BNJIs before minting/staking");
-    console.log(deployerBNJIbalEnd3, "deployers balanceOf for BNJIs after minting/staking");
-
-    console.log(deployerBNJIstakedStart3, "deployer is staking this many BNJI before minting/staking");
-    console.log(deployerBNJIstakedEnd3, "deployer is staking this many BNJI after minting/staking");
-    
-    console.log(benjaminsContractBeforeStakingTokens, "benjaminsContract owns/manages this many benjamins before");
-    console.log(benjaminsContractAfterStakingTokens, "benjaminsContract owns/manages this many benjamins after");
-
-    console.log(amUSDCBalanceBefore, "benjaminsContract has this many amUSDC before testDeposit");
-    console.log(amUSDCBalanceAfter, "benjaminsContract has this many amUSDC after testDeposit");
-
-    const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
-    decipherStakesArray(deployerStakesArray);
+    // args: internalMint(amountToMint, amountToApproveInCents) 
+    await internalMint(282840, 9999808);          
 
   });
 
@@ -722,7 +752,7 @@ describe("Benjamins Test", function () {
     const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
     const amUSDCBalanceBefore = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
 
-    // args: testMinting(mintName, amountToMint, ammountToApproveInCents, callingAccAddress) 
+    // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) 
     await testMinting("second mint", 116576, 10000013, deployer);
     confirmMint(281439, 116576);
 

@@ -16,32 +16,32 @@ contract BNJICurve is Ownable, Pausable{
     // validate input
     require(_tokensToMint > 0, "BNJICurve: Must mint more than 0 tokens");  
 
-    console.log(_tokensToMint, '_tokensToMint in BCRV, calcPriceForTokenMint');  
-    console.log(_supply, ' _supply in BCRV, calcPriceForTokenMint');   
+    //console.log(_tokensToMint, '_tokensToMint in BCRV, calcPriceForTokenMint');  
+    //console.log(_supply, ' _supply in BCRV, calcPriceForTokenMint');   
     
     uint256 _supplySquared = _supply*_supply;
-    console.log(_supplySquared, ' _supplySquared in BCRV, calcPriceForTokenMint');    
+    //console.log(_supplySquared, ' _supplySquared in BCRV, calcPriceForTokenMint');    
 
     uint256 _supplyAfterMint = _supply + _tokensToMint;    
     uint256 _supplyAfterMintSquared = _supplyAfterMint * _supplyAfterMint; 
 
     uint256 _step1 = _supplyAfterMintSquared - _supplySquared; 
-    console.log(_step1, '_step1 in BCRV, calcPriceForTokenMint');
+    //console.log(_step1, '_step1 in BCRV, calcPriceForTokenMint');
 
     uint256 _step2 = _step1 * _USDCscale;
-    console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
+    //console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
 
     uint256 _totalPriceForTokensMintingNowInUSDC_6digits = _step2 / 800000;  
-    console.log(_totalPriceForTokensMintingNowInUSDC_6digits, '_totalPriceForTokensMintingNowInUSDC_6digits in BCRV, calcPriceForTokenMint');
+    //console.log(_totalPriceForTokensMintingNowInUSDC_6digits, '_totalPriceForTokensMintingNowInUSDC_6digits in BCRV, calcPriceForTokenMint');
     
     uint256 takeOffFactor = 10 ** 4;
-    console.log(takeOffFactor, 'takeOff in BCRV, calcPriceForTokenMint');
+    //console.log(takeOffFactor, 'takeOff in BCRV, calcPriceForTokenMint');
 
     uint256 rest = _totalPriceForTokensMintingNowInUSDC_6digits % takeOffFactor;
-    console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
+    //console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
 
     uint256 mintResultWithCentsroundedDown = _totalPriceForTokensMintingNowInUSDC_6digits - rest;
-    console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in BCRV, calcPriceForTokenMint');
+    //console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in BCRV, calcPriceForTokenMint');
 
     // returning price for specified token amount
     return mintResultWithCentsroundedDown;        
@@ -73,12 +73,12 @@ contract BNJICurve is Ownable, Pausable{
     uint256 _supplySquared = _supply * _supply; 
     uint256 _supplyAfterBurnSquared = _supplyAfterBurn * _supplyAfterBurn;
     /*
-    console.log('BCRV, calcReturnForTokenBurn: _supply', _supply);
-    console.log('BCRV, calcReturnForTokenBurn: _tokensToBurn', _tokensToBurn);
-    console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurn', _supplyAfterBurn);
+    //console.log('BCRV, calcReturnForTokenBurn: _supply', _supply);
+    //console.log('BCRV, calcReturnForTokenBurn: _tokensToBurn', _tokensToBurn);
+    //console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurn', _supplyAfterBurn);
 
-    console.log('BCRV, calcReturnForTokenBurn: _supplySquared', _supplySquared);
-    console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurnSquared', _supplyAfterBurnSquared);
+    //console.log('BCRV, calcReturnForTokenBurn: _supplySquared', _supplySquared);
+    //console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurnSquared', _supplyAfterBurnSquared);
     */
     uint256 _step1 = _supplySquared - _supplyAfterBurnSquared;    
     //console.log('BCRV, calcReturnForTokenBurn: _step1', _step1);    

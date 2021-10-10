@@ -43,9 +43,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 tier_2_feeMod = 85;
   uint256 tier_3_feeMod = 70;
   uint256 tier_4_feeMod = 50;
-  uint256 tier_5_feeMod = 25;
-
-  uint256 internalMod = 0;
+  uint256 tier_5_feeMod = 25; 
 
   
 
@@ -85,19 +83,12 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function decimals() public view override returns (uint8) {
     return 0;
   }
-
-  function buyLevels(uint256 amountOfLevels) public {
-    _specifiedAmountMint(amountOfLevels * 20);
-  }
   
   function findUsersLevelFeeModifier (address user) private view returns (uint256 _usersFee) {
 
     uint256 usersStakedBalance = checkStakedBenjamins(user);
-
-    if (_msgSender() == owner()) {
-      return internalMod;
-    }
-    else if (usersStakedBalance < 20) {
+    
+    if (usersStakedBalance < 20) {
       return tier_0_feeMod;
     }
     else if (usersStakedBalance >= 20 && usersStakedBalance < 40 ) {
@@ -124,10 +115,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
   */
 
+  function buyLevels(uint256 amountOfLevels) public {
+    _specifiedAmountMint(amountOfLevels * 20);
+  }
+
   function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {   
     //console.log('BNJ, _specifiedAmountMint: _amount', _amount);
     //require(_amount > 0, "BNJ, _specifiedAmountMint: Amount must be more than zero."); 
-    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be dvisible by 20");       
+    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");       
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
@@ -300,6 +295,43 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 	}
  
   
+  function internalMint(uint256 _amount) public onlyOwner returns (uint256) {
+    //console.log('BNJ, internalMint: _amount', _amount);
+    //require(_amount > 0, "BNJ, internalMint: Amount must be more than zero."); 
+    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");       
+    
+    uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
+    //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in internalMint, BNJ');     
+
+    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( _msgSender() ) ;
+    //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in internalMint, BNJ');    
+
+    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
+    //console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in internalMint, BNJ');
+
+    //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
+    //console.log(_USDCAllowanceinCents, '_USDCAllowance in internalMint, BNJ' );
+    
+    require (priceForMintingIn6dec <= polygonUSDCbalanceIn6dec, "BNJ, internalMint: Not enough USDC"); 
+    require (priceForMintingIn6dec <= _USDCAllowancein6dec, "BNJ, internalMint: Not enough allowance in USDC for payment" );
+    require (priceForMintingIn6dec >= 5000000, "BNJ, internalMint: Minimum minting value of $5 USDC" );      
+
+    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMintingIn6dec);
+    _depositIntoLendingPool(priceForMintingIn6dec);    
+  
+    // minting to Benjamins contract itself
+    _mint(addressOfThisContract, _amount);
+    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6dec);
+
+    // this is the user's balance of tokens
+    ownedBenjamins[_msgSender()] += _amount;
+
+    _stakeTokens(_msgSender(), _amount);
+
+    return priceForMintingIn6dec; 
+
+  }
+
   function calcAccumulated() public view onlyOwner returns (uint256 accumulated) {
     uint256 allTokensValue = calcAllTokensValue();
     uint256 allTokensValueBuffered = (allTokensValue * 97) / 100;
