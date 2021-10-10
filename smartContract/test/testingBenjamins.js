@@ -110,7 +110,7 @@ function decipherStakesArray (stakesArray) {
     console.log("stakingAddress:", stakesArray[index].stakingAddress); 
     console.log("tokenAmount:", bigNumberToNumber(stakesArray[index].tokenAmount));
     console.log("stakeCreatedTimestamp:", bigNumberToNumber(stakesArray[index].stakeCreatedTimestamp));
-    console.log("was deleted:", stakesArray[index].deleted);
+    console.log("was unstaked:", stakesArray[index].unstaked);
   }
 }
 
@@ -152,7 +152,7 @@ async function internalMint(amountToMint, amountToApproveInCents) {
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after internalMint`);
   
   console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `deployer mint price paid in USDC`);
-  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract return received in USDC`);
+  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract received in amUSDC`);
 
   console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
 
@@ -165,14 +165,22 @@ async function internalMint(amountToMint, amountToApproveInCents) {
   console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before minting/staking`);
   console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after minting/staking`);
 
-  const callingAccStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
-  decipherStakesArray(callingAccStakesArray);
+  
 
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
   mintAllowanceInUSDCCentsWasNowGlobalV = amountToApproveInCents;
 }
 
+async function showUsersActiveStakesArray(userAddress) {
+  const callingAccActiveStakesArray = await benjaminsContract.getUsersActiveStakes(userAddress);
+  decipherStakesArray(callingAccActiveStakesArray);
+}
+
+async function showInternalActiveStakesArray() {
+  const deployerActiveStakesArray = await benjaminsContract.connect(deployerSigner).getInternalActiveStakes(deployer);
+  decipherStakesArray(deployerActiveStakesArray);
+}
 
 async function testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) {
  
@@ -191,9 +199,11 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
 
   // buying levels, includes minting and staking ${amountToMint} tokens
   const levelsToBuy = amountToMint / 20;
+
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
   await benjaminsContract.connect(callingAccSigner).buyLevels(levelsToBuy);  
-  
+  console.log(`=========   User is buying this many levels:`, levelsToBuy );
+
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
   //const contractUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
@@ -216,7 +226,7 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
   
   console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
-  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract return received in amUSDC`);
+  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract received in amUSDC`);
 
   console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
   console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `fee received should be in USDC`); 
@@ -230,8 +240,7 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
   console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before minting/staking`);
   console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after minting/staking`);
 
-  const callingAccStakesArray = await benjaminsContract.checkStakedArrayOfUser(callingAccAddress);
-  decipherStakesArray(callingAccStakesArray);
+  
 
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
@@ -740,49 +749,25 @@ describe("Benjamins Test", function () {
 
     // args: internalMint(amountToMint, amountToApproveInCents) 
     await internalMint(282840, 9999808);          
-
-  });
-
-  /*
-  it("6. Second minting and staking", async function () {       
-
-    const deployerUSDCbalStart3 = divideFrom6decToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
-    const deployerBNJIbalStart3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));      
-    const deployerBNJIstakedStart3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer)); 
-    const benjaminsContractBeforeStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceBefore = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
-    // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) 
-    await testMinting("second mint", 116576, 10000013, deployer);
-    confirmMint(281439, 116576);
-
-    const deployerUSDCbalEnd3 = divideFrom6decToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) ); 
-    const deployerBNJIbalEnd3 = bigNumberToNumber(await benjaminsContract.balanceOf(deployer));  
-    const deployerBNJIstakedEnd3 = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(deployer));  
-    const benjaminsContractAfterStakingTokens = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
-    const amUSDCBalanceAfter = divideFrom6decToUSDC (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
-    console.log(deployerUSDCbalStart3, 'deployer has this many USDC before minting/staking');
-    console.log(deployerUSDCbalEnd3, 'deployer has this many USDC after minting/staking');
-
-    console.log(deployerBNJIbalStart3, "deployer's balanceOf for BNJIs before minting/staking");
-    console.log(deployerBNJIbalEnd3, "deployers balanceOf for BNJIs after minting/staking");
-
-    console.log(deployerBNJIstakedStart3, "deployer is staking this many BNJI before minting/staking");
-    console.log(deployerBNJIstakedEnd3, "deployer is staking this many BNJI after minting/staking");
+    showInternalActiveStakesArray();
     
-    console.log(benjaminsContractBeforeStakingTokens, "benjaminsContract owns/manages this many benjamins before 2nd minting/staking");
-    console.log(benjaminsContractAfterStakingTokens, "benjaminsContract owns/manages this many benjamins after 2nd minting/staking");
-
-    console.log(amUSDCBalanceBefore, "aaveLendingTester has this many amUSDC before testDeposit");
-    console.log(amUSDCBalanceAfter, "aaveLendingTester has this many amUSDC after testDeposit");    
-
-    const deployerStakesArray = await benjaminsContract.checkStakedArrayOfUser(deployer);
-    decipherStakesArray(deployerStakesArray);
-
   });
 
   
+  // switch user <=========   XXXXXXX
+
+
+  it("6. Second minting and staking", async function () {       
+
+    
+    // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
+    await testMinting("second mint", 100, 7142, deployer);
+    showUsersActiveStakesArray(deployer);   
+   
+
+  });
+
+  /*  
   it("7. First burn", async function () {    
 
     
