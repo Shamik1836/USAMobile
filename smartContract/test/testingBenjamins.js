@@ -108,6 +108,7 @@ function decipherStakesArray (stakesArray) {
   for (let index = 0; index < stakesArray.length; index++) {
     console.log("stake in index: ", index);
     console.log("stakingAddress:", stakesArray[index].stakingAddress); 
+    console.log("stakeID:", bigNumberToNumber (stakesArray[index].stakeID)); 
     console.log("tokenAmount:", bigNumberToNumber(stakesArray[index].tokenAmount));
     console.log("stakeCreatedTimestamp:", bigNumberToNumber(stakesArray[index].stakeCreatedTimestamp));
     console.log("was unstaked:", stakesArray[index].unstaked);

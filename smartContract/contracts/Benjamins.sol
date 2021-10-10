@@ -27,6 +27,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   struct Stake {
     address stakingAddress;
+    uint256 stakeID;
     uint256 tokenAmount;    
     uint256 stakeCreatedTimestamp; 
     bool unstaked;
@@ -124,6 +125,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
       //console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
       //console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
+      //console.log("BNJ,checkStakedArrayOfUser: stakeID:", activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;
       //console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
       //console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
       //console.log("BNJ,checkStakedArrayOfUser: unstaked:", usersStakeArray[index].unstaked);
@@ -145,6 +147,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
         // each time an active stake is found, its details are put into the next position in the 'activeStakes' array
         if (usersStakeArray[k].unstaked == false) {
           activeStakes[newIndex].stakingAddress = usersStakeArray[newIndex].stakingAddress;
+          activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;
           activeStakes[newIndex].tokenAmount = usersStakeArray[newIndex].tokenAmount;
           activeStakes[newIndex].stakeCreatedTimestamp = usersStakeArray[newIndex].stakeCreatedTimestamp;
           activeStakes[newIndex].unstaked = usersStakeArray[newIndex].unstaked;
@@ -299,8 +302,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
       isOnStakingList[_stakingUserAddress] = true;
     }
 
+    uint256 _stakeID = usersStakingPositions[_stakingUserAddress].length;
+
     Stake memory newStake = Stake({ 
       stakingAddress: address(_stakingUserAddress),
+      stakeID: uint256(_stakeID),
       tokenAmount: uint256(_amountOfTokensToStake),      
       stakeCreatedTimestamp: uint256(block.timestamp),
       unstaked: false       
@@ -366,9 +372,12 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     // this is the user's balance of tokens
     ownedBenjamins[_msgSender()] += _amount;
 
+    uint256 _stakeID = internalStakingPositions[_msgSender()].length;
+
     Stake memory newStake = Stake({ 
       stakingAddress: address(_msgSender()),
-      tokenAmount: uint256(_amount),      
+      tokenAmount: uint256(_amount),
+      stakeID: uint256(_stakeID),      
       stakeCreatedTimestamp: uint256(block.timestamp),
       unstaked: false       
     });        
@@ -396,6 +405,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
       //console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
       //console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
+      //console.log("BNJ,checkStakedArrayOfUser: stakeID:", usersStakeArray[index].stakeID);      
       //console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
       //console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
       //console.log("BNJ,checkStakedArrayOfUser: unstaked:", usersStakeArray[index].unstaked);
@@ -417,6 +427,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
         // each time an active stake is found, its details are put into the next position in the 'activeStakes' array
         if (usersStakeArray[k].unstaked == false) {
           activeStakes[newIndex].stakingAddress = usersStakeArray[newIndex].stakingAddress;
+          activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;          
           activeStakes[newIndex].tokenAmount = usersStakeArray[newIndex].tokenAmount;
           activeStakes[newIndex].stakeCreatedTimestamp = usersStakeArray[newIndex].stakeCreatedTimestamp;
           activeStakes[newIndex].unstaked = usersStakeArray[newIndex].unstaked;
