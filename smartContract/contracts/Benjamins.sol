@@ -38,16 +38,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 centsScale4digits = 10000;
   uint256 dollarScale6dec = 1000000;
 
-  uint256 tier_0_fee = 100;
-  uint256 tier_1_fee = 95;
-  uint256 tier_2_fee = 85;
-  uint256 tier_3_fee = 70;
-  uint256 tier_4_fee = 50;
-  uint256 tier_5_fee = 25;
+  uint256 tier_0_feeMod = 100;
+  uint256 tier_1_feeMod = 95;
+  uint256 tier_2_feeMod = 85;
+  uint256 tier_3_feeMod = 70;
+  uint256 tier_4_feeMod = 50;
+  uint256 tier_5_feeMod = 25;
 
-  function findUsersAccTier (address user) private view returns (uint256 _usersFee) {
-    return tier_0_fee;
-  }
+  uint256 internalMod = 0;
 
   
 
@@ -92,6 +90,34 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     _specifiedAmountMint(amountOfLevels * 20);
   }
   
+  function findUsersLevelFeeModifier (address user) private view returns (uint256 _usersFee) {
+
+    uint256 usersStakedBalance = checkStakedBenjamins(user);
+
+    if (_msgSender() == owner()) {
+      return internalMod;
+    }
+    else if (usersStakedBalance < 20) {
+      return tier_0_feeMod;
+    }
+    else if (usersStakedBalance >= 20 && usersStakedBalance < 40 ) {
+      return tier_1_feeMod;
+    }    
+    else if (usersStakedBalance >= 40 && usersStakedBalance < 60) {
+      return tier_2_feeMod;
+    }
+    else if (usersStakedBalance >= 60 && usersStakedBalance < 80) {
+      return tier_3_feeMod;
+    }  
+    else if (usersStakedBalance >= 80 && usersStakedBalance < 100) {
+      return tier_4_feeMod;
+    } 
+    else if (usersStakedBalance >= 100 ) {
+      return tier_5_feeMod;
+    } 
+    
+  }
+
   /*
   function specifiedMint( uint256 _tokenAmountToMint) public whenNotPaused {        
     _specifiedAmountMint(_tokenAmountToMint);
@@ -106,7 +132,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
 
-    uint256 usersFeeModifier = findUsersAccTier( _msgSender() ); 
+    uint256 usersFeeModifier = findUsersLevelFeeModifier( _msgSender() ); 
 
     uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) / 100;
     console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
@@ -174,8 +200,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, BNJ');   
      
     require(_amount > 0, "Amount to burn must be more than zero.");  
-    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");  
-           
+    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");             
     
     uint256 returnForBurning = calcSpecBurnReturn(_amount);
     //console.log(returnForBurning, 'returnForBurning in _specifiedAmountBurn, BNJ');   
