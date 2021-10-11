@@ -251,64 +251,62 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
 
 async function testBurning(burnName, amountToBurn, callingAccAddress) { 
  
-  const callingAccUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(callingAccAddress);
-  const callingAccUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(callingAccUSDCBalanceBeforeBurnBN);  
-  const callingAccUSDCBalanceBeforeBurnInUSDC = fromCentsToUSDC(callingAccUSDCBalanceBeforeBurnInCents);
-  console.log(`USDC balance of ${callingAccAddress} before ${burnName} burn:`, callingAccUSDCBalanceBeforeBurnInUSDC);        
+  const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
+  const callingAccUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  //const contractUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
+  const feeReceiverUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
+  const contractAMUSDCbalanceBeforeBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedBefore = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
-  const contractUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(benjaminsContract.address);
-  const contractUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(contractUSDCBalanceBeforeBurnBN);    
-  //console.log(`benjaminsContract USDC balance before ${burnName} burn:`, fromCentsToUSDC(contractUSDCBalanceBeforeFirstBurnInCents));
-
-  const feeReceiverUSDCBalanceBeforeBurnBN = await polygonUSDC.balanceOf(feeReceiverAddress);
-  const feeReceiverUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(feeReceiverUSDCBalanceBeforeBurnBN);    
-  //console.log(`feeReceiver USDC balance before ${burnName} burn:`, fromCentsToUSDC(feeReceiverUSDCBalanceBeforeFirstBurnInCents));
-
-  // burning ${amountOfTokensForFirstSpecifiedBurn} tokens
-  await benjaminsContract.connect(callingAccAddress).specifiedBurn(amountToBurn);
-
-  // after burning ${amountOfTokensForFirstSpecifiedBurn} tokens, querying benjamins balance of deployer, logging as number and from WEI to ETH
-  const callingAccAfterBurnBalanceInBenjamins = bigNumberToNumber( await benjaminsContract.balanceOf(callingAccAddress) );
-  //console.log(`Token balance of deployer after burning ${amountOfTokensForFirstSpecifiedBurn} tokens:`, afterFirstBurnBalanceInBenjamins);
-
-  // after burning ${amountOfTokensForFirstSpecifiedBurn} tokens, querying benjamins total supply
-  const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );    
   
+  // selling levels, includes burining and unstaking ${amountToBurn} tokens
+  const levelsToSell = amountToBurn / 20;
 
-  const callingAccUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(callingAccAddress);
-  const callingAccUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(callingAccUSDCBalanceAfterBurnBN);    
-  console.log(`USDC balance of ${callingAccAddress} after ${burnName} burn:`, fromCentsToUSDC(callingAccUSDCBalanceAfterBurnInCents) );        
+  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+  await benjaminsContract.connect(callingAccSigner).sellLevels(levelsToSell);  
+  console.log(`=========   User is selling this many levels:`, levelsToSell );
 
-  const contractUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(benjaminsContract.address);
-  const contractUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(contractUSDCBalanceAfterBurnBN);    
-  //console.log(`benjaminsContract USDC balance after ${burnName} burn:`, fromCentsToUSDC(contractUSDCBalanceAfterBurnInCents));
-
-  const feeReceiverUSDCBalanceAfterBurnBN = await polygonUSDC.balanceOf(feeReceiverAddress);
-  const feeReceiverUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(feeReceiverUSDCBalanceAfterBurnBN);    
-  //console.log(`feeReceiver USDC balance after ${burnName} burn:`, fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents));       
+  const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
+  const callingAccUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
+  //const contractUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
+  const feeReceiverUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiverAddress))); 
+  const contractAMUSDCbalanceAfterBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const callingAccBNJIstakedAfter = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
+  const contractBNJIbalAfter = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
   const callingAccBurnReturnReceivedInCents = callingAccUSDCBalanceAfterBurnInCents - callingAccUSDCBalanceBeforeBurnInCents;
-  const contractUSDCdiffBurnInCents = contractUSDCBalanceBeforeBurnInCents - contractUSDCBalanceAfterBurnInCents ;
+  const contractAMUSDCdiffBurnInCents = contractAMUSDCbalanceBeforeBurnInCents - contractAMUSDCbalanceAfterBurnInCents ;
   const feeReceiverUSDCdiffBurnInCents = feeReceiverUSDCBalanceAfterBurnInCents - feeReceiverUSDCBalanceBeforeBurnInCents;     
   
-  //console.log(`benjaminsContract USDC balance before ${burnName} burn:`, fromCentsToUSDC(contractUSDCBalanceBeforeBurnInCents));
-  //console.log(`benjaminsContract USDC balance after ${burnName} burn:`, fromCentsToUSDC(contractUSDCBalanceAfterBurnInCents));
-
-  //console.log(`${callingAccAddress} USDC balance before ${burnName} burn:`, fromCentsToUSDC(callingAccUSDCBalanceBeforeBurnInCents));
-  //console.log(`${callingAccAddress} USDC balance after ${burnName} burn:`, fromCentsToUSDC(callingAccUSDCBalanceAfterBurnInCents));    
-
-  //console.log(`feeReceiver USDC balance before ${burnName} burn:`, fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents));
-  //console.log(`feeReceiver USDC balance after ${burnName} burn:`, fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents));
   
-  console.log(`benjaminsContract paid out in USDC:`, fromCentsToUSDC(contractUSDCdiffBurnInCents));
-  console.log(`${callingAccAddress} burn return received in USDC:`, fromCentsToUSDC(callingAccBurnReturnReceivedInCents));  
-  console.log(`feeReceiver burn fee received in USDC:`, fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents));
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeBurnInCents), `benjaminsContract amUSDC balance before ${burnName}`);
+  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterBurnInCents), `benjaminsContract amUSDC balance after ${burnName}`);
 
-  console.log(`fee received should be in USDC:`, fromCentsToUSDC(contractUSDCdiffBurnInCents - callingAccBurnReturnReceivedInCents) );
+  console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeBurnInCents), `${callingAccAddress} USDC balance before ${burnName}`);
+  console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterBurnInCents), `${callingAccAddress} USDC balance after ${burnName}`);    
 
-  console.log(`Token total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
+  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents), `feeReceiver USDC balance before ${burnName}`);
+  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents), `feeReceiver USDC balance after ${burnName}`);
+  
+  console.log(fromCentsToUSDC(callingAccBurnReturnReceivedInCents), `${callingAccAddress} burn return received in USDC`);
+  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `benjaminsContract paid out in amUSDC`);
 
-  burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(contractUSDCdiffBurnInCents);
+  console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
+  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - callingAccBurnReturnReceivedInCents), `fee received should be in USDC`); 
+
+  console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
+  console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
+
+  console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${burnName}`);
+  console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after ${burnName}`);
+
+  console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before burning/unstaking`);
+  console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after burning/unstaking`);   
+
+  console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
+
+  burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(contractAMUSDCdiffBurnInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
 };
@@ -768,10 +766,13 @@ describe("Benjamins Test", function () {
 
   });
 
-  /*  
-  it("7. First burn", async function () {    
-
     
+  it("7. First burn", async function () {  
+    
+    await testBurning("First burning", 80, deployer);
+    showUsersActiveStakesArray(deployer);   
+
+    /*
     const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
     console.log("deployer is staking in total: ", deployerStaked);
 
@@ -799,7 +800,7 @@ describe("Benjamins Test", function () {
     // REVERT: using depositStake directly as non-perator is reverted in staking contract
     //await expect( stakingContract.connect(normUserAddress).depositStake() ).to.be.revertedWith(
     //  "StakingContract: caller is not the operator"
-    //);  
+    //);  */
 
-  })*/
+  })
 }); 
