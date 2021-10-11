@@ -182,7 +182,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
 
-    uint256 usersFeeModifier = findUsersLevelFeeModifier( _msgSender() ); 
+    uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender ); 
 
     uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) / 100;
     console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
@@ -196,13 +196,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
     console.log(endPriceIn6dec, 'endPriceIn6dec in _specifiedAmountMint, BNJ');       
 
-    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( _msgSender() ) ;
+    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( msg.sender ) ;
     //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in _specifiedAmountMint, BNJ');
 
     //uint256 polygonUSDCbalInCents = polygonUSDCbalanceIn6dec / centsScale4digits;
     //console.log(polygonUSDCbalInCents, 'polygonUSDCbalInCents in _specifiedAmountMint, BNJ');
 
-    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
+    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
     console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in _specifiedAmountMint, BNJ');
 
     //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
@@ -212,9 +212,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     require (endPriceIn6dec <= _USDCAllowancein6dec, "BNJ, _specifiedAmountMint: Not enough allowance in USDC for payment" );
     require (priceForMintingIn6dec >= 5000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
     
-    polygonUSDC.transferFrom(_msgSender(), feeReceiver, feeRoundedDownIn6dec);   
+    polygonUSDC.transferFrom(msg.sender, feeReceiver, feeRoundedDownIn6dec);   
 
-    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMintingIn6dec);  
+    polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);  
 
     _depositIntoLendingPool(priceForMintingIn6dec);   
     
@@ -225,12 +225,12 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
-    ownedBenjamins[_msgSender()] += _amount;
+    ownedBenjamins[msg.sender] += _amount;
 
     uint256 amountOfLevelsToBuy = _amount / 20;
 
     for (uint256 index = 0; index < amountOfLevelsToBuy; index++) {
-      _stakeTokens(_msgSender(), 20);
+      _stakeTokens(msg.sender, 20);
     }     
 
     return priceForMintingIn6dec;   
@@ -255,7 +255,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");   
 
-    uint256 tokenBalance = checkStakedBenjamins(_msgSender());
+    uint256 tokenBalance = checkStakedBenjamins(msg.sender);
     //console.log(_amount, '_amount in _specifiedAmountBurn, BNJ');   
     //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, BNJ');   
      
@@ -267,7 +267,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     require (returnForBurningIn6dec >= 5000000, "BNJ, _specifiedAmountBurn: Minimum burning value is $5 USDC" );
 
-    uint256 usersFeeModifier = findUsersLevelFeeModifier( _msgSender() );
+    uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender );
 
     uint256 feeIn6dec = ((returnForBurningIn6dec * usersFeeModifier) /100) / 100;   
     //console.log(fee, 'feeIn6dec in _specifiedAmountBurn, BNJ');   
@@ -292,11 +292,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 amountOfLevelsToSell = _amount / 20;
 
     for (uint256 index = 0; index < amountOfLevelsToSell; index++) {
-      _unstakeTokens(_msgSender(), 20);
+      _unstakeTokens(msg.sender, 20);
     }   
 
     // this is the user's balance of tokens
-    ownedBenjamins[_msgSender()] -= _amount;
+    ownedBenjamins[msg.sender] -= _amount;
 
     _burn(addressOfThisContract, _amount);      
     emit SpecifiedBurnEvent(addressOfThisContract, _amount, returnForBurningIn6dec);  
@@ -306,7 +306,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     _withdrawFromLendingPool(returnForBurningIn6dec); 
 
     polygonUSDC.transfer(feeReceiver, feeRoundedDown);
-    polygonUSDC.transfer(_msgSender(), endReturnIn6dec);     
+    polygonUSDC.transfer(msg.sender, endReturnIn6dec);     
     
     
 
@@ -399,10 +399,10 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in internalMint, BNJ');     
 
-    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( _msgSender() ) ;
+    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( msg.sender ) ;
     //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in internalMint, BNJ');    
 
-    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(_msgSender(), addressOfThisContract); 
+    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
     //console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in internalMint, BNJ');
 
     //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
@@ -412,7 +412,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     require (priceForMintingIn6dec <= _USDCAllowancein6dec, "BNJ, internalMint: Not enough allowance in USDC for payment" );
     require (priceForMintingIn6dec >= 5000000, "BNJ, internalMint: Minimum minting value of $5 USDC" );      
 
-    polygonUSDC.transferFrom(_msgSender(), addressOfThisContract, priceForMintingIn6dec);
+    polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);
     _depositIntoLendingPool(priceForMintingIn6dec);    
   
     // minting to Benjamins contract itself
@@ -420,21 +420,21 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
-    ownedBenjamins[_msgSender()] += _amount;
+    ownedBenjamins[msg.sender] += _amount;
 
-    uint256 _stakeID = internalStakingPositions[_msgSender()].length;
+    uint256 _stakeID = internalStakingPositions[msg.sender].length;
 
     Stake memory newStake = Stake({ 
-      stakingAddress: address(_msgSender()),
+      stakingAddress: address(msg.sender),
       tokenAmount: uint256(_amount),
       stakeID: uint256(_stakeID),      
       stakeCreatedTimestamp: uint256(block.timestamp),
       unstaked: false       
     });        
 
-    internalStakingPositions[_msgSender()].push(newStake);
+    internalStakingPositions[msg.sender].push(newStake);
 
-    totalStakedByUser[_msgSender()] += _amount;    
+    totalStakedByUser[msg.sender] += _amount;    
 
     return priceForMintingIn6dec; 
 
@@ -536,6 +536,24 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     polygonLendingPool = ILendingPool(_newAddress);
   }
     
-    
+  function updateTier_0_feeMod (uint256 _new_tier_0_feeMod) public onlyOwner {
+    tier_0_feeMod = _new_tier_0_feeMod;
+  }
+
+  function updateTier_1_feeMod (uint256 _new_tier_1_feeMod) public onlyOwner {
+    tier_1_feeMod = _new_tier_1_feeMod;
+  }
+
+  function updateTier_2_feeMod (uint256 _new_tier_2_feeMod) public onlyOwner {
+    tier_2_feeMod = _new_tier_2_feeMod;
+  }
+
+  function updateTier_3_feeMod (uint256 _new_tier_3_feeMod) public onlyOwner {
+    tier_3_feeMod = _new_tier_3_feeMod;
+  }
+
+  function updateTier_4_feeMod (uint256 _new_tier_4_feeMod) public onlyOwner {
+    tier_4_feeMod = _new_tier_4_feeMod;
+  }  
 
 }

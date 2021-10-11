@@ -230,7 +230,7 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
   console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract received in amUSDC`);
 
   console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `fee received should be in USDC`); 
+  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `should be the fee received, in USDC`); 
 
   console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
   console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
@@ -293,7 +293,7 @@ async function testBurning(burnName, amountToBurn, callingAccAddress) {
   console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `benjaminsContract paid out in amUSDC`);
 
   console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
-  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - callingAccBurnReturnReceivedInCents), `fee received should be in USDC`); 
+  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - callingAccBurnReturnReceivedInCents), `should be the fee received, in USDC`); 
 
   console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
   console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
@@ -691,7 +691,8 @@ describe("Benjamins Test", function () {
       polygonQuickswapRouterAddress,
       [
        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',      
-       'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',  
+       'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)', 
+       'function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
        'function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut)',
        'function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)',       
       ], 
@@ -716,11 +717,18 @@ describe("Benjamins Test", function () {
     const deployerUSDCbalStart2 = fromWEItoETH18dig( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC before using DEX:', deployerUSDCbalStart2);
     
+    /*
+    // function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)
     let amountWMATICToSwapToUSDCInWEI =  ethers.utils.parseEther("5000000");
-    let getoutMin = 4000000 * (10**6);
-    
+    let getoutMin = 4000000 * (10**6);    
     await polygonQuickswapRouter.swapExactTokensForTokens( amountWMATICToSwapToUSDCInWEI, getoutMin , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);
-    
+    */
+
+    //function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)
+    const amountToReceiveUSDCIn6dec = 1000000 * (10**6) //ethers.utils.parseEther("1000000");
+    const amountInMaxInWEI = ethers.utils.parseEther("4000000"); //4000000 * (10**18);   
+    await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);
+
     /*
     let resultAmountsOut = [];
     resultAmountsOut = await polygonQuickswapRouter.getAmountsOut( ethers.utils.parseEther("5000000"),  [polygonWMATICaddress, polygonWETHaddress, polygonUSDCaddress]);
@@ -741,10 +749,18 @@ describe("Benjamins Test", function () {
     console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
       
   });    
-
-  
-  
+/*
   it("5. Setting up: Internal minting and staking", async function () {        
+
+    // args: internalMint(amountToMint, amountToApproveInCents) 
+    await internalMint(282840, 9999808);          
+    showInternalActiveStakesArray();
+    
+  });
+*/
+  
+  
+  it("6. Setting up: Internal minting and staking", async function () {        
 
     // args: internalMint(amountToMint, amountToApproveInCents) 
     await internalMint(282840, 9999808);          
@@ -756,7 +772,7 @@ describe("Benjamins Test", function () {
   // switch user <=========   XXXXXXX
 
 
-  it("6. Second minting and staking", async function () {       
+  it("7. Second minting and staking", async function () {       
 
     
     // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
@@ -767,7 +783,7 @@ describe("Benjamins Test", function () {
   });
 
     
-  it("7. First burn", async function () {  
+  it("8. First burn", async function () {  
     
     await testBurning("First burning", 80, deployer);
     showUsersActiveStakesArray(deployer);   
