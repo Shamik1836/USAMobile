@@ -5,7 +5,7 @@ import { EmailIcon, LinkIcon, RepeatIcon, ViewIcon } from "@chakra-ui/icons";
 
 import { useMoralis } from "react-moralis";
 
-import { TopNavBar } from "../components/Pages/TopNavBar";
+import { TopNavBar } from "./Screens/TopNavBar";
 import { ExpertStage } from "./Screens/ExpertStage";
 import { BuySell } from "./Screens/BuySell";
 import { PortfolioPrices } from "./Screens/PortfolioPrices";
