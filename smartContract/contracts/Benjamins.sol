@@ -39,6 +39,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 centsScale4digits = 10000;
   uint256 dollarScale6dec = 1000000;
 
+  uint256 stakingPeriodInSeconds = 86400;
+
   uint256 tier_0_feeMod = 100;
   uint256 tier_1_feeMod = 95;
   uint256 tier_2_feeMod = 85;
@@ -120,8 +122,10 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     for (uint256 index = 0; index < usersStakeArray.length; index++) { 
       
-      // staking period is hardcoded at the moment to 24 hours
-      uint256 unlockTimeStamp = usersStakeArray[index].stakeCreatedTimestamp + 86400; 
+      // staking period is hardcoded at the moment to 24 hours                           //  <======== XXXXX deactivated only for testing
+      uint256 unlockTimeStamp = usersStakeArray[index].stakeCreatedTimestamp + stakingPeriodInSeconds;  //  <======== XXXXX deactivated only for testing 
+
+      //uint256 unlockTimeStamp = 1;                                                      //  <======== XXXXX only for testing 
       
       // each time an active and burnable stake is found, nrOfActiveBurnableStakes is increased by 1
       if (usersStakeArray[index].unstaked == false && unlockTimeStamp <= timestampNow ) {
@@ -401,7 +405,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function internalMint(uint256 _amount) public onlyOwner returns (uint256) {
     //console.log('BNJ, internalMint: _amount', _amount);
     //require(_amount > 0, "BNJ, internalMint: Amount must be more than zero."); 
-    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");       
+    require((_amount % 1000 == 0), "BNJ, internalMint: Amount must be divisible by 1000");       
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in internalMint, BNJ');     
@@ -429,17 +433,24 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     // this is the user's balance of tokens
     ownedBenjamins[msg.sender] += _amount;
 
-    uint256 _stakeID = internalStakingPositions[msg.sender].length;
+    uint256 positions = _amount / 1000;
 
-    Stake memory newStake = Stake({ 
-      stakingAddress: address(msg.sender),
-      tokenAmount: uint256(_amount),
-      stakeID: uint256(_stakeID),      
-      stakeCreatedTimestamp: uint256(block.timestamp),
-      unstaked: false       
-    });        
+    for (uint256 intMintIndex = 0; intMintIndex < positions; intMintIndex++) {
 
-    internalStakingPositions[msg.sender].push(newStake);
+      uint256 _stakeID = internalStakingPositions[msg.sender].length;
+
+      Stake memory newStake = Stake({ 
+        stakingAddress: address(msg.sender),
+        tokenAmount: uint256(_amount),
+        stakeID: uint256(_stakeID),      
+        stakeCreatedTimestamp: uint256(block.timestamp),
+        unstaked: false  
+
+      });        
+
+      internalStakingPositions[msg.sender].push(newStake);
+
+    }    
 
     totalStakedByUser[msg.sender] += _amount;    
 
@@ -520,6 +531,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   function withdrawAccumulated(uint256 amount) public onlyOwner {
     polygonAMUSDC.transfer(accumulatedReceiver, amount);
+  } 
+
+  function depositUSDCBuffer (uint256 amount) public onlyOwner {
+    polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
+    emit LendingPoolDeposit(amount);
   } 
 
   function calcAllTokensValue() public view onlyOwner returns (uint256 allTokensReturn) {

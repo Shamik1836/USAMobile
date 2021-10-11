@@ -763,7 +763,7 @@ describe("Benjamins Test", function () {
   it("6. Setting up: Internal minting and staking", async function () {        
 
     // args: internalMint(amountToMint, amountToApproveInCents) 
-    await internalMint(282840, 9999808);          
+    await internalMint(290000, 10617625);          
     showInternalActiveStakesArray();
     
   });
@@ -776,7 +776,7 @@ describe("Benjamins Test", function () {
 
     
     // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-    await testMinting("second mint", 100, 7142, deployer);
+    await testMinting("second mint", 100, 7146, deployer);
     showUsersActiveStakesArray(deployer);   
    
 
