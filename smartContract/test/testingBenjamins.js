@@ -174,12 +174,12 @@ async function internalMint(amountToMint, amountToApproveInCents) {
 }
 
 async function showUsersActiveStakesArray(userAddress) {
-  const callingAccActiveStakesArray = await benjaminsContract.getUsersActiveStakes(userAddress);
+  const callingAccActiveStakesArray = await benjaminsContract.connect(deployerSigner).showAllUsersStakes(userAddress);
   decipherStakesArray(callingAccActiveStakesArray);
 }
 
 async function showInternalActiveStakesArray() {
-  const deployerActiveStakesArray = await benjaminsContract.connect(deployerSigner).getInternalActiveStakes(deployer);
+  const deployerActiveStakesArray = await benjaminsContract.connect(deployerSigner).showAllInternalStakes(deployer);
   decipherStakesArray(deployerActiveStakesArray);
 }
 

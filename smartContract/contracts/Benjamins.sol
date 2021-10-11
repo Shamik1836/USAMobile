@@ -19,7 +19,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   address[] private stakers;
 
-  mapping (address => uint256) ownedBenjamins;
+  mapping (address => uint256) private ownedBenjamins;
   mapping (address => uint256) private totalStakedByUser;
   mapping (address => bool) private isOnStakingList;
   mapping (address => Stake[]) private usersStakingPositions;
@@ -110,53 +110,58 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     
   }
 
-  function getUsersActiveStakes(address userToCheck) public view returns (Stake[] memory stakeArray){
+  function getUsersActiveAndBurnableStakes (address userToCheck) public view returns (Stake[] memory stakeArray){    
 
-    uint256 numberOfActiveStakes;
+    uint256 timestampNow = uint256(block.timestamp);
+
+    uint256 nrOfActiveBurnableStakes;
 
     Stake[] memory usersStakeArray = usersStakingPositions[userToCheck];
 
     for (uint256 index = 0; index < usersStakeArray.length; index++) { 
-
-      // each time an active stake is found, numberOfActiveStakes is increased by 1
-      if (usersStakeArray[index].unstaked == false) {
-        numberOfActiveStakes++;
+      
+      // staking period is hardcoded at the moment to 24 hours
+      uint256 unlockTimeStamp = usersStakeArray[index].stakeCreatedTimestamp + 86400; 
+      
+      // each time an active and burnable stake is found, nrOfActiveBurnableStakes is increased by 1
+      if (usersStakeArray[index].unstaked == false && unlockTimeStamp <= timestampNow ) {
+        nrOfActiveBurnableStakes++;
       }     
 
       //console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
       //console.log("BNJ,checkStakedArrayOfUser: stakingAddress:", usersStakeArray[index].stakingAddress);
-      //console.log("BNJ,checkStakedArrayOfUser: stakeID:", activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;
+      //console.log("BNJ,checkStakedArrayOfUser: stakeID:", usersStakeArray[newIndex].stakeID;
       //console.log("BNJ,checkStakedArrayOfUser: tokenAmount:", usersStakeArray[index].tokenAmount);      
       //console.log("BNJ,checkStakedArrayOfUser: stakeCreatedTimestamp:", usersStakeArray[index].stakeCreatedTimestamp);
       //console.log("BNJ,checkStakedArrayOfUser: unstaked:", usersStakeArray[index].unstaked);
     }
 
-    if (numberOfActiveStakes == 0){
+    if (nrOfActiveBurnableStakes == 0){
       return new Stake[](0);
     }
 
     else {
-      // 'activeStakes' array with hardcoded length, defined by active stakes found above
-      Stake[] memory activeStakes = new Stake[](numberOfActiveStakes);      
+      // 'activeBurnableStakes' array with hardcoded length, defined by active stakes found above
+      Stake[] memory activeBurnableStakes = new Stake[](nrOfActiveBurnableStakes);      
 
-      // index position in activeStakes array
+      // index position in activeBurnableStakes array
       uint256 newIndex = 0 ;
 
-      for (uint256 k = 0; k < activeStakes.length; k++) {
+      for (uint256 k = 0; k < activeBurnableStakes.length; k++) {
         
-        // each time an active stake is found, its details are put into the next position in the 'activeStakes' array
+        // each time an active stake is found, its details are put into the next position in the 'activeBurnableStakes' array
         if (usersStakeArray[k].unstaked == false) {
-          activeStakes[newIndex].stakingAddress = usersStakeArray[newIndex].stakingAddress;
-          activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;
-          activeStakes[newIndex].tokenAmount = usersStakeArray[newIndex].tokenAmount;
-          activeStakes[newIndex].stakeCreatedTimestamp = usersStakeArray[newIndex].stakeCreatedTimestamp;
-          activeStakes[newIndex].unstaked = usersStakeArray[newIndex].unstaked;
+          activeBurnableStakes[newIndex].stakingAddress = usersStakeArray[newIndex].stakingAddress;
+          activeBurnableStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;
+          activeBurnableStakes[newIndex].tokenAmount = usersStakeArray[newIndex].tokenAmount;
+          activeBurnableStakes[newIndex].stakeCreatedTimestamp = usersStakeArray[newIndex].stakeCreatedTimestamp;
+          activeBurnableStakes[newIndex].unstaked = usersStakeArray[newIndex].unstaked;
           newIndex++;
         }         
 
       }
-      // returning activeStakes array
-      return activeStakes; 
+      // returning activeBurnableStakes array
+      return activeBurnableStakes; 
 
     } 
     
@@ -184,7 +189,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender ); 
 
-    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) / 100;
+    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) /100;
     console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
     
     uint256 roundThisDown = feeIn6dec % (10**4);
@@ -352,11 +357,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     require (_amountOfTokensToUnstake <= tokensOwned, 'BNJ, _unstakeTokens: Not enough tokens'); 
    
-    Stake[] memory usersActiveStakes = getUsersActiveStakes(_stakingUserAddress);
+    Stake[] memory usersActiveBurnableStakess = getUsersActiveAndBurnableStakes(_stakingUserAddress);
 
-    uint256 newestActiveStake = usersActiveStakes.length - 1;
+    require (usersActiveBurnableStakess.length > 0, 'BNJ, _unstakeTokens: No burnable staking positions found. Consider time since staking.');
 
-    uint256 stakeIDtoUnstake = usersActiveStakes[newestActiveStake].stakeID;    
+    uint256 newestActiveStake = usersActiveBurnableStakess.length - 1;
+
+    uint256 stakeIDtoUnstake = usersActiveBurnableStakess[newestActiveStake].stakeID;    
 
     for (uint256 unStIndex = 0; unStIndex < usersStakingPositions[_stakingUserAddress].length; unStIndex++) {
       if (usersStakingPositions[_stakingUserAddress][unStIndex].stakeID == stakeIDtoUnstake ) {
@@ -440,17 +447,25 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   }
 
-  function getInternalActiveStakes(address userToCheck) public view  onlyOwner returns (Stake[] memory stakeArray){
+  function showAllUsersStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray) { 
+    return usersStakingPositions[userToCheck];
+  }
 
-    uint256 numberOfActiveStakes;
+  function showAllInternalStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray) {   
+    return internalStakingPositions[userToCheck];
+  }
+
+  function getInternalActiveStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray){
+
+    uint256 nrOfActiveStakes;
 
     Stake[] memory usersStakeArray = internalStakingPositions[userToCheck];
 
     for (uint256 index = 0; index < usersStakeArray.length; index++) { 
 
-      // each time an active stake is found, numberOfActiveStakes is increased by 1
+      // each time an active stake is found, nrOfActiveStakes is increased by 1
       if (usersStakeArray[index].unstaked == false) {
-        numberOfActiveStakes++;
+        nrOfActiveStakes++;
       }     
 
       //console.log("BNJ,checkStakedArrayOfUser: the checked users array at position:", index, "is:");
@@ -461,13 +476,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
       //console.log("BNJ,checkStakedArrayOfUser: unstaked:", usersStakeArray[index].unstaked);
     }
 
-    if (numberOfActiveStakes == 0){
+    if (nrOfActiveStakes == 0){
       return new Stake[](0);
     }
 
     else {
       // 'activeStakes' array with hardcoded length, defined by active stakes found above
-      Stake[] memory activeStakes = new Stake[](numberOfActiveStakes);      
+      Stake[] memory activeStakes = new Stake[](nrOfActiveStakes);      
 
       // index position in activeStakes array
       uint256 newIndex = 0 ;
