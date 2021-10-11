@@ -9,6 +9,7 @@ export const ActionsProvider = (props) => {
   const [fromAddress, setFromAddress] = useState("");
   const [toSymbol, setToSymbol] = useState("");
   const [toAddress, setToAddress] = useState("");
+  const [toToken, setToToken] = useState({});
   const [txAmount, setTxAmount] = useState("");
 
   return (
@@ -22,6 +23,8 @@ export const ActionsProvider = (props) => {
         setToSymbol,
         toAddress,
         setToAddress,
+        toToken,
+        setToToken,
         txAmount,
         setTxAmount,
       }}

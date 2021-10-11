@@ -2,7 +2,7 @@ import { Button, Input, HStack, Tooltip, VStack } from "@chakra-ui/react";
 import { Alert, AlertIcon, AlertDescription } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import { useState } from "react";
-import "../AuthDrawer.css";
+import "./AuthDrawer.css";
 
 export const AuthDrawer = (props) => {
   const {

@@ -7,7 +7,7 @@ import {
   AccordionIcon,
 } from "@chakra-ui/react";
 import { WarningIcon } from "@chakra-ui/icons";
-import { useCoinData } from "../../hooks/coinData";
+import { useCoinData } from "./coinData";
 import { c2 } from "../Support/utils";
 
 export const Dashboard = () => {

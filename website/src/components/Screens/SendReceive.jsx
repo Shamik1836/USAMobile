@@ -1,21 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  HStack,
-  VStack,
-  useColorMode,
-} from "@chakra-ui/react";
-import { SendPanel } from "../components/Blocks/SendPanel";
-import { AddressPanel } from "../components/Blocks/AddressPanel";
-import { useExperts } from "../contexts/expertsContext";
-
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
+import { Box, Button, Heading, HStack, VStack } from "@chakra-ui/react";
+import { SendPanel } from "../Blocks/SendPanel";
+import { AddressPanel } from "../Blocks/AddressPanel";
+import { useExperts } from "../../contexts/expertsContext";
 
 export const SendReceive = () => {
-  const { colorMode } = useColorMode();
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
 

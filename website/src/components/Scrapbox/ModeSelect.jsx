@@ -1,7 +1,7 @@
 import { Button, HStack, Text, Tooltip } from "@chakra-ui/react";
 import { EmailIcon, RepeatIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { useExperts } from "../../contexts/expertsContext";
-import { CopyAddress } from "./CopyAddress";
+import { CopyAddress } from "../Bits/CopyAddress";
 
 export const ModeSelect = () => {
   const { setActionMode, setDialog } = useExperts();

@@ -1,8 +1,8 @@
 import { Container, HStack, Text, useColorMode } from "@chakra-ui/react";
-import { LibertyFox } from "../components/Guides/LibertyFox";
-import { SamEagle } from "../components/Guides/SamEagle";
-import { Benicorn } from "../components/Guides/Benicorn";
-import { useExperts } from "../contexts/expertsContext";
+import { LibertyFox } from "../Guides/LibertyFox";
+import { SamEagle } from "../Guides/SamEagle";
+import { Benicorn } from "../Guides/Benicorn";
+import { useExperts } from "../../contexts/expertsContext";
 
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
 const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";

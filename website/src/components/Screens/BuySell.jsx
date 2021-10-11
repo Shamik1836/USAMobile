@@ -1,13 +1,11 @@
 import { useEffect } from "react";
-import { useColorMode } from "@chakra-ui/react";
-import { useMoralis } from "react-moralis";
-import { useExperts } from "../contexts/expertsContext";
+// import { useMoralis } from "react-moralis";
+import { useExperts } from "../../contexts/expertsContext";
 
 export const BuySell = () => {
-  const { colorMode } = useColorMode();
-  const { user } = useMoralis();
+  // const { user } = useMoralis();
   const { setActionMode, setDialog } = useExperts();
-  const ethAddress = user?.attributes.ethAddress;
+  // const ethAddress = user?.attributes.ethAddress;
 
   useEffect(() => {
     setActionMode("buy");
