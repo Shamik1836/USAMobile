@@ -115,7 +115,7 @@ function decipherStakesArray (stakesArray) {
   }
 }
 
-async function internalMint(amountToMint, amountToApproveInCents) {
+async function internalMint(amountToMint, amountToApproveInCents, addressToHoldInternalMint) {
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const callingAccUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(deployer))); 
   //const contractUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
@@ -128,8 +128,8 @@ async function internalMint(amountToMint, amountToApproveInCents) {
   const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
   console.log( bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec');     
   await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
-  // internal minting  
-  await benjaminsContract.connect(deployerSigner).internalMint(amountToMint);  
+  // args: internalMint(uint256 _amount, address _holderOfInternalMint)
+  await benjaminsContract.connect(deployerSigner).internalMint(amountToMint, addressToHoldInternalMint);  
   
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(deployer))); 
@@ -152,19 +152,19 @@ async function internalMint(amountToMint, amountToApproveInCents) {
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before internalMint`);
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after internalMint`);
   
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `deployer mint price paid in USDC`);
+  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `deployer internalMint price paid in USDC`);
   console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `benjaminsContract received in amUSDC`);
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
+  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver internalMint fee received in USDC`);  
 
-  console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
-  console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
+  console.log(totalSupplyBeforeMint, `Benjamins total supply before internalMinting ${amountToMint} Benjamins`); 
+  console.log(totalSupplyAfterMint, `Benjamins total supply after internalMinting ${amountToMint} Benjamins`); 
 
   console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before internalMint`);
   console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after internalMint`);
 
-  console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before minting/staking`);
-  console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after minting/staking`);
+  console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before internalMint`);
+  console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after internalMint`);
 
   
 
@@ -178,9 +178,10 @@ async function showUsersActiveStakesArray(userAddress) {
   decipherStakesArray(callingAccActiveStakesArray);
 }
 
-async function showInternalActiveStakesArray() {
-  const deployerActiveStakesArray = await benjaminsContract.connect(deployerSigner).showAllInternalStakes(deployer);
-  decipherStakesArray(deployerActiveStakesArray);
+async function showInternalBenjamins(userTocheck) {
+  const holdersInternalBenjamins = bigNumberToNumber(await benjaminsContract.connect(deployerSigner).showInternalBenjamins(userTocheck)); 
+  console.log('holder of internal benjamins:', userTocheck) 
+  console.log('amount of holders internal benjamins:', holdersInternalBenjamins)
 }
 
 async function testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) {
@@ -749,35 +750,30 @@ describe("Benjamins Test", function () {
     console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
       
   });    
-/*
-  it("5. Setting up: Internal minting and staking", async function () {        
 
-    // args: internalMint(amountToMint, amountToApproveInCents) 
-    await internalMint(282840, 9999808);          
-    showInternalActiveStakesArray();
-    
-  });
-*/
+
+  /*
+  // send out funds to switch users <=========   XXXXXXX
+  */
   
   
   it("6. Setting up: Internal minting and staking", async function () {        
 
-    // args: internalMint(amountToMint, amountToApproveInCents) 
-    await internalMint(290000, 10617625);          
-    showInternalActiveStakesArray();
+    // args: internalMint(amountToMint, amountToApproveInCents, addressToHoldInternalMint)
+    await internalMint(282840, 9999808, deployer);          
+    await showInternalBenjamins(deployer);
     
   });
 
   
-  // switch user <=========   XXXXXXX
+  // switch user(s) <=========   XXXXXXX
 
 
-  it("7. Second minting and staking", async function () {       
-
+  it("7. Second minting and staking", async function () {    
     
     // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-    await testMinting("second mint", 100, 7146, deployer);
-    showUsersActiveStakesArray(deployer);   
+    await testMinting("second mint", 100, 7142, deployer);
+    await showUsersActiveStakesArray(deployer);   
    
 
   });
@@ -786,7 +782,7 @@ describe("Benjamins Test", function () {
   it("8. First burn", async function () {  
     
     await testBurning("First burning", 80, deployer);
-    showUsersActiveStakesArray(deployer);   
+    await showUsersActiveStakesArray(deployer);   
 
     /*
     const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));

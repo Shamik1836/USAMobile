@@ -18,10 +18,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   address private accumulatedReceiver;   
 
   address[] private stakers;
+  address[] private internalAddresses;
 
   mapping (address => uint256) private ownedBenjamins;
+  mapping (address => uint256) private internalBenjamins;
   mapping (address => uint256) private totalStakedByUser;
   mapping (address => bool) private isOnStakingList;
+  mapping (address => bool) private isOnInternalList;
   mapping (address => Stake[]) private usersStakingPositions;
   mapping (address => Stake[]) private internalStakingPositions;  
 
@@ -231,7 +234,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
-    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6dec);
+    emit SpecifiedMintEvent(msg.sender, _amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
     ownedBenjamins[msg.sender] += _amount;
@@ -262,7 +265,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function _specifiedAmountBurn(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
     //console.log('BNJ, _specifiedAmountBurn: _amount', _amount);
 
-    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");   
+    require((_amount % 20) == 0, "BNJ, _specifiedAmountMint: Amount must be divisible by 20");   
 
     uint256 tokenBalance = checkStakedBenjamins(msg.sender);
     //console.log(_amount, '_amount in _specifiedAmountBurn, BNJ');   
@@ -308,7 +311,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     ownedBenjamins[msg.sender] -= _amount;
 
     _burn(addressOfThisContract, _amount);      
-    emit SpecifiedBurnEvent(addressOfThisContract, _amount, returnForBurningIn6dec);  
+    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);  
     
 
 
@@ -382,13 +385,15 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return ownedBenjamins[userToCheck];
   }
 
+  function showInternalAddresses() public view onlyOwner returns (address[] memory) {
+    return internalAddresses;  
+  }
+  
   function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
     //console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
     return usersTotalStake;
-  }
-
-   
+  }   
 
   function _depositIntoLendingPool(uint256 amount) private whenNotPaused {
     //console.log("BNJI, _depositIntoLendingPool, msg.sender is:", msg.sender);
@@ -402,10 +407,16 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 	}
  
   
-  function internalMint(uint256 _amount) public onlyOwner returns (uint256) {
+  function internalMint(uint256 _amount, address _holderOfInternalMint) public onlyOwner returns (uint256) {
     //console.log('BNJ, internalMint: _amount', _amount);
-    //require(_amount > 0, "BNJ, internalMint: Amount must be more than zero."); 
-    require((_amount % 1000 == 0), "BNJ, internalMint: Amount must be divisible by 1000");       
+
+    if (!isOnInternalList[_holderOfInternalMint]) {
+      internalAddresses.push(_holderOfInternalMint);
+      isOnInternalList[_holderOfInternalMint] = true;
+    }
+    
+    require(_amount > 0, "BNJ, internalMint: Amount must be more than zero.");        
+    require(_amount % 20 == 0, "BNJ, internalMint: Amount must be divisible by 20");   
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in internalMint, BNJ');     
@@ -428,42 +439,54 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
-    emit SpecifiedMintEvent(addressOfThisContract, _amount, priceForMintingIn6dec);
+    emit SpecifiedMintEvent(msg.sender, _amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
-    ownedBenjamins[msg.sender] += _amount;
-
-    uint256 positions = _amount / 1000;
-
-    for (uint256 intMintIndex = 0; intMintIndex < positions; intMintIndex++) {
-
-      uint256 _stakeID = internalStakingPositions[msg.sender].length;
-
-      Stake memory newStake = Stake({ 
-        stakingAddress: address(msg.sender),
-        tokenAmount: uint256(_amount),
-        stakeID: uint256(_stakeID),      
-        stakeCreatedTimestamp: uint256(block.timestamp),
-        unstaked: false  
-
-      });        
-
-      internalStakingPositions[msg.sender].push(newStake);
-
-    }    
-
-    totalStakedByUser[msg.sender] += _amount;    
+    internalBenjamins[_holderOfInternalMint] += _amount;    
 
     return priceForMintingIn6dec; 
 
   }
 
+  function internalBurn(uint256 _amount) public whenNotPaused nonReentrant returns (uint256) {
+    //console.log('BNJ, internalBurn: _amount', _amount);
+
+    require(_amount % 20 == 0, "BNJ, internalBurn: Amount must be divisible by 20");   
+
+    uint256 tokenBalance = internalBenjamins[msg.sender];    
+    
+    //console.log(_amount, '_amount in internalBurn, BNJ');   
+    //console.log(tokenBalance, 'tokenBalance in internalBurn, BNJ');   
+     
+    require(_amount > 0, "Amount to burn must be more than zero.");  
+    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");             
+    
+    uint256 returnForBurningIn6dec = calcSpecBurnReturn(_amount);
+    //console.log(returnForBurning, 'returnForBurning in internalBurn, BNJ');   
+
+    require (returnForBurningIn6dec >= 5000000, "BNJ, internalBurn: Minimum burning value is $5 USDC" );    
+
+    // this is the user's balance of tokens
+    internalBenjamins[msg.sender] -= _amount;
+
+    _burn(addressOfThisContract, _amount);      
+    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);  
+
+    _withdrawFromLendingPool(returnForBurningIn6dec); 
+   
+    polygonUSDC.transfer(msg.sender, returnForBurningIn6dec);  
+
+    return returnForBurningIn6dec;   
+  }
+
+
+
   function showAllUsersStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray) { 
     return usersStakingPositions[userToCheck];
   }
 
-  function showAllInternalStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray) {   
-    return internalStakingPositions[userToCheck];
+  function showInternalBenjamins (address userToCheck) public view onlyOwner returns (uint256) {   
+    return internalBenjamins[userToCheck];
   }
 
   function getInternalActiveStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray){
@@ -541,6 +564,10 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function calcAllTokensValue() public view onlyOwner returns (uint256 allTokensReturn) {
     return calcReturnForTokenBurn(totalSupply(), totalSupply()); 
   }
+
+  function updateStakingPeriodInSeconds (uint256 _new_stakingPeriodInSeconds) public onlyOwner {
+    stakingPeriodInSeconds = _new_stakingPeriodInSeconds;
+  }  
 
   function updateFeeReceiver(address _newAddress) public onlyOwner {
     require(_newAddress != address(0), "updateFeeReceiver: _newAddress cannot be the zero address");
