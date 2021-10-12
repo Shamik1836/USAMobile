@@ -12,7 +12,7 @@ export const FromSelect = () => {
   const handleChange = (e) => {
     let selectedIndex = e.target.options.selectedIndex - 1;
     setActionMode("recieve");
-    if (selectedIndex > 0) {
+    if (selectedIndex >= 0) {
       setFromSymbol(positions[selectedIndex].symbol);
       setFromAddress(positions[selectedIndex].tokenAddress);
       setDialog(
