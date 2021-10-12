@@ -42,7 +42,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 centsScale4digits = 10000;
   uint256 dollarScale6dec = 1000000;
 
-  uint256 stakingPeriodInSeconds = 86400;
+  uint256 stakingPeriodInSeconds = 0; // 86400; <===== XXXXX, _changed only for testing
 
   uint256 tier_0_feeMod = 100;
   uint256 tier_1_feeMod = 95;
