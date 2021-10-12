@@ -49,14 +49,11 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint256 tier_2_feeMod = 85;
   uint256 tier_3_feeMod = 70;
   uint256 tier_4_feeMod = 50;
-  uint256 tier_5_feeMod = 25; 
-
-  
+  uint256 tier_5_feeMod = 25;   
 
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
   IERC20 public polygonAMUSDC;
-
 
   event SpecifiedMintEvent (address sender, uint256 tokenAmount, uint256 priceForMintingIn6dec);  
 
@@ -74,7 +71,12 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
     polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
     _approveLendingPool(largestUint);    
+    pause();
   }
+
+  receive() external payable {   
+  }
+
 
   function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
     //console.log('msg.sender in _approveLendingPool, BNJ:', msg.sender );
@@ -83,9 +85,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     //console.log('msg.sender allowance to lendingpool in _approveLendingPool, BNJ:', polygonUSDC.allowance(msg.sender, address(polygonLendingPool)));    
   }
 
-  receive() external payable {   
-  }
-
+  
   function decimals() public view override returns (uint8) {
     return 0;
   }
@@ -182,7 +182,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
   */
 
-  function buyLevels(uint256 amountOfLevels) public {
+  function buyLevels(uint256 amountOfLevels) public whenNotPaused {
     _specifiedAmountMint(amountOfLevels * 20);
   }
 
@@ -228,9 +228,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);  
 
-    _depositIntoLendingPool(priceForMintingIn6dec);   
-    
-     
+    _depositIntoLendingPool(priceForMintingIn6dec);      
   
     // minting to Benjamins contract itself
     _mint(addressOfThisContract, _amount);
@@ -248,7 +246,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return priceForMintingIn6dec;   
   }  
 
-  function calcSpecMintReturn(uint256 _amount) public view whenNotPaused returns (uint256 mintPrice) {
+  function calcSpecMintReturn(uint256 _amount) public view returns (uint256 mintPrice) {
     return calcPriceForTokenMint(totalSupply(), _amount); 
   }    
 
@@ -258,7 +256,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
   */
 
-  function sellLevels(uint256 amountOfLevels) public {
+  function sellLevels(uint256 amountOfLevels) public whenNotPaused {
     _specifiedAmountBurn(amountOfLevels * 20);
   }
 
@@ -298,7 +296,6 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     uint256 checkTheBalance = polygonUSDC.balanceOf(addressOfThisContract);    // XXXXXX
     //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, BNJ');   // XXXXXX
-
     
 
     uint256 amountOfLevelsToSell = _amount / 20;
@@ -311,8 +308,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     ownedBenjamins[msg.sender] -= _amount;
 
     _burn(addressOfThisContract, _amount);      
-    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);  
-    
+    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);      
 
 
     _withdrawFromLendingPool(returnForBurningIn6dec); 
@@ -325,7 +321,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return returnForBurningIn6dec;   
   }
 
-  function calcSpecBurnReturn(uint256 _amount) public view whenNotPaused returns (uint256 burnReturn) {    
+  function calcSpecBurnReturn(uint256 _amount) public view returns (uint256 burnReturn) {    
     //console.log("BNJ, calcSpecBurnReturn, totalsupply:", totalSupply() );
     //console.log("BNJ, calcSpecBurnReturn, _amount:", _amount );
     return calcReturnForTokenBurn(totalSupply(), _amount); 
@@ -359,10 +355,10 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   function _unstakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToUnstake) private {
 
-    uint256 tokensOwned = checkStakedBenjamins( _stakingUserAddress ) ;
-    console.log(tokensOwned, 'tokensOwned in _unstakeTokens, BNJ');
+    uint256 tokensStaked = checkStakedBenjamins( _stakingUserAddress ) ;
+    console.log(tokensStaked, 'tokensStaked in _unstakeTokens, BNJ');
 
-    require (_amountOfTokensToUnstake <= tokensOwned, 'BNJ, _unstakeTokens: Not enough tokens'); 
+    require (_amountOfTokensToUnstake <= tokensStaked, 'BNJ, _unstakeTokens: Not enough tokens'); 
    
     Stake[] memory usersActiveBurnableStakess = getUsersActiveAndBurnableStakes(_stakingUserAddress);
 
@@ -381,21 +377,26 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     totalStakedByUser[_stakingUserAddress] -= _amountOfTokensToUnstake;
   }
 
-  function checkOwnedBenjamins(address userToCheck) public view returns (uint256 usersOwnedBNJIs){
+  function checkOwnedBenjamins(address userToCheck) private view returns (uint256 usersOwnedBNJIs){
     return ownedBenjamins[userToCheck];
   }
 
   function showInternalAddresses() public view onlyOwner returns (address[] memory) {
     return internalAddresses;  
   }
+
+ function showStakersAddresses() public view onlyOwner returns (address[] memory) {
+    return stakers;  
+  }
   
-  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){
+  
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){   // XXXXXX <=======_changed this only for testing, should be private visibility
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
     //console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
     return usersTotalStake;
   }   
 
-  function _depositIntoLendingPool(uint256 amount) private whenNotPaused {
+  function _depositIntoLendingPool(uint256 amount) private {
     //console.log("BNJI, _depositIntoLendingPool, msg.sender is:", msg.sender);
 		polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
     emit LendingPoolDeposit(amount);
@@ -479,7 +480,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return returnForBurningIn6dec;   
   }
 
-
+  
 
   function showAllUsersStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray) { 
     return usersStakingPositions[userToCheck];

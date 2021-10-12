@@ -126,7 +126,7 @@ async function internalMint(amountToMint, amountToApproveInCents, addressToHoldI
 
   // allowing benjaminsContract to handle USDC for deployer   
   const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
-  console.log( bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec');     
+  console.log( bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in internalMint');     
   await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
   // args: internalMint(uint256 _amount, address _holderOfInternalMint)
   await benjaminsContract.connect(deployerSigner).internalMint(amountToMint, addressToHoldInternalMint);  
@@ -196,7 +196,7 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
 
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
-  console.log('amountToApproveIn6dec:', bigNumberToNumber(amountToApproveIn6dec));     
+  console.log(bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in testMinting', );     
   await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
 
   // buying levels, includes minting and staking ${amountToMint} tokens
@@ -762,6 +762,7 @@ describe("Benjamins Test", function () {
     // args: internalMint(amountToMint, amountToApproveInCents, addressToHoldInternalMint)
     await internalMint(282840, 9999808, deployer);          
     await showInternalBenjamins(deployer);
+    await benjaminsContract.connect(deployerSigner).unpause();
     
   });
 
@@ -769,10 +770,10 @@ describe("Benjamins Test", function () {
   // switch user(s) <=========   XXXXXXX
 
 
-  it("7. Second minting and staking", async function () {    
+  it("7. First Users minting and staking", async function () {    
     
     // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-    await testMinting("second mint", 100, 7142, deployer);
+    await testMinting("First user mint", 100, 7142, deployer);
     await showUsersActiveStakesArray(deployer);   
    
 
@@ -781,7 +782,7 @@ describe("Benjamins Test", function () {
     
   it("8. First burn", async function () {  
     
-    await testBurning("First burning", 80, deployer);
+    await testBurning("First user burn", 80, deployer);
     await showUsersActiveStakesArray(deployer);   
 
     /*
