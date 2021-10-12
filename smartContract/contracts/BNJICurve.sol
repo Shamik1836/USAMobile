@@ -9,6 +9,8 @@ contract BNJICurve is Ownable, Pausable{
 
   uint256 _USDCscale = 10**6;  
 
+  uint256 _curveFactor = 800000;
+
   function calcPriceForTokenMint(
     uint256 _supply,    
     uint256 _tokensToMint) public view returns (uint256)
@@ -31,7 +33,7 @@ contract BNJICurve is Ownable, Pausable{
     uint256 _step2 = _step1 * _USDCscale;
     //console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
 
-    uint256 _totalPriceForTokensMintingNowInUSDC_6digits = _step2 / 800000;  
+    uint256 _totalPriceForTokensMintingNowInUSDC_6digits = _step2 / _curveFactor;  
     //console.log(_totalPriceForTokensMintingNowInUSDC_6digits, '_totalPriceForTokensMintingNowInUSDC_6digits in BCRV, calcPriceForTokenMint');
     
     uint256 takeOffFactor = 10 ** 4;
@@ -102,6 +104,11 @@ contract BNJICurve is Ownable, Pausable{
     
   }
   
+  // function for owner to withdraw any ERC20 token that has accumulated
+  function updateCurveFactor (uint256 _newCurveFactor) public onlyOwner {
+    _curveFactor = _newCurveFactor;
+  }
+
   // function for owner to withdraw any ERC20 token that has accumulated
   function withdrawERC20 (address ERC20ContractAddress, uint256 amount) public onlyOwner {
     IERC20 ERC20Instance = IERC20(ERC20ContractAddress);        

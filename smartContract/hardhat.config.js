@@ -37,6 +37,11 @@ module.exports = {
   namedAccounts: {
     deployer: `${process.env.DEPLOYER_ACC}`,    
     feeReceiverAddress: `${process.env.FEE_RECEIVER_ACC}`,
+    testUser_1: `${process.env.TEST_USER_1}`,
+    testUser_2: `${process.env.TEST_USER_2}`,
+    testUser_3: `${process.env.TEST_USER_3}`,
+    testUser_4: `${process.env.TEST_USER_4}`,
+    testUser_5: `${process.env.TEST_USER_5}`,    
   },
   gasReporter: {
     currency: "MATIC",

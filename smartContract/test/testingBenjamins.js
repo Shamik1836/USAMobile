@@ -185,6 +185,8 @@ async function showInternalBenjamins(userTocheck) {
 }
 
 async function testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress) {
+
+  console.log('calling acount address in testMinting is now:', callingAccAddress);
  
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const callingAccUSDCBalanceBeforeMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
@@ -194,17 +196,22 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
   const callingAccBNJIstakedBefore = bigNumberToNumber(await benjaminsContract.checkStakedBenjamins(callingAccAddress)); 
   const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
+  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
   console.log(bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in testMinting', );     
-  await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
+  await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
+
+  const givenAllowanceToBNJIcontract = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
+  console.log(bigNumberToNumber(givenAllowanceToBNJIcontract), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
+
 
   // buying levels, includes minting and staking ${amountToMint} tokens
   const levelsToBuy = amountToMint / 20;
-
-  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+  
   await benjaminsContract.connect(callingAccSigner).buyLevels(levelsToBuy);  
-  console.log(`=========   User is buying this many levels:`, levelsToBuy );
+  console.log(`========================== ${callingAccAddress} is buying this many levels:`, levelsToBuy );
 
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const callingAccUSDCBalanceAfterMintInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
@@ -239,8 +246,8 @@ async function testMinting(mintName, amountToMint, amountToApproveInCents, calli
   console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
   console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after${mintName}`);
 
-  console.log(callingAccBNJIstakedBefore, `deployer is staking this many BNJI before minting/staking`);
-  console.log(callingAccBNJIstakedAfter, `deployer is staking this many BNJI after minting/staking`);
+  console.log(callingAccBNJIstakedBefore, `${callingAccAddress} is staking this many BNJI before minting/staking`);
+  console.log(callingAccBNJIstakedAfter, `${callingAccAddress} is staking this many BNJI after minting/staking`);
 
   
 
@@ -360,6 +367,8 @@ function calcMintVariables(nrOfTokensExisting, amountToMint) {
   tokensShouldExistNowGlobalV = amountOfTokensAfterMint;
   mintPriceTotalInUSDCShouldBeNowGlobalV = inUSDCToPayTotal;
   mintAllowanceInUSDCCentsShouldBeNowGlobalV = inCentsToPayTotal;
+
+  return multiplyFromUSDCcentsTo6dec(inCentsToPayTotal);
 }
 
 function calcBurnVariables(nrOfTokensExisting, amountToBurn) {
@@ -510,9 +519,7 @@ async function runMintOrBurnLoop(loopsToRun) {
 
   loopCounterTotal += (opCounter-1);
   mintCounterTotal += mintCounter;
-  burnCounterTotal += burnCounter;
-
-  
+  burnCounterTotal += burnCounter;  
 
   const protocolBalanceAfterTest = fromWEItoETH18dig( bigNumberToNumber (await polygonUSDC.balanceOf(benjaminsContract.address)) );
   console.log('protocol our contract USDC balance at the end of all loops so far', protocolBalanceAfterTest);
@@ -545,13 +552,23 @@ async function runMintOrBurnLoop(loopsToRun) {
 } 
 
 
+
+
+let testingUserAddressesArray = [];
+
 describe("Benjamins Test", function () {
 
   // setting instances of contracts
   before(async function() {
 
-    ({ deployer, feeReceiverAddress } = await getNamedAccounts());
+    ({ deployer, feeReceiverAddress, testUser_1, testUser_2, testUser_3, testUser_4, testUser_5 } = await getNamedAccounts());
     deployerSigner = await ethers.provider.getSigner(deployer);    
+
+    testingUserAddressesArray.push(testUser_1);
+    testingUserAddressesArray.push(testUser_2);
+    testingUserAddressesArray.push(testUser_3);
+    testingUserAddressesArray.push(testUser_4);
+    testingUserAddressesArray.push(testUser_5);
     
     // Deploy contract
     await fixture(["Benjamins"]);
@@ -679,7 +696,7 @@ describe("Benjamins Test", function () {
     
     
     
-    await polygonWMATIC.deposit( {value: ethers.utils.parseEther("5000000")} );
+    await polygonWMATIC.deposit( {value: ethers.utils.parseEther("4000000")} );
 
     const deployerMaticAfterWrapping = await getMaticBalance(deployer);
     console.log('deployer has this many MATIC after wrapping:', deployerMaticAfterWrapping);
@@ -749,15 +766,9 @@ describe("Benjamins Test", function () {
     const deployerUSDCbalEnd2 = divideFrom6decToUSDC( bigNumberToNumber (await polygonUSDC.balanceOf(deployer)) );
     console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);             
       
-  });    
-
-
-  /*
-  // send out funds to switch users <=========   XXXXXXX
-  */
+  });     
   
-  
-  it("6. Setting up: Internal minting and staking", async function () {        
+  it("5. Setting up: Internal minting and staking", async function () {        
 
     // args: internalMint(amountToMint, amountToApproveInCents, addressToHoldInternalMint)
     await internalMint(282840, 9999808, deployer);          
@@ -767,20 +778,55 @@ describe("Benjamins Test", function () {
   });
 
   
-  // switch user(s) <=========   XXXXXXX
-
-
-  it("7. First Users minting and staking", async function () {    
+  it("6. Preparing user addresses to test protocol ", async function () {   
     
-    // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-    await testMinting("First user mint", 100, 7142, deployer);
-    await showUsersActiveStakesArray(deployer);   
+    for (let index = 0; index < testingUserAddressesArray.length; index++) {
+      const testingUser = testingUserAddressesArray[index];
+
+      await deployerSigner.sendTransaction({
+        to: testingUser,
+        value: ethers.utils.parseEther("100") // 100 Matic
+      })
+
+      await polygonUSDC.connect(deployerSigner).transfer(testingUser, (1000*scale6dec) );
+
+      const testingUserMATICbalance = await getMaticBalance(testingUser);
+      const testingUserUSDCbalance = await polygonUSDC.balanceOf(testingUser) ;
+
+      console.log('testingUser is:', testingUser);
+      console.log(`${testingUser} has in Matic:`, testingUserMATICbalance);
+      console.log(`${testingUser} has in USDC:`, divideFrom6decToUSDC(bigNumberToNumber(testingUserUSDCbalance)));           
+    }  
+    
+  });
+  
+
+  
+  // switch user(s) <=========   XXXXXXX
+  
+
+  it("8. Users minting and staking", async function () {    
+    
+    //First three users in array will mint 100 tokens / buy 5 levels
+    for (let index = 0; index < 3; index++) {
+      const testingUser = testingUserAddressesArray[index];
+
+
+      let mintingAllowanceNeeded = calcMintVariables(tokensExistQueriedGlobalV, 100);
+      console.log(mintingAllowanceNeeded, `mintingAllowanceNeeded in user mint nr ${index}`)
+
+      // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
+      await testMinting(`User mint nr ${index} `, 100, mintingAllowanceNeeded, testingUser);
+      await showUsersActiveStakesArray(testingUser);   
+      console.log(`==============${testingUser} is DONE, NEXT USER =================`)
+    }  
+    
    
 
   });
 
-    
-  it("8. First burn", async function () {  
+    /*
+  it("9. First burn", async function () {  
     
     await testBurning("First user burn", 80, deployer);
     await showUsersActiveStakesArray(deployer);   
@@ -813,7 +859,7 @@ describe("Benjamins Test", function () {
     // REVERT: using depositStake directly as non-perator is reverted in staking contract
     //await expect( stakingContract.connect(normUserAddress).depositStake() ).to.be.revertedWith(
     //  "StakingContract: caller is not the operator"
-    //);  */
+    //); 
 
-  })
+  })*/
 }); 
