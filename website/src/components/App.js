@@ -14,7 +14,7 @@ import { SwapTrade } from "./Screens/SwapTrade";
 import { BottomFooter } from "./Screens/BottomFooter";
 
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
+const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
 
 function App() {
   const { colorMode } = useColorMode();
