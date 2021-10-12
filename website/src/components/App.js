@@ -5,16 +5,16 @@ import { EmailIcon, LinkIcon, RepeatIcon, ViewIcon } from "@chakra-ui/icons";
 
 import { useMoralis } from "react-moralis";
 
-import { TopNavBar } from "../components/Pages/TopNavBar";
-import { ExpertStage } from "../screens/ExpertStage";
-import { BuySell } from "../screens/BuySell";
-import { PortfolioPrices } from "../screens/PortfolioPrices";
-import { SendReceive } from "../screens/SendReceive";
-import { SwapTrade } from "../screens/SwapTrade";
-import { BottomFooter } from "../screens/BottomFooter";
+import { TopNavBar } from "./Screens/TopNavBar";
+import { ExpertStage } from "./Screens/ExpertStage";
+import { BuySell } from "./Screens/BuySell";
+import { PortfolioPrices } from "./Screens/PortfolioPrices";
+import { SendReceive } from "./Screens/SendReceive";
+import { SwapTrade } from "./Screens/SwapTrade";
+import { BottomFooter } from "./Screens/BottomFooter";
 
 const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,red.900,grey,red.900)";
+const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
 
 function App() {
   const { colorMode } = useColorMode();

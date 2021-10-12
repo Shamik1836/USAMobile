@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Box, Heading } from "@chakra-ui/react";
-import { SwapPanel } from "../components/Blocks/SwapPanel";
-import { useExperts } from "../contexts/expertsContext";
+import { SwapPanel } from "../Blocks/SwapPanel";
+import { useExperts } from "../../contexts/expertsContext";
 
 export const SwapTrade = () => {
   const { setActionMode, setDialog } = useExperts();

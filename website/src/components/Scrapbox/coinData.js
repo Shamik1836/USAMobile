@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useMoralis, useMoralisCloudFunction } from "react-moralis";
-import coinGeckoList from "../data/coinGeckoTokenList.json";
-import { tokenValue, tokenValueTxt } from "../components/Support/utils";
+import coinGeckoList from "../../data/coinGeckoTokenList.json";
+import { tokenValue, tokenValueTxt } from "../Support/utils";
 
 const emptyList = [];
 const coinGeckoApiUrl = "https://api.coingecko.com/api/v3/coins/markets";

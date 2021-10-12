@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Box, Heading } from "@chakra-ui/react";
-import { TokenTable } from "../components/Blocks/TokenTable";
-import { useExperts } from "../contexts/expertsContext";
+import { TokenTable } from "../Blocks/TokenTable";
+import { useExperts } from "../../contexts/expertsContext";
 
 export const PortfolioPrices = () => {
   const { setActionMode, setDialog } = useExperts();

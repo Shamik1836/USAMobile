@@ -9,14 +9,14 @@ import { Flex, Heading, Spacer, HStack, VStack } from "@chakra-ui/layout";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { useMoralis } from "react-moralis";
 import { Link, Switch, Route, Redirect } from "react-router-dom";
-import { Auth } from "./Blocks/Auth";
-import { Dashboard } from "./Pages/Dashboard";
+import { Auth } from "../Blocks/Auth";
+import { Dashboard } from "./Dashboard";
 import { Trade } from "./Pages/Trade";
 import { SendReceive } from "./Pages/SendReceive";
 import { Invest } from "./Pages/Invest";
 import { Gallery } from "./Pages/Gallery";
 import { Guides } from "./Pages/Guides";
-import { Profile } from "./Pages/Profile";
+import { Profile } from "./Profile";
 
 function App() {
   const { colorMode, toggleColorMode } = useColorMode();
