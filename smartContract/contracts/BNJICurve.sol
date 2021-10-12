@@ -7,42 +7,42 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract BNJICurve is Ownable, Pausable{   
 
-  uint256 _USDCscale = 10**6;  
+  uint256 USDCscale = 10**6;  
 
-  uint256 _curveFactor = 800000;
+  uint256 curveFactor = 800000;
 
   function calcPriceForTokenMint(
-    uint256 _supply,    
-    uint256 _tokensToMint) public view returns (uint256)
+    uint256 supply,    
+    uint256 tokensToMint) public view returns (uint256)
   { 
     // validate input
-    require(_tokensToMint > 0, "BNJICurve: Must mint more than 0 tokens");  
+    require(tokensToMint > 0, "BNJICurve: Must mint more than 0 tokens");  
 
-    //console.log(_tokensToMint, '_tokensToMint in BCRV, calcPriceForTokenMint');  
-    //console.log(_supply, ' _supply in BCRV, calcPriceForTokenMint');   
+    //console.log(tokensToMint, 'tokensToMint in BCRV, calcPriceForTokenMint');  
+    //console.log(supply, ' supply in BCRV, calcPriceForTokenMint');   
     
-    uint256 _supplySquared = _supply*_supply;
-    //console.log(_supplySquared, ' _supplySquared in BCRV, calcPriceForTokenMint');    
+    uint256 supplySquared = supply*supply;
+    //console.log(supplySquared, ' supplySquared in BCRV, calcPriceForTokenMint');    
 
-    uint256 _supplyAfterMint = _supply + _tokensToMint;    
-    uint256 _supplyAfterMintSquared = _supplyAfterMint * _supplyAfterMint; 
+    uint256 supplyAfterMint = supply + tokensToMint;    
+    uint256 supplyAfterMintSquared = supplyAfterMint * supplyAfterMint; 
 
-    uint256 _step1 = _supplyAfterMintSquared - _supplySquared; 
-    //console.log(_step1, '_step1 in BCRV, calcPriceForTokenMint');
+    uint256 step1 = supplyAfterMintSquared - supplySquared; 
+    //console.log(step1, 'step1 in BCRV, calcPriceForTokenMint');
 
-    uint256 _step2 = _step1 * _USDCscale;
-    //console.log(_step2, '_step2 in BCRV, calcPriceForTokenMint');
+    uint256 step2 = step1 * USDCscale;
+    //console.log(step2, 'step2 in BCRV, calcPriceForTokenMint');
 
-    uint256 _totalPriceForTokensMintingNowInUSDC_6digits = _step2 / _curveFactor;  
-    //console.log(_totalPriceForTokensMintingNowInUSDC_6digits, '_totalPriceForTokensMintingNowInUSDC_6digits in BCRV, calcPriceForTokenMint');
+    uint256 totalPriceForTokensMintingNowInUSDC6digits = step2 / curveFactor;  
+    //console.log(totalPriceForTokensMintingNowInUSDC6digits, 'totalPriceForTokensMintingNowInUSDC6digits in BCRV, calcPriceForTokenMint');
     
     uint256 takeOffFactor = 10 ** 4;
     //console.log(takeOffFactor, 'takeOff in BCRV, calcPriceForTokenMint');
 
-    uint256 rest = _totalPriceForTokensMintingNowInUSDC_6digits % takeOffFactor;
+    uint256 rest = totalPriceForTokensMintingNowInUSDC6digits % takeOffFactor;
     //console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
 
-    uint256 mintResultWithCentsroundedDown = _totalPriceForTokensMintingNowInUSDC_6digits - rest;
+    uint256 mintResultWithCentsroundedDown = totalPriceForTokensMintingNowInUSDC6digits - rest;
     //console.log(mintResultWithCentsroundedDown, 'mintResultWithCentsroundedDown in BCRV, calcPriceForTokenMint');
 
     // returning price for specified token amount
@@ -54,50 +54,50 @@ contract BNJICurve is Ownable, Pausable{
    * calculates the return for a given conversion (at the moment in ETH, in the future in a stable coin)
    *
    * Burn Formula:
-   * _supplyAfterBurn = _supply - _tokensToBurn;     
-   * Return = ( (_supply * _supply) - (_supplyAfterBurn * _supplyAfterBurn) ) / 800000;
+   * supplyAfterBurn = supply - tokensToBurn;     
+   * Return = ( (supply * supply) - (supplyAfterBurn * supplyAfterBurn) ) / 800000;
    *
-   * @param _supply              Benjamins total supply 
-   * @param _tokensToBurn          sell amount, in Benjamins
+   * @param supply              Benjamins total supply 
+   * @param tokensToBurn          sell amount, in Benjamins
    *
-   * @return price in USDC_6digits
+   * @return price in USDC6digits
   */
   function calcReturnForTokenBurn(
-    uint256 _supply,    
-    uint256 _tokensToBurn) public view returns (uint256)
+    uint256 supply,    
+    uint256 tokensToBurn) public view returns (uint256)
   {
     // validate input
     
-    require(_supply > 0 && _tokensToBurn > 0 && _supply >= _tokensToBurn, "BNJICurve: Sending args must be larger than 0");   
+    require(supply > 0 && tokensToBurn > 0 && supply >= tokensToBurn, "BNJICurve: Sending args must be larger than 0");   
     
-    uint256 _supplyAfterBurn = _supply - _tokensToBurn; 
+    uint256 supplyAfterBurn = supply - tokensToBurn; 
 
-    uint256 _supplySquared = _supply * _supply; 
-    uint256 _supplyAfterBurnSquared = _supplyAfterBurn * _supplyAfterBurn;
+    uint256 supplySquared = supply * supply; 
+    uint256 supplyAfterBurnSquared = supplyAfterBurn * supplyAfterBurn;
     /*
-    //console.log('BCRV, calcReturnForTokenBurn: _supply', _supply);
-    //console.log('BCRV, calcReturnForTokenBurn: _tokensToBurn', _tokensToBurn);
-    //console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurn', _supplyAfterBurn);
+    //console.log('BCRV, calcReturnForTokenBurn: supply', supply);
+    //console.log('BCRV, calcReturnForTokenBurn: tokensToBurn', tokensToBurn);
+    //console.log('BCRV, calcReturnForTokenBurn: supplyAfterBurn', supplyAfterBurn);
 
-    //console.log('BCRV, calcReturnForTokenBurn: _supplySquared', _supplySquared);
-    //console.log('BCRV, calcReturnForTokenBurn: _supplyAfterBurnSquared', _supplyAfterBurnSquared);
+    //console.log('BCRV, calcReturnForTokenBurn: supplySquared', supplySquared);
+    //console.log('BCRV, calcReturnForTokenBurn: supplyAfterBurnSquared', supplyAfterBurnSquared);
     */
-    uint256 _step1 = _supplySquared - _supplyAfterBurnSquared;    
-    //console.log('BCRV, calcReturnForTokenBurn: _step1', _step1);    
+    uint256 step1 = supplySquared - supplyAfterBurnSquared;    
+    //console.log('BCRV, calcReturnForTokenBurn: step1', step1);    
 
-    uint256 _step2 = _step1 * _USDCscale ;
-    //console.log('BCRV, calcReturnForTokenBurn: _step2', _step2);
+    uint256 step2 = step1 * USDCscale ;
+    //console.log('BCRV, calcReturnForTokenBurn: step2', step2);
 
-    uint256 _returnForTokenBurnInUSDC_6digits = _step2/ 800000 ;
-    //console.log('BCRV, calcReturnForTokenBurn: _result', _result);
+    uint256 returnForTokenBurnInUSDC6digits = step2/ 800000 ;
+    //console.log('BCRV, calcReturnForTokenBurn: result', result);
 
     uint256 takeOffFactor = 10 ** 4;
     //console.log(takeOffFactor, 'takeOff in BCRV, calcReturnForTokenBurn');
 
-    uint256 rest = _returnForTokenBurnInUSDC_6digits % takeOffFactor;
+    uint256 rest = returnForTokenBurnInUSDC6digits % takeOffFactor;
     //console.log(rest, 'rest in BCRV, calcPriceForTokenMint');
 
-    uint256 burnResultWithCentsroundedDown = _returnForTokenBurnInUSDC_6digits - rest;
+    uint256 burnResultWithCentsroundedDown = returnForTokenBurnInUSDC6digits - rest;
     //console.log(burnResultWithCentsroundedDown, 'burnResultWithCentsroundedDown in BCRV, calcReturnForTokenBurn');
 
     return burnResultWithCentsroundedDown ;
@@ -105,8 +105,8 @@ contract BNJICurve is Ownable, Pausable{
   }
   
   // function for owner to withdraw any ERC20 token that has accumulated
-  function updateCurveFactor (uint256 _newCurveFactor) public onlyOwner {
-    _curveFactor = _newCurveFactor;
+  function updateCurveFactor (uint256 newCurveFactor) public onlyOwner {
+    curveFactor = newCurveFactor;
   }
 
   // function for owner to withdraw any ERC20 token that has accumulated

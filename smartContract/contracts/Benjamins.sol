@@ -36,13 +36,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     bool unstaked;
   }
 
-  uint8 private _decimals;
+  uint8 private amountDecimals;
   uint256 largestUint = type(uint256).max;
 
   uint256 centsScale4digits = 10000;
   uint256 dollarScale6dec = 1000000;
 
-  uint256 stakingPeriodInSeconds = 0; // 86400; <===== XXXXX, _changed only for testing
+  uint256 stakingPeriodInSeconds = 0; // 86400; <===== XXXXX, changed only for testing
 
   uint256 tier_0_feeMod = 100;
   uint256 tier_1_feeMod = 95;
@@ -63,14 +63,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
   event LendingPoolWithdrawal (uint256 amount);
 
-  constructor(address _feeReceiver) ERC20("Benjamins", "BNJI") {
+  constructor(address feeReceiverAddress) ERC20("Benjamins", "BNJI") {
     addressOfThisContract = address(this);
-    feeReceiver = _feeReceiver;
-    _decimals = 0;
+    feeReceiver = feeReceiverAddress;
+    amountDecimals = 0;
     polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
     polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
-    _approveLendingPool(largestUint);    
+    approveLendingPool(largestUint);    
     pause();
   }
 
@@ -78,19 +78,19 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
 
-  function _approveLendingPool (uint256 _amountToApprove) public onlyOwner {
-    //console.log('msg.sender in _approveLendingPool, BNJ:', msg.sender );
-    polygonUSDC.approve(address(polygonLendingPool), _amountToApprove);
-    //console.log('addressOfThisContract allowance to lendingpool _approveLendingPool, BNJ:', polygonUSDC.allowance(addressOfThisContract, address(polygonLendingPool)));
-    //console.log('msg.sender allowance to lendingpool in _approveLendingPool, BNJ:', polygonUSDC.allowance(msg.sender, address(polygonLendingPool)));    
+  function approveLendingPool (uint256 amountToApprove) public onlyOwner {
+    //console.log('msg.sender in approveLendingPool, BNJ:', msg.sender );
+    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
+    //console.log('addressOfThisContract allowance to lendingpool approveLendingPool, BNJ:', polygonUSDC.allowance(addressOfThisContract, address(polygonLendingPool)));
+    //console.log('msg.sender allowance to lendingpool in approveLendingPool, BNJ:', polygonUSDC.allowance(msg.sender, address(polygonLendingPool)));    
   }
 
   
   function decimals() public view override returns (uint8) {
-    return 0;
+    return amountDecimals;
   }
   
-  function findUsersLevelFeeModifier (address user) private view returns (uint256 _usersFee) {
+  function findUsersLevelFeeModifier (address user) private view returns (uint256 usersFee) {
 
     uint256 usersStakedBalance = checkStakedBenjamins(user);
     
@@ -177,141 +177,141 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
 
   /*
-  function specifiedMint( uint256 _tokenAmountToMint) public whenNotPaused {        
-    _specifiedAmountMint(_tokenAmountToMint);
+  function specifiedMint( uint256 tokenAmountToMint) public whenNotPaused {        
+    specifiedAmountMint(tokenAmountToMint);
   }
   */
 
   function buyLevels(uint256 amountOfLevels) public whenNotPaused {
-    _specifiedAmountMint(amountOfLevels * 20);
+    specifiedAmountMint(amountOfLevels * 20);
   }
 
-  function _specifiedAmountMint(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {   
-    //console.log('BNJ, _specifiedAmountMint: _amount', _amount);
-    //require(_amount > 0, "BNJ, _specifiedAmountMint: Amount must be more than zero."); 
-    require((_amount % 20 == 0), "BNJ, _specifiedAmountMint: Amount must be divisible by 20");       
+  function specifiedAmountMint(uint256 amount) internal whenNotPaused nonReentrant returns (uint256) {   
+    //console.log('BNJ, specifiedAmountMint: amount', amount);
+    //require(amount > 0, "BNJ, specifiedAmountMint: Amount must be more than zero."); 
+    require((amount % 20 == 0), "BNJ, specifiedAmountMint: Amount must be divisible by 20");       
     
-    uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
-    //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in _specifiedAmountMint, BNJ');     
+    uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
+    console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in specifiedAmountMint, BNJ');     
 
     uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender ); 
 
     uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) /100;
-    console.log(feeIn6dec, 'feeIn6dec in _specifiedAmountMint, BNJ');   
+    console.log(feeIn6dec, 'feeIn6dec in specifiedAmountMint, BNJ');   
     
     uint256 roundThisDown = feeIn6dec % (10**4);
-    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountMint, BNJ');   
+    //console.log(roundThisDown, 'roundThisDown in specifiedAmountMint, BNJ');   
 
     uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-    console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec in _specifiedAmountMint, BNJ');   
+    console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec in specifiedAmountMint, BNJ');   
 
     uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
-    console.log(endPriceIn6dec, 'endPriceIn6dec in _specifiedAmountMint, BNJ');       
+    console.log(endPriceIn6dec, 'endPriceIn6dec in specifiedAmountMint, BNJ');       
 
     uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( msg.sender ) ;
-    //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in _specifiedAmountMint, BNJ');
+    //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in specifiedAmountMint, BNJ');
 
     //uint256 polygonUSDCbalInCents = polygonUSDCbalanceIn6dec / centsScale4digits;
-    //console.log(polygonUSDCbalInCents, 'polygonUSDCbalInCents in _specifiedAmountMint, BNJ');
+    //console.log(polygonUSDCbalInCents, 'polygonUSDCbalInCents in specifiedAmountMint, BNJ');
 
-    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
-    console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in _specifiedAmountMint, BNJ');
+    uint256 USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
+    console.log(USDCAllowancein6dec, 'USDCAllowancein6dec in specifiedAmountMint, BNJ');
 
-    //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
-    //console.log(_USDCAllowanceinCents, '_USDCAllowance in _specifiedAmountMint, BNJ' );
+    //uint256 USDCAllowanceinCents = USDCAllowancein6dec / centsScale4digits;
+    //console.log(USDCAllowanceinCents, 'USDCAllowance in specifiedAmountMint, BNJ' );
     
-    require (endPriceIn6dec <= polygonUSDCbalanceIn6dec, "BNJ, _specifiedAmountMint: Not enough USDC"); 
-    require (endPriceIn6dec <= _USDCAllowancein6dec, "BNJ, _specifiedAmountMint: Not enough allowance in USDC for payment" );
-    require (priceForMintingIn6dec >= 5000000, "BNJ, _specifiedAmountMint: Minimum minting value of $5 USDC" );
+    require (endPriceIn6dec <= polygonUSDCbalanceIn6dec, "BNJ, specifiedAmountMint: Not enough USDC"); 
+    require (endPriceIn6dec <= USDCAllowancein6dec, "BNJ, specifiedAmountMint: Not enough allowance in USDC for payment" );
+    require (priceForMintingIn6dec >= 5000000, "BNJ, specifiedAmountMint: Minimum minting value of $5 USDC" );
     
     polygonUSDC.transferFrom(msg.sender, feeReceiver, feeRoundedDownIn6dec);   
 
     polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);  
 
-    _depositIntoLendingPool(priceForMintingIn6dec);      
+    depositIntoLendingPool(priceForMintingIn6dec);      
   
     // minting to Benjamins contract itself
-    _mint(addressOfThisContract, _amount);
-    emit SpecifiedMintEvent(msg.sender, _amount, priceForMintingIn6dec);
+    _mint(addressOfThisContract, amount);
+    emit SpecifiedMintEvent(msg.sender, amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
-    ownedBenjamins[msg.sender] += _amount;
+    ownedBenjamins[msg.sender] += amount;
 
-    uint256 amountOfLevelsToBuy = _amount / 20;
+    uint256 amountOfLevelsToBuy = amount / 20;
 
     for (uint256 index = 0; index < amountOfLevelsToBuy; index++) {
-      _stakeTokens(msg.sender, 20);
+      stakeTokens(msg.sender, 20);
     }     
 
     return priceForMintingIn6dec;   
   }  
 
-  function calcSpecMintReturn(uint256 _amount) public view returns (uint256 mintPrice) {
-    return calcPriceForTokenMint(totalSupply(), _amount); 
+  function calcSpecMintReturn(uint256 amount) public view returns (uint256 mintPrice) {
+    return calcPriceForTokenMint(totalSupply(), amount); 
   }    
 
   /*
-  function specifiedBurn( uint256 _tokenAmountToBurn) public payable whenNotPaused {    
-    _specifiedAmountBurn(_tokenAmountToBurn);
+  function specifiedBurn( uint256 tokenAmountToBurn) public payable whenNotPaused {    
+    specifiedAmountBurn(tokenAmountToBurn);
   }
   */
 
   function sellLevels(uint256 amountOfLevels) public whenNotPaused {
-    _specifiedAmountBurn(amountOfLevels * 20);
+    specifiedAmountBurn(amountOfLevels * 20);
   }
 
-  function _specifiedAmountBurn(uint256 _amount) internal whenNotPaused nonReentrant returns (uint256) {
-    //console.log('BNJ, _specifiedAmountBurn: _amount', _amount);
+  function specifiedAmountBurn(uint256 amount) internal whenNotPaused nonReentrant returns (uint256) {
+    //console.log('BNJ, specifiedAmountBurn: amount', amount);
 
-    require((_amount % 20) == 0, "BNJ, _specifiedAmountMint: Amount must be divisible by 20");   
+    require((amount % 20) == 0, "BNJ, specifiedAmountMint: Amount must be divisible by 20");   
 
     uint256 tokenBalance = checkStakedBenjamins(msg.sender);
-    //console.log(_amount, '_amount in _specifiedAmountBurn, BNJ');   
-    //console.log(tokenBalance, 'tokenBalance in _specifiedAmountBurn, BNJ');   
+    //console.log(amount, 'amount in specifiedAmountBurn, BNJ');   
+    //console.log(tokenBalance, 'tokenBalance in specifiedAmountBurn, BNJ');   
      
-    require(_amount > 0, "Amount to burn must be more than zero.");  
-    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");             
+    require(amount > 0, "Amount to burn must be more than zero.");  
+    require(tokenBalance >= amount, "Users tokenBalance must be equal to or more than amount to burn.");             
     
-    uint256 returnForBurningIn6dec = calcSpecBurnReturn(_amount);
-    //console.log(returnForBurning, 'returnForBurning in _specifiedAmountBurn, BNJ');   
+    uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
+    //console.log(returnForBurning, 'returnForBurning in specifiedAmountBurn, BNJ');   
 
-    require (returnForBurningIn6dec >= 5000000, "BNJ, _specifiedAmountBurn: Minimum burning value is $5 USDC" );
+    require (returnForBurningIn6dec >= 5000000, "BNJ, specifiedAmountBurn: Minimum burning value is $5 USDC" );
 
     uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender );
 
     uint256 feeIn6dec = ((returnForBurningIn6dec * usersFeeModifier) /100) / 100;   
-    //console.log(fee, 'feeIn6dec in _specifiedAmountBurn, BNJ');   
+    //console.log(fee, 'feeIn6dec in specifiedAmountBurn, BNJ');   
 
     uint256 roundThisDown = feeIn6dec % (10**4);
-    //console.log(roundThisDown, 'roundThisDown in _specifiedAmountBurn, BNJ');   
+    //console.log(roundThisDown, 'roundThisDown in specifiedAmountBurn, BNJ');   
 
     uint256 feeRoundedDown = feeIn6dec - roundThisDown;
-    //console.log(feeRoundedDown, 'feeRoundedDown in _specifiedAmountBurn, BNJ');   
+    //console.log(feeRoundedDown, 'feeRoundedDown in specifiedAmountBurn, BNJ');   
 
     uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDown;
-    //console.log(endReturn, 'endReturn in _specifiedAmountBurn, BNJ');   
+    //console.log(endReturn, 'endReturn in specifiedAmountBurn, BNJ');   
 
     uint256 toPayoutTotal =  feeRoundedDown + endReturnIn6dec;  // XXXXXX
-    //console.log(toPayoutTotal, 'toPayoutTotal in _specifiedAmountBurn, BNJ');    // XXXXXX
+    //console.log(toPayoutTotal, 'toPayoutTotal in specifiedAmountBurn, BNJ');    // XXXXXX
 
     uint256 checkTheBalance = polygonUSDC.balanceOf(addressOfThisContract);    // XXXXXX
-    //console.log(checkTheBalance, 'checkTheBalance in _specifiedAmountBurn, BNJ');   // XXXXXX
+    //console.log(checkTheBalance, 'checkTheBalance in specifiedAmountBurn, BNJ');   // XXXXXX
     
 
-    uint256 amountOfLevelsToSell = _amount / 20;
+    uint256 amountOfLevelsToSell = amount / 20;
 
     for (uint256 index = 0; index < amountOfLevelsToSell; index++) {
-      _unstakeTokens(msg.sender, 20);
+      unstakeTokens(msg.sender, 20);
     }   
 
     // this is the user's balance of tokens
-    ownedBenjamins[msg.sender] -= _amount;
+    ownedBenjamins[msg.sender] -= amount;
 
-    _burn(addressOfThisContract, _amount);      
-    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);      
+    _burn(addressOfThisContract, amount);      
+    emit SpecifiedBurnEvent(msg.sender, amount, returnForBurningIn6dec);      
 
 
-    _withdrawFromLendingPool(returnForBurningIn6dec); 
+    withdrawFromLendingPool(returnForBurningIn6dec); 
 
     polygonUSDC.transfer(feeReceiver, feeRoundedDown);
     polygonUSDC.transfer(msg.sender, endReturnIn6dec);     
@@ -321,60 +321,60 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return returnForBurningIn6dec;   
   }
 
-  function calcSpecBurnReturn(uint256 _amount) public view returns (uint256 burnReturn) {    
+  function calcSpecBurnReturn(uint256 amount) public view returns (uint256 burnReturn) {    
     //console.log("BNJ, calcSpecBurnReturn, totalsupply:", totalSupply() );
-    //console.log("BNJ, calcSpecBurnReturn, _amount:", _amount );
-    return calcReturnForTokenBurn(totalSupply(), _amount); 
+    //console.log("BNJ, calcSpecBurnReturn, amount:", amount );
+    return calcReturnForTokenBurn(totalSupply(), amount); 
   }      
 
-  function _stakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToStake) private {
-    uint256 tokensOwned = checkOwnedBenjamins( _stakingUserAddress ) ;
-    //console.log(tokensOwned, 'tokensOwned in _stakeTokens, BNJ');
+  function stakeTokens(address stakingUserAddress, uint256 amountOfTokensToStake) private {
+    uint256 tokensOwned = checkOwnedBenjamins( stakingUserAddress ) ;
+    //console.log(tokensOwned, 'tokensOwned in stakeTokens, BNJ');
 
-    require (_amountOfTokensToStake <= tokensOwned, 'BNJ, _stakeTokens: Not enough tokens'); 
+    require (amountOfTokensToStake <= tokensOwned, 'BNJ, stakeTokens: Not enough tokens'); 
 
-    if (!isOnStakingList[_stakingUserAddress]) {
-      stakers.push(_stakingUserAddress);
-      isOnStakingList[_stakingUserAddress] = true;
+    if (!isOnStakingList[stakingUserAddress]) {
+      stakers.push(stakingUserAddress);
+      isOnStakingList[stakingUserAddress] = true;
     }
 
-    uint256 _stakeID = usersStakingPositions[_stakingUserAddress].length;
+    uint256 stakeID = usersStakingPositions[stakingUserAddress].length;
 
     Stake memory newStake = Stake({ 
-      stakingAddress: address(_stakingUserAddress),
-      stakeID: uint256(_stakeID),
-      tokenAmount: uint256(_amountOfTokensToStake),      
+      stakingAddress: address(stakingUserAddress),
+      stakeID: uint256(stakeID),
+      tokenAmount: uint256(amountOfTokensToStake),      
       stakeCreatedTimestamp: uint256(block.timestamp),
       unstaked: false       
     });        
 
-    usersStakingPositions[_stakingUserAddress].push(newStake);
+    usersStakingPositions[stakingUserAddress].push(newStake);
 
-    totalStakedByUser[_stakingUserAddress] += _amountOfTokensToStake;
+    totalStakedByUser[stakingUserAddress] += amountOfTokensToStake;
   }
 
-  function _unstakeTokens(address _stakingUserAddress, uint256 _amountOfTokensToUnstake) private {
+  function unstakeTokens(address stakingUserAddress, uint256 amountOfTokensToUnstake) private {
 
-    uint256 tokensStaked = checkStakedBenjamins( _stakingUserAddress ) ;
-    console.log(tokensStaked, 'tokensStaked in _unstakeTokens, BNJ');
+    uint256 tokensStaked = checkStakedBenjamins( stakingUserAddress ) ;
+    console.log(tokensStaked, 'tokensStaked in unstakeTokens, BNJ');
 
-    require (_amountOfTokensToUnstake <= tokensStaked, 'BNJ, _unstakeTokens: Not enough tokens'); 
+    require (amountOfTokensToUnstake <= tokensStaked, 'BNJ, unstakeTokens: Not enough tokens'); 
    
-    Stake[] memory usersActiveBurnableStakess = getUsersActiveAndBurnableStakes(_stakingUserAddress);
+    Stake[] memory usersActiveBurnableStakess = getUsersActiveAndBurnableStakes(stakingUserAddress);
 
-    require (usersActiveBurnableStakess.length > 0, 'BNJ, _unstakeTokens: No burnable staking positions found. Consider time since staking.');
+    require (usersActiveBurnableStakess.length > 0, 'BNJ, unstakeTokens: No burnable staking positions found. Consider time since staking.');
 
     uint256 newestActiveStake = usersActiveBurnableStakess.length - 1;
 
     uint256 stakeIDtoUnstake = usersActiveBurnableStakess[newestActiveStake].stakeID;    
 
-    for (uint256 unStIndex = 0; unStIndex < usersStakingPositions[_stakingUserAddress].length; unStIndex++) {
-      if (usersStakingPositions[_stakingUserAddress][unStIndex].stakeID == stakeIDtoUnstake ) {
-        usersStakingPositions[_stakingUserAddress][unStIndex].unstaked = true;
+    for (uint256 unStIndex = 0; unStIndex < usersStakingPositions[stakingUserAddress].length; unStIndex++) {
+      if (usersStakingPositions[stakingUserAddress][unStIndex].stakeID == stakeIDtoUnstake ) {
+        usersStakingPositions[stakingUserAddress][unStIndex].unstaked = true;
       }
     }    
 
-    totalStakedByUser[_stakingUserAddress] -= _amountOfTokensToUnstake;
+    totalStakedByUser[stakingUserAddress] -= amountOfTokensToUnstake;
   }
 
   function checkOwnedBenjamins(address userToCheck) private view returns (uint256 usersOwnedBNJIs){
@@ -390,90 +390,90 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
   
   
-  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){   // XXXXXX <=======_changed this only for testing, should be private visibility
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){   // XXXXXX <=======changed this only for testing, should be private visibility
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
     //console.log("BNJ,checkStakedBenjamins: the checked user is staking in total: ", usersTotalStake);
     return usersTotalStake;
   }   
 
-  function _depositIntoLendingPool(uint256 amount) private {
-    //console.log("BNJI, _depositIntoLendingPool, msg.sender is:", msg.sender);
+  function depositIntoLendingPool(uint256 amount) private {
+    //console.log("BNJI, depositIntoLendingPool, msg.sender is:", msg.sender);
 		polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
     emit LendingPoolDeposit(amount);
 	}
 
-	function _withdrawFromLendingPool(uint256 amount) private whenNotPaused {
+	function withdrawFromLendingPool(uint256 amount) private whenNotPaused {
 		polygonLendingPool.withdraw(address(polygonUSDC), amount, addressOfThisContract);
     emit LendingPoolWithdrawal(amount);
 	}
  
   
-  function internalMint(uint256 _amount, address _holderOfInternalMint) public onlyOwner returns (uint256) {
-    //console.log('BNJ, internalMint: _amount', _amount);
+  function internalMint(uint256 amount, address holderOfInternalMint) public onlyOwner returns (uint256) {
+    //console.log('BNJ, internalMint: amount', amount);
 
-    if (!isOnInternalList[_holderOfInternalMint]) {
-      internalAddresses.push(_holderOfInternalMint);
-      isOnInternalList[_holderOfInternalMint] = true;
+    if (!isOnInternalList[holderOfInternalMint]) {
+      internalAddresses.push(holderOfInternalMint);
+      isOnInternalList[holderOfInternalMint] = true;
     }
     
-    require(_amount > 0, "BNJ, internalMint: Amount must be more than zero.");        
-    require(_amount % 20 == 0, "BNJ, internalMint: Amount must be divisible by 20");   
+    require(amount > 0, "BNJ, internalMint: Amount must be more than zero.");        
+    require(amount % 20 == 0, "BNJ, internalMint: Amount must be divisible by 20");   
     
-    uint256 priceForMintingIn6dec = calcSpecMintReturn(_amount);
+    uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
     //console.log(priceForMintingIn6dec, 'priceForMintingIn6dec in internalMint, BNJ');     
 
     uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( msg.sender ) ;
     //console.log(polygonUSDCbalanceIn6dec, 'polygonUSDCbalanceIn6dec in internalMint, BNJ');    
 
-    uint256 _USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
-    //console.log(_USDCAllowancein6dec, '_USDCAllowancein6dec in internalMint, BNJ');
+    uint256 USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
+    //console.log(USDCAllowancein6dec, 'USDCAllowancein6dec in internalMint, BNJ');
 
-    //uint256 _USDCAllowanceinCents = _USDCAllowancein6dec / centsScale4digits;
-    //console.log(_USDCAllowanceinCents, '_USDCAllowance in internalMint, BNJ' );
+    //uint256 USDCAllowanceinCents = USDCAllowancein6dec / centsScale4digits;
+    //console.log(USDCAllowanceinCents, 'USDCAllowance in internalMint, BNJ' );
     
     require (priceForMintingIn6dec <= polygonUSDCbalanceIn6dec, "BNJ, internalMint: Not enough USDC"); 
-    require (priceForMintingIn6dec <= _USDCAllowancein6dec, "BNJ, internalMint: Not enough allowance in USDC for payment" );
+    require (priceForMintingIn6dec <= USDCAllowancein6dec, "BNJ, internalMint: Not enough allowance in USDC for payment" );
     require (priceForMintingIn6dec >= 5000000, "BNJ, internalMint: Minimum minting value of $5 USDC" );      
 
     polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);
-    _depositIntoLendingPool(priceForMintingIn6dec);    
+    depositIntoLendingPool(priceForMintingIn6dec);    
   
     // minting to Benjamins contract itself
-    _mint(addressOfThisContract, _amount);
-    emit SpecifiedMintEvent(msg.sender, _amount, priceForMintingIn6dec);
+    _mint(addressOfThisContract, amount);
+    emit SpecifiedMintEvent(msg.sender, amount, priceForMintingIn6dec);
 
     // this is the user's balance of tokens
-    internalBenjamins[_holderOfInternalMint] += _amount;    
+    internalBenjamins[holderOfInternalMint] += amount;    
 
     return priceForMintingIn6dec; 
 
   }
 
-  function internalBurn(uint256 _amount) public whenNotPaused nonReentrant returns (uint256) {
-    //console.log('BNJ, internalBurn: _amount', _amount);
+  function internalBurn(uint256 amount) public whenNotPaused nonReentrant returns (uint256) {
+    //console.log('BNJ, internalBurn: amount', amount);
 
-    require(_amount % 20 == 0, "BNJ, internalBurn: Amount must be divisible by 20");   
+    require(amount % 20 == 0, "BNJ, internalBurn: Amount must be divisible by 20");   
 
     uint256 tokenBalance = internalBenjamins[msg.sender];    
     
-    //console.log(_amount, '_amount in internalBurn, BNJ');   
+    //console.log(amount, 'amount in internalBurn, BNJ');   
     //console.log(tokenBalance, 'tokenBalance in internalBurn, BNJ');   
      
-    require(_amount > 0, "Amount to burn must be more than zero.");  
-    require(tokenBalance >= _amount, "Users tokenBalance must be equal to or more than amount to burn.");             
+    require(amount > 0, "Amount to burn must be more than zero.");  
+    require(tokenBalance >= amount, "Users tokenBalance must be equal to or more than amount to burn.");             
     
-    uint256 returnForBurningIn6dec = calcSpecBurnReturn(_amount);
+    uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
     //console.log(returnForBurning, 'returnForBurning in internalBurn, BNJ');   
 
     require (returnForBurningIn6dec >= 5000000, "BNJ, internalBurn: Minimum burning value is $5 USDC" );    
 
     // this is the user's balance of tokens
-    internalBenjamins[msg.sender] -= _amount;
+    internalBenjamins[msg.sender] -= amount;
 
-    _burn(addressOfThisContract, _amount);      
-    emit SpecifiedBurnEvent(msg.sender, _amount, returnForBurningIn6dec);  
+    _burn(addressOfThisContract, amount);      
+    emit SpecifiedBurnEvent(msg.sender, amount, returnForBurningIn6dec);  
 
-    _withdrawFromLendingPool(returnForBurningIn6dec); 
+    withdrawFromLendingPool(returnForBurningIn6dec); 
    
     polygonUSDC.transfer(msg.sender, returnForBurningIn6dec);  
 
@@ -542,14 +542,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     
   } 
 
-  function calcAccumulated() public view onlyOwner returns (uint256 accumulated) {
+  function calcAccumulated() public view onlyOwner returns (uint256 accumulatedAmount) {
     uint256 allTokensValue = calcAllTokensValue();
     uint256 allTokensValueBuffered = (allTokensValue * 97) / 100;
 
     uint256 allAMUSDC = polygonAMUSDC.balanceOf(addressOfThisContract);
 
-    uint256 _accumulated = allTokensValueBuffered - allAMUSDC;
-    return _accumulated;
+    uint256 accumulated = allTokensValueBuffered - allAMUSDC;
+    return accumulated;
 
   }   
 
@@ -566,53 +566,57 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     return calcReturnForTokenBurn(totalSupply(), totalSupply()); 
   }
 
-  function updateStakingPeriodInSeconds (uint256 _new_stakingPeriodInSeconds) public onlyOwner {
-    stakingPeriodInSeconds = _new_stakingPeriodInSeconds;
+  function updateStakingPeriodInSeconds (uint256 newstakingPeriodInSeconds) public onlyOwner {
+    stakingPeriodInSeconds = newstakingPeriodInSeconds;
   }  
 
-  function updateFeeReceiver(address _newAddress) public onlyOwner {
-    require(_newAddress != address(0), "updateFeeReceiver: _newAddress cannot be the zero address");
-    feeReceiver = _newAddress;
+  function updateFeeReceiver(address newAddress) public onlyOwner {
+    require(newAddress != address(0), "updateFeeReceiver: newAddress cannot be the zero address");
+    feeReceiver = newAddress;
   }
 
-  function updateAccumulatedReceiver(address _newAddress) public onlyOwner {
-    require(_newAddress != address(0), "updateAccumulatedReceiver: _newAddress cannot be the zero address");
-    accumulatedReceiver = _newAddress;
+  function updateAccumulatedReceiver(address newAddress) public onlyOwner {
+    require(newAddress != address(0), "updateAccumulatedReceiver: newAddress cannot be the zero address");
+    accumulatedReceiver = newAddress;
   }  
 
-  function updatePolygonUSDC(address _newAddress) public onlyOwner {
-    require(_newAddress != address(0), "updatePolygonUSDC: _newAddress cannot be the zero address");
-    polygonUSDC = IERC20(_newAddress);
+  function updatePolygonUSDC(address newAddress) public onlyOwner {
+    require(newAddress != address(0), "updatePolygonUSDC: newAddress cannot be the zero address");
+    polygonUSDC = IERC20(newAddress);
   }
 
-  function updatePolygonAMUSDCC(address _newAddress) public onlyOwner {
-    require(_newAddress != address(0), "updatePolygonAMUSDCC: _newAddress cannot be the zero address");
-    polygonAMUSDC = IERC20(_newAddress);
+  function updatePolygonAMUSDCC(address newAddress) public onlyOwner {
+    require(newAddress != address(0), "updatePolygonAMUSDCC: newAddress cannot be the zero address");
+    polygonAMUSDC = IERC20(newAddress);
   }
 
-  function updatePolygonLendingPool(address _newAddress) public onlyOwner {
-    require(_newAddress != address(0), "updatePolygonLendingPool: _newAddress cannot be the zero address");
-    polygonLendingPool = ILendingPool(_newAddress);
+  function updatePolygonLendingPool(address newAddress) public onlyOwner {
+    require(newAddress != address(0), "updatePolygonLendingPool: newAddress cannot be the zero address");
+    polygonLendingPool = ILendingPool(newAddress);
   }
     
-  function updateTier_0_feeMod (uint256 _new_tier_0_feeMod) public onlyOwner {
-    tier_0_feeMod = _new_tier_0_feeMod;
+  function updateTier0feeMod (uint256 newtier0feeMod) public onlyOwner {
+    tier_0_feeMod = newtier0feeMod;
   }
 
-  function updateTier_1_feeMod (uint256 _new_tier_1_feeMod) public onlyOwner {
-    tier_1_feeMod = _new_tier_1_feeMod;
+  function updateTier1feeMod (uint256 newtier1feeMod) public onlyOwner {
+    tier_1_feeMod = newtier1feeMod;
   }
 
-  function updateTier_2_feeMod (uint256 _new_tier_2_feeMod) public onlyOwner {
-    tier_2_feeMod = _new_tier_2_feeMod;
+  function updateTier2feeMod (uint256 newtier2feeMod) public onlyOwner {
+    tier_2_feeMod = newtier2feeMod;
   }
 
-  function updateTier_3_feeMod (uint256 _new_tier_3_feeMod) public onlyOwner {
-    tier_3_feeMod = _new_tier_3_feeMod;
+  function updateTier3feeMod (uint256 newtier3feeMod) public onlyOwner {
+    tier_3_feeMod = newtier3feeMod;
   }
 
-  function updateTier_4_feeMod (uint256 _new_tier_4_feeMod) public onlyOwner {
-    tier_4_feeMod = _new_tier_4_feeMod;
-  }  
+  function updateTier4feeMod (uint256 newtier4feeMod) public onlyOwner {
+    tier_4_feeMod = newtier4feeMod;
+  } 
+
+  function updateTier5feeMod (uint256 newtier4feeMod) public onlyOwner {
+    tier_5_feeMod = newtier4feeMod;
+  }   
 
 }

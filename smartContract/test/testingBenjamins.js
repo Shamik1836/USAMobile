@@ -14,7 +14,9 @@ let mintPriceTotalInUSDCWasPaidNowGlobalV;
 let mintAllowanceInUSDCCentsWasNowGlobalV;
 let burnReturnTotalInUSDCWasPaidNowGlobalV;
 
-let scale6dec = 1000000;
+const scale6dec = 1000000;
+
+let testingUserAddressesArray = [];
 
 let loopCounterTotal = 0;
 let mintCounterTotal = 0;
@@ -128,7 +130,7 @@ async function internalMint(amountToMint, amountToApproveInCents, addressToHoldI
   const amountToApproveIn6dec = multiplyFromUSDCcentsTo6dec(amountToApproveInCents);  
   console.log( bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in internalMint');     
   await polygonUSDC.approve(benjaminsContract.address, amountToApproveIn6dec);
-  // args: internalMint(uint256 _amount, address _holderOfInternalMint)
+  // args: internalMint(uint256 amount, address holderOfInternalMint)
   await benjaminsContract.connect(deployerSigner).internalMint(amountToMint, addressToHoldInternalMint);  
   
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
@@ -554,7 +556,9 @@ async function runMintOrBurnLoop(loopsToRun) {
 
 
 
-let testingUserAddressesArray = [];
+
+
+
 
 describe("Benjamins Test", function () {
 
@@ -812,11 +816,12 @@ describe("Benjamins Test", function () {
       const testingUser = testingUserAddressesArray[index];
 
 
-      let mintingAllowanceNeeded = calcMintVariables(tokensExistQueriedGlobalV, 100);
-      console.log(mintingAllowanceNeeded, `mintingAllowanceNeeded in user mint nr ${index}`)
+      let mintingAllowanceNeededin6dec = calcMintVariables(tokensExistQueriedGlobalV, 100);
+      let mintingAllowanceNeededinUSDCcents = dividefrom6decToUSDCcents(mintingAllowanceNeededin6dec);
+      console.log(mintingAllowanceNeededin6dec, `mintingAllowanceNeededin6dec in user mint nr ${index}`)
 
       // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-      await testMinting(`User mint nr ${index} `, 100, mintingAllowanceNeeded, testingUser);
+      await testMinting(`User mint nr ${index} `, 100, mintingAllowanceNeededinUSDCcents, testingUser);
       await showUsersActiveStakesArray(testingUser);   
       console.log(`==============${testingUser} is DONE, NEXT USER =================`)
     }  
