@@ -10,8 +10,9 @@
   },
   {
     "networkId": "137",
+    "name": "Polygon (Matic)",
     "symbol": "matic",
-    "address": null,
+    "address": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     "description": "Base value on the Polygon network",
     "type": "native",
     "image": "https://assets.coingecko.com/coins/'image's/4713/thumb/matic-token-icon.png?1624446912"
