@@ -1,4 +1,4 @@
-const CONTRACT_NAME = "Benjamins";
+const CONTRACT_NAME = "MumbaiBenjaminsFLAT";  // CHANGED FOR MUMBAI XXXXX
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
@@ -6,8 +6,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   console.log("Deploying now with the acc:", deployer); 
 
-  // Upgradeable Proxy
-  await deploy("Benjamins", {
+  await deploy("MumbaiBenjaminsFLAT", {   // CHANGED FOR MUMBAI XXXXX
     from: deployer,
     args: [feeReceiverAddress],
     log: true,      
