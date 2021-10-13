@@ -23,8 +23,8 @@ function App() {
   var paddingLeft = { paddingLeft: "10px" };
   return (
     <VStack
-      height="100vh"
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+      style={{ minHeight: "100vh", backgroundAttachment: "fixed" }}
     >
       <br />
       <TopNavBar />
