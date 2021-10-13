@@ -3,12 +3,11 @@ import { LibertyFox } from "../Guides/LibertyFox";
 import { SamEagle } from "../Guides/SamEagle";
 import { Benicorn } from "../Guides/Benicorn";
 import { useExperts } from "../../contexts/expertsContext";
-
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
+import { useGradient } from "../../contexts/gradientsContext";
 
 export const ExpertStage = () => {
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { expertsOn, actionMode, dialog } = useExperts();
 
   if (expertsOn === true) {

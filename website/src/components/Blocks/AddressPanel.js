@@ -15,12 +15,12 @@ import { CopyIcon } from "@chakra-ui/icons";
 // import { ToSelect } from "../Bits/ToSelect";
 // import { AmountSelect } from "../Bits/AmountSelect";
 import QRCode from "react-qr-code";
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
+import { useGradient } from "../../contexts/gradientsContext";
 
 export const AddressPanel = () => {
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { setActionMode, setDialog } = useExperts();
   // const { toSymbol, toAddress, txAmount } = useActions();
   const [copied, setCopied] = useState(false);

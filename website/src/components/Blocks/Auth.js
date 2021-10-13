@@ -11,16 +11,15 @@ import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { useMoralis } from "react-moralis";
 import { useState } from "react";
 import { ErrorBox } from "../Support/ErrorPopup";
+import { useGradient } from "../../contexts/gradientsContext";
 
 export const Auth = () => {
   const { colorMode, toggleColorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { authenticate, authError, isAuthenticating, login, signup } =
     useMoralis();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
-
-  const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-  const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
 
   return (
     <VStack
