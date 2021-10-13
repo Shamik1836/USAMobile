@@ -1,4 +1,4 @@
-const CONTRACT_NAME = "MumbaiBenjaminsFLAT";  // CHANGED FOR MUMBAI XXXXX
+const CONTRACT_NAME = "MumbaiBenjamins";  // CHANGED FOR MUMBAI XXXXX
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
@@ -6,7 +6,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   console.log("Deploying now with the acc:", deployer); 
 
-  await deploy("MumbaiBenjaminsFLAT", {   // CHANGED FOR MUMBAI XXXXX
+  await deploy("MumbaiBenjamins", {   // CHANGED FOR MUMBAI XXXXX
     from: deployer,
     args: [feeReceiverAddress],
     log: true,      

@@ -10,7 +10,7 @@ require("hardhat-deploy");
 
 require("hardhat-gas-reporter");
 require("chai");
-//require("@nomiclabs/hardhat-etherscan");
+require("@nomiclabs/hardhat-etherscan");
 //require("solidity-coverage");
 
 let secret = require ("./secret")
@@ -24,6 +24,7 @@ let mnemonic = process.env.MNEMONIC
 module.exports = {
   networks: {
     mumbai: {
+      saveDeployments: true,
       url: secret.url, // CHANGED FOR MUMBAI XXXXX
       accounts: [secret.key] // CHANGED FOR MUMBAI XXXXX
     },
@@ -57,13 +58,16 @@ module.exports = {
     //excludeContracts: ["mocks/"],
   },
   solidity: {
-    version: "^0.8.0",
+    version: "0.8.0",
     settings: {
       optimizer: {
         enabled: true,
         runs: 200,
       },
     },
+  },
+  etherscan: {
+    apiKey: secret.Polygon_APIKEY, 
   },
   mocha: {
     timeout: 240000,
