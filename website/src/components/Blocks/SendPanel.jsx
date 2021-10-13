@@ -45,6 +45,7 @@ export const SendPanel = () => {
               <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
             )}
           </HStack>
+          <br />
           {toAddress && <StartSend />}
         </VStack>
       )}

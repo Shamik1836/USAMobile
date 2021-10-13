@@ -3,6 +3,7 @@ import { Flex } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import ENSAddress from "@ensdomains/react-ens-address";
 import { useActions } from "../../contexts/actionsContext";
+import "./ToAddress.css";
 
 export const ToAddress = () => {
   const { web3, enableWeb3, isWeb3Enabled } = useMoralis();
@@ -15,7 +16,7 @@ export const ToAddress = () => {
   }, [isWeb3Enabled, enableWeb3]);
 
   return (
-    <Flex width="100%" boxShadow="dark-lg">
+    <Flex width="100%">
       {isWeb3Enabled && (
         <ENSAddress
           provider={web3.givenProvider || web3.currentProvider}

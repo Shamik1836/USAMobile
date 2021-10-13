@@ -6,15 +6,8 @@ import { useQuote } from "../../contexts/quoteContext";
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
-  const {
-    fromSymbol,
-    fromAddress,
-    setToSymbol,
-    setToAddress,
-    // toToken,
-    // setToToken,
-    txAmount,
-  } = useActions();
+  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } =
+    useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
