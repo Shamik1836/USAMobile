@@ -175,9 +175,9 @@ async function internalMint(amountToMint, amountToApproveInCents, addressToHoldI
   mintAllowanceInUSDCCentsWasNowGlobalV = amountToApproveInCents;
 }
 
-async function showUsersActiveStakesArray(userAddress) {
-  const callingAccActiveStakesArray = await benjaminsContract.connect(deployerSigner).showAllUsersStakes(userAddress);
-  decipherStakesArray(callingAccActiveStakesArray);
+async function showUsersCompleteStakesArray(userAddress) {
+  const callingAccCompleteStakesArray = await benjaminsContract.connect(deployerSigner).showAllUsersStakes(userAddress);
+  decipherStakesArray(callingAccCompleteStakesArray);
 }
 
 async function showInternalBenjamins(userTocheck) {
@@ -822,7 +822,7 @@ describe("Benjamins Test", function () {
 
       // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
       await testMinting(`User mint nr ${index} `, 100, mintingAllowanceNeededinUSDCcents, testingUser);
-      await showUsersActiveStakesArray(testingUser);   
+      await showUsersCompleteStakesArray(testingUser);   
       console.log(`==============${testingUser} is DONE, NEXT USER =================`)
     }  
     
@@ -830,11 +830,11 @@ describe("Benjamins Test", function () {
 
   });
 
-    /*
+    
   it("9. First burn", async function () {  
     
-    await testBurning("First user burn", 80, deployer);
-    await showUsersActiveStakesArray(deployer);   
+    await testBurning("First user burn", 80, testUser_2);
+    await showUsersCompleteStakesArray(testUser_2);   
 
     /*
     const deployerStaked = bigNumberToNumber( await benjaminsContract.checkStakedBenjamins(deployer));
@@ -864,7 +864,7 @@ describe("Benjamins Test", function () {
     // REVERT: using depositStake directly as non-perator is reverted in staking contract
     //await expect( stakingContract.connect(normUserAddress).depositStake() ).to.be.revertedWith(
     //  "StakingContract: caller is not the operator"
-    //); 
+    //); */
 
-  })*/
+  })
 }); 
