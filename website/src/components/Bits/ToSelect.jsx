@@ -25,8 +25,7 @@ export const ToSelect = () => {
     let selectedIndex = e.target.options.selectedIndex;
     console.log("selectedIndex:", selectedIndex);
     if (selectedIndex > 0) {
-      let selectedSymbol =
-        e.target.childNodes[selectedIndex].attributes.value.value;
+      let selectedSymbol = e.target.value;
       console.log("selectedOption:", selectedSymbol);
       setToSymbol(selectedSymbol.toUpperCase());
       let selectedRecord = TokenList.find(
