@@ -7,9 +7,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "hardhat/console.sol";
-
-contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
+contract MumbaiBenjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ for Mumbai testnet
   using SafeMath for uint256;
  
   address public addressOfThisContract;
@@ -63,13 +61,18 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
   event LendingPoolWithdrawal (uint256 amount);
 
-  constructor(address feeReceiverAddress) ERC20("Benjamins", "BNJI") {
+  constructor(address feeReceiverAddress) ERC20("MumbaiBenjamins", "MumBenj") {     // <==== changed_ for Mumbai testnet
     addressOfThisContract = address(this);
     feeReceiver = feeReceiverAddress;
     amountDecimals = 0;
-    polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
-    polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
-    polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);        
+    //polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);               <==== changed_ for Mumbai testnet
+    //polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             <==== changed_ for Mumbai testnet
+    //polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);  <==== changed_ for Mumbai testnet       
+    
+    polygonUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet
+    polygonAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet
+    polygonLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet   
+
     approveLendingPool(largestUint);    
     pause();
   }
@@ -347,7 +350,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
   
   
-  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){   // XXXXXX <=======changed_ this only for testing, should be private visibility
+  function checkStakedBenjamins(address userToCheck) public view returns (uint256 usersStakedBNJIs){   // XXXXX <=======changed_ this only for testing, should be private visibility
     uint256 usersTotalStake = totalStakedByUser[userToCheck];
    
     return usersTotalStake;
