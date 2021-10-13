@@ -1,30 +1,44 @@
-import { FormControl, Flex, FormErrorMessage, Input } from "@chakra-ui/react";
+import { useEffect } from "react";
+import { Flex } from "@chakra-ui/react";
+import { useMoralis } from "react-moralis";
+import ENSAddress from "@ensdomains/react-ens-address";
 import { useActions } from "../../contexts/actionsContext";
 
 export const ToAddress = () => {
-  const { fromSymbol, setToSymbol, toAddress, setToAddress } = useActions();
-  console.groupCollapsed("ToAddress");
-  console.groupEnd();
+  const { web3, enableWeb3, isWeb3Enabled } = useMoralis();
+  const { setToSymbol, setToAddress, setToENSType } = useActions();
 
-  const handleChange = (e) => {
-    setToSymbol(fromSymbol);
-    setToAddress(e.target.value);
-    console.groupCollapsed("ToAddress");
-    console.log("Set toAddress:", toAddress);
-    console.groupEnd();
-  };
+  useEffect(() => {
+    if (!isWeb3Enabled) {
+      enableWeb3();
+    }
+  }, [isWeb3Enabled, enableWeb3]);
 
   return (
-    <Flex width="100%">
-      <FormControl id="toAddress" isRequired>
-        <Input
-          variant="outline"
-          placeholder="Enter recipiant address"
-          boxShadow="dark-lg"
-          onChange={handleChange}
+    <Flex width="100%" boxShadow="dark-lg">
+      {isWeb3Enabled && (
+        <ENSAddress
+          provider={web3.givenProvider || web3.currentProvider}
+          onResolve={({ name, address, type }) => {
+            if (
+              type &&
+              address !== undefined &&
+              address !== "0x0000000000000000000000000000000000000000"
+            ) {
+              setToSymbol(name);
+              setToAddress(address);
+              setToENSType(type);
+              console.groupCollapsed("ToAddress");
+              console.log("ENS Resolved To:", {
+                name: name,
+                address: address,
+                type: type,
+              });
+              console.groupEnd();
+            }
+          }}
         />
-        <FormErrorMessage>Please enter a valid address.</FormErrorMessage>
-      </FormControl>
+      )}
     </Flex>
   );
 };

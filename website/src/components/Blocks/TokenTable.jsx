@@ -29,6 +29,7 @@ export const TokenTable = () => {
       borderRadius="3xl"
       width="100%"
       padding={5}
+      boxShadow="dark-lg"
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
       {!isLoading && (
