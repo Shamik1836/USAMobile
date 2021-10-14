@@ -3,6 +3,7 @@ import { HStack, VStack, useColorMode } from "@chakra-ui/react";
 
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
+import { useGradient } from "../../contexts/gradientsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
@@ -11,13 +12,11 @@ import { StartSend } from "../Bits/StartSend";
 // Send mode.
 import { ToAddress } from "../Bits/ToAddress";
 
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
-
 export const SendPanel = () => {
   const { txAmount, fromSymbol, toAddress } = useActions();
   const { setActionMode, setDialog } = useExperts();
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
 
   useEffect(() => {
     setActionMode("send");
@@ -46,6 +45,7 @@ export const SendPanel = () => {
               <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
             )}
           </HStack>
+          <br />
           {toAddress && <StartSend />}
         </VStack>
       )}
