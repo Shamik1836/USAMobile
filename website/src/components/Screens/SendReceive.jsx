@@ -11,7 +11,7 @@ export const SendReceive = () => {
   useEffect(() => {
     setActionMode("send");
     setDialog("Would you like to send or receive cryptocurrency?");
-  }, []);
+  }, [setActionMode, setDialog]);
 
   const handleSendMode = () => {
     setLocalMode("send");

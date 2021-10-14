@@ -9,7 +9,7 @@ export const SwapTrade = () => {
   useEffect(() => {
     setActionMode("swap");
     setDialog("Select a token to convert.");
-  }, []);
+  }, [setActionMode, setDialog]);
 
   return (
     <Box align="center">
