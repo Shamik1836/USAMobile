@@ -62,6 +62,8 @@ export const usePositions = () => {
               ];
               return output;
             });
+            const user = Moralis.User.current();
+            newList[0].tokenAddress = user?.attributes.ethAddress;
             // Done.  Report back to states.
             setPositions(newList);
             setTotalValue(runningTotal);
