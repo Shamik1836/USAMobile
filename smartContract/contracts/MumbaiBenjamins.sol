@@ -36,11 +36,7 @@ contract MumbaiBenjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== chang
   }
 
   uint8 private amountDecimals;
-  uint256 largestUint = type(uint256).max;
-
-  uint256 centsScale4digits = 10000;
-  uint256 dollarScale6dec = 1000000;
-
+  
   uint256 stakingPeriodInSeconds = 1; // 86400; <===== XXXXX, changed_ only for testing
 
   uint256 tier_0_feeMod = 100;
@@ -62,9 +58,10 @@ contract MumbaiBenjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== chang
   
   event LendingPoolWithdrawal (uint256 amount);
 
-  constructor(address feeReceiverAddress) ERC20("MumbaiBenjamins", "MumBenj") {     // <==== changed_ for Mumbai testnet
+  constructor() ERC20("MumbaiBenjamins", "MumBenj") {     // <==== changed_ for Mumbai testnet
     addressOfThisContract = address(this);
-    feeReceiver = feeReceiverAddress;
+    feeReceiver = owner();
+    accumulatedReceiver = owner();
     amountDecimals = 0;
     //polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);               <==== changed_ for Mumbai testnet
     //polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             <==== changed_ for Mumbai testnet
@@ -73,25 +70,22 @@ contract MumbaiBenjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== chang
     polygonUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet
     polygonAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet
     polygonLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet   
-
-    approveLendingPool(largestUint);    
+    
     pause();
   }
 
   receive() external payable {   
   }
 
-
-  function approveLendingPool (uint256 amountToApprove) public onlyOwner {   
-    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);       
+  function approveLendingPool (uint256 amountToApprove) private {   
+    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);           
   }
-
   
   function decimals() public view override returns (uint8) {
     return amountDecimals;
   }
   
-  function findUsersLevelFeeModifier (address user) private view returns (uint256 usersFee) {
+  function findUsersLevelFeeModifier (address user) private view returns (uint256 usersFeeModifier) {
 
     uint256 usersStakedBalance = checkStakedBenjamins(user);
     
@@ -532,7 +526,11 @@ contract MumbaiBenjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== chang
     require(newAddress != address(0), "updatePolygonLendingPool: newAddress cannot be the zero address");
     polygonLendingPool = ILendingPool(newAddress);
   }
-    
+
+  function updateApproveLendingPool (uint256 amountToApprove) public onlyOwner {   
+    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);       
+  }
+
   function updateTier0feeMod (uint256 newtier0feeMod) public onlyOwner {
     tier_0_feeMod = newtier0feeMod;
   }
