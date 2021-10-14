@@ -21,7 +21,7 @@ export const AddressPanel = () => {
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
   const { lightModeBG, darkModeBG } = useGradient();
-  const { setActionMode, setDialog } = useExperts();
+  const { setDialog } = useExperts();
   // const { toSymbol, toAddress, txAmount } = useActions();
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState("0x0");
@@ -30,7 +30,6 @@ export const AddressPanel = () => {
 
   useEffect(() => {
     if (copied) {
-      setActionMode("recieve");
       setDialog(
         "Your wallet address has been copied to the clipboard.  " +
           "Paste your address as the destination " +

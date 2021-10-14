@@ -1,8 +1,6 @@
-import { useEffect } from "react";
 import { HStack, VStack, useColorMode } from "@chakra-ui/react";
 
 import { useActions } from "../../contexts/actionsContext";
-import { useExperts } from "../../contexts/expertsContext";
 import { useGradient } from "../../contexts/gradientsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
@@ -14,14 +12,8 @@ import { ToAddress } from "../Bits/ToAddress";
 
 export const SendPanel = () => {
   const { txAmount, fromSymbol, toAddress } = useActions();
-  const { setActionMode, setDialog } = useExperts();
   const { colorMode } = useColorMode();
   const { lightModeBG, darkModeBG } = useGradient();
-
-  useEffect(() => {
-    setActionMode("send");
-    setDialog("Select a token to send.");
-  });
 
   return (
     <VStack

@@ -10,7 +10,7 @@ export const BuySell = () => {
   useEffect(() => {
     setActionMode("buy");
     setDialog("Place an order to buy cryptocurrency.");
-  });
+  }, []);
 
   return (
     <iframe
