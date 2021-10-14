@@ -3,7 +3,17 @@
   "version": "0.1.0",
   "description": "USA Wallet utility token with bonding curve, AAVE deposit, etc.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "coverage": "hardhat coverage",
+    "deploy": "hardhat deploy --tags Benjamins --write true",
+    "testnet:deploy": "hardhat deploy --tags Benjamins --network rinkeby",
+    "mainnet:deploy": "hardhat deploy --tags Benjamins --network mainnet",
+    "t:verify": "hardhat --network rinkeby etherscan-verify --sleep",
+    "m:verify": "hardhat --network mainnet etherscan-verify --sleep",
+    "prettier": "prettier --write 'contracts/**/*.sol'"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/orbitmechanic/USAMobile.git"
@@ -19,11 +29,11 @@
     "url": "https://github.com/orbitmechanic/USAMobile/issues"
   },
   "author": "ctrl030, orbitmechanic",
-  "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",
+  "homepage": "https://github.com/orbitmechanic/USAMobile/smartContract#readme",  
   "license": "../LICENSE.txt",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
-    "@nomiclabs/hardhat-etherscan": "^2.1.1",
+    "@nomiclabs/hardhat-etherscan": "2.1.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "chai": "4.3.4",
     "ethereum-waffle": "3.4.0",
@@ -32,7 +42,8 @@
     "hardhat-deploy": "0.8.6",
     "hardhat-gas-reporter": "^1.0.4",
     "prettier": "2.2.1",
-    "prettier-plugin-solidity": "1.0.0-beta.8"
+    "prettier-plugin-solidity": "1.0.0-beta.8",
+    "solidity-coverage": "^0.7.17"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.1.0",

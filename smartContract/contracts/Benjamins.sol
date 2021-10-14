@@ -63,13 +63,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     feeReceiver = owner();
     accumulatedReceiver = owner();
     amountDecimals = 0;
-    //polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);               <==== changed_ for Mumbai testnet
-    //polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             <==== changed_ for Mumbai testnet
-    //polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);  <==== changed_ for Mumbai testnet       
+    polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);              
+    polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             
+    polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);         
     
-    polygonUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet
-    polygonAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet
-    polygonLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet   
+    //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet
+    //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet
+    //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet   
     
     pause();
   }
@@ -385,6 +385,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     require (priceForMintingIn6dec >= 5000000, "BNJ, internalMint: Minimum minting value of $5 USDC" );      
 
     polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);
+
+    approveLendingPool(priceForMintingIn6dec);
+
     depositIntoLendingPool(priceForMintingIn6dec);    
   
     // minting to Benjamins contract itself

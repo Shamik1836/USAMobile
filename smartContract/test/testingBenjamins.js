@@ -811,12 +811,9 @@ describe("Benjamins Test", function () {
     
   });
   
+ 
 
-  
-  // switch user(s) <=========   XXXXXXX
-  
-
-  it("8. Users minting and staking", async function () {    
+  it("8. testUser_1 - testUser_3 will buy 5 levels, i.e. mint and stake 100 tokens", async function () {    
     
     //First three users in array will mint 100 tokens / buy 5 levels
     for (let index = 0; index < 3; index++) {
