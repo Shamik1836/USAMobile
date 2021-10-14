@@ -10,7 +10,7 @@ require("hardhat-deploy");
 
 require("hardhat-gas-reporter");
 require("chai");
-require("@nomiclabs/hardhat-etherscan");
+//require("@nomiclabs/hardhat-etherscan");
 //require("solidity-coverage");
 
 let secret = require ("./secret")
@@ -23,27 +23,41 @@ let mnemonic = process.env.MNEMONIC
 
 module.exports = {
   networks: {
+    /*
     mumbai: {
       saveDeployments: true,
       url: secret.url, // CHANGED FOR MUMBAI XXXXX
       accounts: [secret.key] // CHANGED FOR MUMBAI XXXXX
-    },
+    }, 
+    */   
     /*hardhat: {
-      // using forked polygon mainnet as default network, peg at blockNumber: 19907815
+      // using forked MUMBAI TESTNET as default network, peg at blockNumber: 19907815
       forking: {
         live: true,
         saveDeployments: true,
-        url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 19907815,
+        url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_MUMBAI_URL}`,
+        blockNumber: 20182000,
         //accounts: {
         //  mnemonic,
         //},
       },
-    },   */ 
+    },*/
+    hardhat: {
+      // using forked POLYGON MAINNET as default network, peg at blockNumber: 19907815
+      forking: {
+        live: true,
+        saveDeployments: true,
+        url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_POLYGON_URL}`,
+        blockNumber: 19907815,
+        //accounts: {
+        //  mnemonic,
+        //},
+      },      
+    },          
   },  
   namedAccounts: {
-    deployer: `${process.env.MUMBAI_DEPLOYER_ACC}`,                // CHANGED FOR MUMBAI XXXXX
-    feeReceiverAddress: `${process.env.MUMBAI_FEE_RECEIVER_ACC}`,  // CHANGED FOR MUMBAI XXXXX
+    deployer: `${process.env.DEPLOYER_ACC}`,               
+    feeReceiverAddress: `${process.env.FEE_RECEIVER_ACC}`,  // CHANGED FOR MUMBAI XXXXX
     testUser_1: `${process.env.TEST_USER_1}`,
     testUser_2: `${process.env.TEST_USER_2}`,
     testUser_3: `${process.env.TEST_USER_3}`,
@@ -66,9 +80,11 @@ module.exports = {
       },
     },
   },
+  /*
   etherscan: {
     apiKey: secret.Polygon_APIKEY, 
   },
+  */
   mocha: {
     timeout: 240000,
   },
