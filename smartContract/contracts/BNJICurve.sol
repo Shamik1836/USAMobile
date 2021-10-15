@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract BNJICurve is Ownable, Pausable{   
 
-  uint256 USDCscale = 10**6;  
+  uint256 USDCscale = 1000000;  
 
   uint256 curveFactor = 800000;
 
@@ -29,7 +29,7 @@ contract BNJICurve is Ownable, Pausable{
    
     uint256 totalPriceForTokensMintingNowInUSDC6digits = step2 / curveFactor;  
         
-    uint256 takeOffFactor = 10 ** 4;
+    uint256 takeOffFactor = 10000;
     
     uint256 rest = totalPriceForTokensMintingNowInUSDC6digits % takeOffFactor;
     
@@ -56,9 +56,9 @@ contract BNJICurve is Ownable, Pausable{
    
     uint256 step2 = step1 * USDCscale ;
     
-    uint256 returnForTokenBurnInUSDC6digits = step2/ 800000 ;
+    uint256 returnForTokenBurnInUSDC6digits = step2/ curveFactor ;
     
-    uint256 takeOffFactor = 10 ** 4;
+    uint256 takeOffFactor = 10000;
    
     uint256 rest = returnForTokenBurnInUSDC6digits % takeOffFactor;
    

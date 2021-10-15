@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: NONE
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+
 import "./BNJICurve.sol";
 import "./ILendingPool.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -8,7 +10,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ for Mumbai testnet
+contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {  
   using SafeMath for uint256;
  
   address public addressOfThisContract;
@@ -24,8 +26,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
   mapping (address => uint256) private totalStakedByUser;
   mapping (address => bool) private isOnStakingList;
   mapping (address => bool) private isOnInternalList;
-  mapping (address => Stake[]) private usersStakingPositions;
-  mapping (address => Stake[]) private internalStakingPositions;  
+  mapping (address => Stake[]) private usersStakingPositions;  
 
   struct Stake {
     address stakingAddress;
@@ -38,7 +39,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
   uint8 private amountDecimals;
   
   uint256 stakingPeriodInSeconds = 0; // 86400; <===== XXXXX, changed_ only for testing
-
+  
   uint256 tier_0_feeMod = 100;
   uint256 tier_1_feeMod = 95;
   uint256 tier_2_feeMod = 85;
@@ -58,7 +59,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
   
   event LendingPoolWithdrawal (uint256 amount);
 
-  constructor() ERC20("Benjamins", "BNJI") {     // <==== changed_ for Mumbai testnet
+  constructor() ERC20("Benjamins", "BNJI") {    
     addressOfThisContract = address(this);
     feeReceiver = owner();
     accumulatedReceiver = owner();
@@ -67,9 +68,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             
     polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);         
     
-    //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet
-    //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet
-    //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet   
+    //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet XXXXX
+    //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet XXXXX
+    //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet XXXXX   
     
     pause();
   }
@@ -78,14 +79,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
   }
 
   function approveLendingPool (uint256 amountToApprove) private {   
-    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);           
+    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);               
   }
   
   function decimals() public view override returns (uint8) {
     return amountDecimals;
   }
   
-  function findUsersLevelFeeModifier (address user) private view returns (uint256 usersFeeModifier) {
+  function findUsersFeeModifier (address user) private view returns (uint256 usersFeeModifier) {
 
     uint256 usersStakedBalance = checkStakedBenjamins(user);
     
@@ -178,7 +179,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
     
-    uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender ); 
+    uint256 usersFeeModifier = findUsersFeeModifier( msg.sender ); 
 
     uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier) /100) /100;
     
@@ -201,6 +202,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);  
 
     approveLendingPool(priceForMintingIn6dec);
+
+    uint256 LendingPoolAllowancein6dec = polygonUSDC.allowance(addressOfThisContract, address(polygonLendingPool)); 
+    console.log(LendingPoolAllowancein6dec, '================   ===== =======BNJ, LendingPoolAllowancein6dec ');  // take out later XXXXX
 
     depositIntoLendingPool(priceForMintingIn6dec);      
   
@@ -247,7 +251,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     
     require (returnForBurningIn6dec >= 5000000, "BNJ, specifiedAmountBurn: Minimum burning value is $5 USDC" );
 
-    uint256 usersFeeModifier = findUsersLevelFeeModifier( msg.sender );
+    uint256 usersFeeModifier = findUsersFeeModifier( msg.sender );
 
     uint256 feeIn6dec = ((returnForBurningIn6dec * usersFeeModifier) /100) / 100;   
     
@@ -280,9 +284,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
     return returnForBurningIn6dec;   
   }
 
-  function calcSpecBurnReturn(uint256 amount) public view returns (uint256 burnReturn) {    
-    //console.log("BNJ, calcSpecBurnReturn, totalsupply:", totalSupply() );
-    //console.log("BNJ, calcSpecBurnReturn, amount:", amount );
+  function calcSpecBurnReturn(uint256 amount) public view returns (uint256 burnReturn) { 
     return calcReturnForTokenBurn(totalSupply(), amount); 
   }      
 
@@ -433,52 +435,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {   // <==== changed_ fo
   function showInternalBenjamins (address userToCheck) public view onlyOwner returns (uint256) {   
     return internalBenjamins[userToCheck];
   }
-
-  function getInternalActiveStakes(address userToCheck) public view onlyOwner returns (Stake[] memory stakeArray){
-
-    uint256 nrOfActiveStakes;
-
-    Stake[] memory usersStakeArray = internalStakingPositions[userToCheck];
-
-    for (uint256 index = 0; index < usersStakeArray.length; index++) { 
-
-      // each time an active stake is found, nrOfActiveStakes is increased by 1
-      if (usersStakeArray[index].unstaked == false) {
-        nrOfActiveStakes++;
-      }     
-    }
-
-    if (nrOfActiveStakes == 0){
-      return new Stake[](0);
-    }
-
-    else {
-      // 'activeStakes' array with hardcoded length, defined by active stakes found above
-      Stake[] memory activeStakes = new Stake[](nrOfActiveStakes);      
-
-      // index position in activeStakes array
-      uint256 newIndex = 0 ;
-
-      for (uint256 k = 0; k < activeStakes.length; k++) {
-        
-        // each time an active stake is found, its details are put into the next position in the 'activeStakes' array
-        if (usersStakeArray[k].unstaked == false) {
-          activeStakes[newIndex].stakingAddress = usersStakeArray[newIndex].stakingAddress;
-          activeStakes[newIndex].stakeID = usersStakeArray[newIndex].stakeID;          
-          activeStakes[newIndex].tokenAmount = usersStakeArray[newIndex].tokenAmount;
-          activeStakes[newIndex].stakeCreatedTimestamp = usersStakeArray[newIndex].stakeCreatedTimestamp;
-          activeStakes[newIndex].unstaked = usersStakeArray[newIndex].unstaked;
-          newIndex++;
-        }         
-
-      }
-      // returning activeStakes array
-      return activeStakes; 
-
-    } 
-    
-  } 
-
+  
   function calcAccumulated() public view onlyOwner returns (uint256 accumulatedAmount) {
     uint256 allTokensValue = calcAllTokensValue();
     uint256 allTokensValueBuffered = (allTokensValue * 97) / 100;

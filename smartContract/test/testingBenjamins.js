@@ -565,15 +565,15 @@ describe("Benjamins Test", function () {
   // setting instances of contracts
   before(async function() {
 
-    console.log("starting before part here ------");
+    //console.log("starting before part here ------");
 
     ({ deployer, feeReceiverAddress, testUser_1, testUser_2, testUser_3, testUser_4, testUser_5 } = await getNamedAccounts());
 
-    console.log("got through getNamedAccounts here ------");
+    //console.log("got through getNamedAccounts here ------");
 
     deployerSigner = await ethers.provider.getSigner(deployer); 
     
-    console.log("got through getSigner for deployer here ------");
+    //console.log("got through getSigner for deployer here ------");
 
     testingUserAddressesArray.push(testUser_1);
     testingUserAddressesArray.push(testUser_2);
