@@ -5,6 +5,7 @@ import {
   FormErrorMessage,
   Tooltip,
   useColorMode,
+  useToast,
 } from "@chakra-ui/react";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
@@ -26,6 +27,7 @@ export const RequestQuote = () => {
   } = useQuote();
   const { setDialog } = useExperts();
   const { colorMode } = useColorMode();
+  const toast = useToast();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -53,15 +55,13 @@ export const RequestQuote = () => {
       .then((oneInchQuote) => {
         console.groupCollapsed("RequestQuote::response.");
         console.log("Recieved Quote:", oneInchQuote);
-        oneInchQuote.fromToken && setFromToken(oneInchQuote.fromToken);
-        oneInchQuote.fromTokenAmount &&
-          setFromTokenAmount(oneInchQuote.fromTokenAmount);
-        oneInchQuote.protocols && setProtocols(oneInchQuote.protocols[0]);
-        oneInchQuote.toToken && setToToken(oneInchQuote.toToken);
-        oneInchQuote.toTokenAmount &&
-          setToTokenAmount(oneInchQuote.toTokenAmount);
-        oneInchQuote.estimatedGas && setEstimatedGas(oneInchQuote.estimatedGas);
         if (oneInchQuote.protocols !== undefined) {
+          setFromToken(oneInchQuote.fromToken);
+          setFromTokenAmount(oneInchQuote.fromTokenAmount);
+          setProtocols(oneInchQuote.protocols[0]);
+          setToToken(oneInchQuote.toToken);
+          setToTokenAmount(oneInchQuote.toTokenAmount);
+          setEstimatedGas(oneInchQuote.estimatedGas);
           setQuoteValid("true");
           setDialog(
             "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
@@ -74,6 +74,11 @@ export const RequestQuote = () => {
               oneInchQuote.message
           );
           setQuoteValid("false");
+          toast({
+            description: oneInchQuote.message,
+            status: "error",
+            isClosable: true,
+          });
           return;
         }
         console.groupEnd();
@@ -85,7 +90,7 @@ export const RequestQuote = () => {
       <FormControl id="sendstart">
         <Tooltip label="Preview token transmission.">
           <Button
-            enabled={txAmount > 0 ? "true" : "false"}
+            isDisabled={!txAmount || !toSymbol}
             variant={colorMode === "light" ? "outline" : "solid"}
             boxShadow="dark-lg"
             onClick={handlePress}

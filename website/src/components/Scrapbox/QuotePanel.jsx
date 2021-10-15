@@ -1,7 +1,7 @@
 import { Avatar, Button, HStack, Text, VStack } from "@chakra-ui/react";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
-import { DoItButton } from "../Bits/DoItButton";
+import { DoItButton } from "./DoItButton";
 
 export const QuotePanel = () => {
   const {

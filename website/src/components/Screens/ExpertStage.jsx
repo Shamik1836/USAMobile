@@ -3,13 +3,27 @@ import { LibertyFox } from "../Guides/LibertyFox";
 import { SamEagle } from "../Guides/SamEagle";
 import { Benicorn } from "../Guides/Benicorn";
 import { useExperts } from "../../contexts/expertsContext";
+import { useGradient } from "../../contexts/gradientsContext";
 
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
+const Icons = {
+  "": Benicorn,
+  idle: Benicorn,
+  portfolio: SamEagle,
+  chart: SamEagle,
+  trade: Benicorn,
+  swap: Benicorn,
+  buy: LibertyFox,
+  sell: LibertyFox,
+  send: LibertyFox,
+  receive: LibertyFox,
+  gallery: LibertyFox,
+};
 
 export const ExpertStage = () => {
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { expertsOn, actionMode, dialog } = useExperts();
+  const Icon = Icons[actionMode];
 
   if (expertsOn === true) {
     return (
@@ -25,22 +39,10 @@ export const ExpertStage = () => {
           width="400px"
           bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
         >
-          <Container width="200px" margin={7} padding={3} text-align="center">
-            <Text text-align="center">{dialog}</Text>
+          <Container padding={3} flex="1">
+            <Text>{dialog}</Text>
           </Container>
-          <Container>
-            {actionMode === "" && <Benicorn />}
-            {actionMode === "idle" && <Benicorn />}
-            {actionMode === "portfolio" && <SamEagle />}
-            {actionMode === "chart" && <SamEagle />}
-            {actionMode === "trade" && <Benicorn />}
-            {actionMode === "swap" && <Benicorn />}
-            {actionMode === "buy" && <LibertyFox />}
-            {actionMode === "sell" && <LibertyFox />}
-            {actionMode === "send" && <LibertyFox />}
-            {actionMode === "receive" && <LibertyFox />}
-            {actionMode === "gallery" && <LibertyFox />}
-          </Container>
+          <Container flex="1">{Icon && <Icon />}</Container>
         </HStack>
         <br />
       </Container>

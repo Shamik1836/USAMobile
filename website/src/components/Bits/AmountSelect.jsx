@@ -19,7 +19,7 @@ export const AmountSelect = () => {
   const [value, setValue] = useState(0);
   const { positions, waiting } = usePositions();
   const { fromSymbol, setTxAmount } = useActions();
-  const { setActionMode, setDialog } = useExperts();
+  const { setDialog } = useExperts();
 
   const format = (val) =>
     fromSymbol === undefined ? "" : val + " " + fromSymbol?.toUpperCase();
@@ -45,7 +45,6 @@ export const AmountSelect = () => {
     } else {
       console.log("AmountSelect::useEffect::waiting.");
     }
-    setActionMode("recieve");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positions, fromSymbol, waiting]);
 

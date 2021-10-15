@@ -110,7 +110,6 @@ export const DoItButton = (props) => {
     <Tooltip label="Submit swap order.">
       <Button
         mr={2}
-        mt={-2}
         className="ExpertButton"
         boxShadow="dark-lg"
         onClick={handlePress}

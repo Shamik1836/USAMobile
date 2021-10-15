@@ -1,6 +1,7 @@
 import { HStack, VStack, useColorMode } from "@chakra-ui/react";
-
+import { useGradient } from "../../contexts/gradientsContext";
 import { useActions } from "../../contexts/actionsContext";
+import { useQuote } from "../../contexts/quoteContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
@@ -8,13 +9,13 @@ import { AmountSelect } from "../Bits/AmountSelect";
 // Swap mode.
 import { ToSelect } from "../Bits/ToSelect";
 import { RequestQuote } from "../Bits/RequestQuote";
-
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
+import { QuotePanel } from "../Scrapbox/QuotePanel";
 
 export const SwapPanel = () => {
-  const { txAmount, fromSymbol, toSymbol } = useActions();
+  const { fromSymbol } = useActions();
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
+  const { quoteValid } = useQuote();
 
   return (
     <VStack
@@ -30,17 +31,16 @@ export const SwapPanel = () => {
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
       <FromSelect />
-      {fromSymbol !== "" && (
+      {!!fromSymbol && (
         <>
           <HStack>
             <AmountSelect />
-            {txAmount && (
-              <ToSelect visible={fromSymbol === "" ? "hidden" : "visible"} />
-            )}
+            <ToSelect visible={fromSymbol === "" ? "hidden" : "visible"} />
           </HStack>
-          {toSymbol && <RequestQuote />}
+          <RequestQuote />
         </>
       )}
+      {quoteValid === "true" && <QuotePanel />}
     </VStack>
   );
 };

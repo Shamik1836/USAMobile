@@ -13,14 +13,13 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
+import { useGradient } from "../../contexts/gradientsContext";
 import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
 
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
-
 export const TokenTable = () => {
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { positions, isLoading, totalValue } = usePositions();
 
   return (
@@ -29,6 +28,7 @@ export const TokenTable = () => {
       borderRadius="3xl"
       width="100%"
       padding={5}
+      boxShadow="dark-lg"
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
       {!isLoading && (

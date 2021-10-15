@@ -7,6 +7,7 @@ import { MoralisProvider } from "react-moralis";
 import { ExpertsProvider } from "./contexts/expertsContext";
 import { ActionsProvider } from "./contexts/actionsContext";
 import { QuoteProvider } from "./contexts/quoteContext";
+import { GradientProvider } from "./contexts/gradientsContext";
 
 const theme = extendTheme({
   config: {
@@ -25,7 +26,9 @@ ReactDOM.render(
         <ExpertsProvider>
           <ActionsProvider>
             <QuoteProvider>
-              <App />
+              <GradientProvider>
+                <App />
+              </GradientProvider>
             </QuoteProvider>
           </ActionsProvider>
         </ExpertsProvider>
