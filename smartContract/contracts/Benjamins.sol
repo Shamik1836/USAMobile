@@ -81,9 +81,15 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function calcCurrentLevel(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
     uint256 userBalance = balanceOf(userToCheck);
     uint256 currentLevel;
-    for (currentLevel = 0; levelAntes[currentLevel] < userBalance; currentLevel ++){
+    for (currentLevel = 0; (levelAntes[currentLevel+1]-1)< userBalance; currentLevel ++){
+      console.log("userBalance is:", userBalance);
+      console.log("currentLevel is:", currentLevel);
+      console.log("levelAntes[currentLevel] is:", levelAntes[currentLevel]);      
     }
+    console.log("currentLevel after loop is:", currentLevel);
     return currentLevel;
+    
+    
   }
 
   function calcDiscount(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
@@ -216,7 +222,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   function checkWithdrawAllowed (address userToCheck) internal view returns (bool) {
     uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
-    return ( (holdTime > antiFlashLoan) && ( holdTime > amountBlocksHoldingNeeded(userToCheck) ) );
+
+    //console.log("checkWithdrawAllowed, antiFlashLoan:", antiFlashLoan);
+    //console.log("checkWithdrawAllowed, holdTime:", holdTime);
+    //console.log("checkWithdrawAllowed, msg.sender:", msg.sender);
+    //console.log("checkWithdrawAllowed, amountBlocksHoldingNeeded(userToCheck):", amountBlocksHoldingNeeded(userToCheck));    
+
+    return ( (holdTime > antiFlashLoan) && (holdTime > amountBlocksHoldingNeeded(userToCheck)) );
   }
 
   function transfer(address receiver, uint256 amountOfBNJIs ) public override returns (bool) {

@@ -53,12 +53,19 @@ const polygonQuickswapRouterAddress = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678f
 
 let whaleSignerAddress;
 
-// simulate the passing of "amount" of blocks
-
+// simulate the passing of blocks
 async function mintBlocks (amountOfBlocksToMint) {
   for (let i = 0; i < amountOfBlocksToMint; i++) {
     await ethers.provider.send("evm_mine");
   }
+}
+
+async function balUSDC(userToQuery) {
+  return divideFrom6decToUSDC(bigNumberToNumber (await polygonUSDC.balanceOf(userToQuery)));
+}
+
+async function balBNJI(userToQuery) {
+  return bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1));
 }
 
 // converting BN big numbers to normal numbers
@@ -616,7 +623,7 @@ describe("Benjamins Test", function () {
   });  
   */
 
-  
+  /*  
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () {   
 
     // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
@@ -634,6 +641,28 @@ describe("Benjamins Test", function () {
     expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(20);
 
   });  
+  */
+
+  
+  it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
+
+    // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
+    await testMinting("Test 5.1, minting 20 BNJI to caller", 19, testUser_1, testUser_1);    
+    confirmMint();
+
+    expect(await balBNJI(testUser_1)).to.equal(19);   
+    
+    await mintBlocks(11);  
+
+    const USDCbeforeBurn = await balUSDC(testUser_1);
+    
+    await testBurning("Test 5.2, burning after 11 blocks", 19, testUser_1, testUser_1);
+
+    expect(await balBNJI(testUser_1)).to.equal(0);
+
+  });  
+
+  
   
  
  
