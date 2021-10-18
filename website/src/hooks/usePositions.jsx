@@ -45,6 +45,7 @@ export const usePositions = () => {
               const output = { ...token };
               const tokenData = data[token.symbol.toUpperCase()];
               output.image = tokenData?.image;
+              output.id = tokenData?.id
               output.price = tokenData?.current_price;
               output.tokens = token.balance
                 ? token.balance / 10 ** token.decimals

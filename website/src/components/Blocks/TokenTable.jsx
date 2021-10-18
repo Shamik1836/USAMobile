@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Avatar,
   Box,
@@ -5,23 +6,41 @@ import {
   Text,
   useColorMode,
   VStack,
-} from "@chakra-ui/react";
-import {
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useGradient } from "../../contexts/gradientsContext";
 import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
+import { getDataByCoinID } from "../../hooks/action";
+import Card from "../Research/card";
+import Loader from "../Research/load";
 
 export const TokenTable = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedCoin, setSelectedCoin] = useState(null);
   const { colorMode } = useColorMode();
   const { lightModeBG, darkModeBG } = useGradient();
   const { positions, isLoading, totalValue } = usePositions();
-
+  const getDataApi = getDataByCoinID();
+  const handleClickRow = async (p) => {
+    onOpen();
+    const data = await getDataApi(p.id);
+    if (data.id) {
+      setSelectedCoin(data);
+    } else {
+      onClose();
+    }
+  };
   return (
     <VStack
       borderWidth={4}
@@ -37,7 +56,11 @@ export const TokenTable = () => {
       <Accordion allowToggle width="100%">
         {!isLoading &&
           positions.map((position) => (
-            <AccordionItem key={position.name} width="100%">
+            <AccordionItem
+              key={position.name}
+              width="100%"
+              onClick={() => handleClickRow(position)}
+            >
               <AccordionButton>
                 <Flex gap={6}>
                   <Box width="50px">
@@ -80,6 +103,15 @@ export const TokenTable = () => {
             </AccordionItem>
           ))}
       </Accordion>
+      <Modal isOpen={isOpen} onClose={onClose} size={"4xl"} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedCoin ? <Card data={selectedCoin} /> : <Loader />}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </VStack>
   );
 };
