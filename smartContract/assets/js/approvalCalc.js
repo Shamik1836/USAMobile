@@ -8,8 +8,7 @@ const benjaminsContract = await ethers.getContract("Benjamins");
 // taking the amounts of levels to buy from the user
 const amountOfLevelsPurchased = incomingUserCall;
 
-const tokensExistAtStart = bigNumberToNumber(await benjaminsContract.totalSupply());
-const tokensMintingNow = amountOfLevelsPurchased*20;
+const tokensExistAtStart = bigNumberToNumber(await benjaminsContract.totalSupply());c
 const tokensExistAtEnd = Number(tokensExistAtStart) + Number(tokensMintingNow);
 
 // starting with minting costs, then rounding down to cents

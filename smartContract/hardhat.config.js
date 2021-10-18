@@ -57,7 +57,8 @@ module.exports = {
   },  
   namedAccounts: {
     deployer: `${process.env.DEPLOYER_ACC}`,               
-    feeReceiverAddress: `${process.env.FEE_RECEIVER_ACC}`,  // CHANGED FOR MUMBAI XXXXX
+    feeReceiver: `${process.env.FEE_RECEIVER_ACC}`,  // CHANGED FOR TESTING XXXXX
+    accumulatedReceiver: `${process.env.ACCUMULATED_RECEIVER_ACC}`, // CHANGED FOR TESTING XXXXX
     testUser_1: `${process.env.TEST_USER_1}`,
     testUser_2: `${process.env.TEST_USER_2}`,
     testUser_3: `${process.env.TEST_USER_3}`,

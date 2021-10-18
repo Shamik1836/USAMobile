@@ -21,6 +21,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint8 private amountDecimals;
 
   mapping (address => uint256) lastDepositBlockHeight;
+  mapping (address => bool) private whitelisted;
 
   // amount of BNJI needed for each level;
   uint256[] levelAntes; 
@@ -51,8 +52,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   constructor() ERC20("Benjamins", "BNJI") {    
     addressOfThisContract = address(this);
-    feeReceiver = owner();
-    accumulatedReceiver = owner();
+    feeReceiver = 0xa9ECE84E3139CBa81F60F648002D38c635cd857d;                      // <==== changed_ for testing XXXXX
+    accumulatedReceiver = 0x7c976677499803bbc72262784ec45088715c0221;              // <==== changed_ for testing XXXXX
+    updateWhitelisted(owner(), true);
     amountDecimals = 0;
     polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);              
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             
@@ -85,7 +87,15 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function calcDiscount(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
+    if (isWhitelisted(userToCheck)){
+      return 100;
+    }
+
     return levelDiscounts[calcCurrentLevel(userToCheck)];
+  }
+
+  function isWhitelisted(address userToCheck) internal view returns (bool){
+    return whitelisted[userToCheck];
   }
 
   function mintToSelf (uint256 amountOfBNJIs) public {
@@ -125,13 +135,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     approveLendingPool(priceForMintingIn6dec);
 
     uint256 LendingPoolAllowancein6dec = polygonUSDC.allowance(addressOfThisContract, address(polygonLendingPool)); 
-    console.log(LendingPoolAllowancein6dec, '================   ===== =======BNJ, LendingPoolAllowancein6dec ');  // take out later XXXXX
+    console.log(LendingPoolAllowancein6dec, 'BNJ, LendingPoolAllowancein6dec ');  // take out later XXXXX
 
     depositIntoLendingPool(priceForMintingIn6dec);      
 
     lastDepositBlockHeight[receiverOfTokens] = block.number;
 
-    // minting to Benjamins contract itself
+    // minting to receiverOfTokens
     _mint(receiverOfTokens, amount);    
 
     emit SpecifiedMintEvent(msg.sender, receiverOfTokens, amount, priceForMintingIn6dec);    
@@ -170,16 +180,16 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     
     uint256 roundThisDown = feeIn6dec % (10000);
     
-    uint256 feeRoundedDown = feeIn6dec - roundThisDown;
+    uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
    
-    uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDown;            
+    uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDownIn6dec;            
 
     _burn(msg.sender, amount);      
     emit SpecifiedBurnEvent(msg.sender, receiverOfUSDC, amount, returnForBurningIn6dec);     
 
     withdrawFromLendingPool(returnForBurningIn6dec); 
 
-    polygonUSDC.transfer(feeReceiver, feeRoundedDown);
+    polygonUSDC.transfer(feeReceiver, feeRoundedDownIn6dec);
     polygonUSDC.transfer(receiverOfUSDC, endReturnIn6dec);  
 
     return returnForBurningIn6dec;   
@@ -191,6 +201,10 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   function amountBlocksHoldingNeeded(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
     return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay);
+  }
+
+  function showBaseFee() public view returns (uint256) {  
+    return baseFee;
   }
 
 
@@ -207,13 +221,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     }
   }
 
-  function transferFrom(address payingAddress, address receiver, uint256 amount) public override returns (bool) {
+  function transferFrom(address payingAddress, address receiver, uint256 amountOfBNJIs) public override returns (bool) {
     if (checkWithdrawAllowed(payingAddress)) { 
-      _transfer(payingAddress, receiver, amount);
+      _transfer(payingAddress, receiver, amountOfBNJIs);
       address spender = _msgSender();
       uint256 currentAllowance =  allowance(payingAddress, spender);
-      require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-      _approve(payingAddress, spender, (currentAllowance - amount));
+      require(currentAllowance >= amountOfBNJIs, "ERC20: transfer amount exceeds allowance");
+      _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
 
       return true;
     }
@@ -285,7 +299,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   function updateLevelDiscounts (uint256[] memory newLevelDiscounts) public onlyOwner {
     levelDiscounts = newLevelDiscounts;
-  }
+  }  
 
-  
+  function updateWhitelisted (address userToModifyWL, bool newStatus) public onlyOwner {
+    whitelisted[userToModifyWL] = newStatus;
+  }
 }
