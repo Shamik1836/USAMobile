@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
 const { fixture } = deployments;
 
@@ -118,9 +119,10 @@ async function getMaticBalance(adress) {
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
-  console.log('calling acount address in testMinting is now:', callingAccAddress);
+  console.log('calling address in testMinting is now:', callingAccAddress);
  
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply()); 
+
   const receivingAddressBNJIbalBeforeMint = bigNumberToNumber(await benjaminsContract.balanceOf(receivingAddress));
   const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
@@ -184,8 +186,6 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
 
   
-
-
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
   mintAllowanceInUSDCCentsWasNowGlobalV = dividefrom6decToUSDCcents(givenAllowanceToBNJIcontractIn6dec);
@@ -194,51 +194,62 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   console.log(`==============================================================================`);
 
 };
-/*
-async function testBurning(burnName, amountToBurn, callingAccAddress) { 
+
+async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
+
+  console.log('calling address in testBurning is now:', callingAccAddress);
  
-  const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const callingAccUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
-  //const contractUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
-  const feeReceiverUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiver))); 
-  const contractAMUSDCbalanceBeforeBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-  
+  const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
+
+  const callingAddressBNJIbalBeforeBurn = bigNumberToNumber(await benjaminsContract.balanceOf(callingAccAddress));
   const contractBNJIbalBefore = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
+  const receivingAddressUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(receivingAddress))); 
+  const feeReceiverUSDCBalanceBeforeBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiver))); 
   
- 
+  const contractAMUSDCbalanceBeforeBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  
+
 
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-  await benjaminsContract.connect(callingAccSigner).sellLevels(levelsToSell);  
-  console.log(`=========   User is selling this many levels:`, levelsToSell );
+
+  await calcBurnVariables(amountToBurn, callingAccAddress);
+
+  await benjaminsContract.connect(callingAccSigner).burnForBeneficiary(amountToBurn, receivingAddress);  
+  
+  console.log(`${callingAccAddress} is burning this many tokens:`, amountToBurn, 'for:', receivingAddress );
 
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const callingAccUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(callingAccAddress))); 
-  //const contractUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(benjaminsContract.address))); 
+  const receivingAccUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(receivingAddress))); 
+  
+  
+  const callingAccBNJIbalAfter = bigNumberToNumber(await benjaminsContract.balanceOf(callingAccAddress)); 
   const feeReceiverUSDCBalanceAfterBurnInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(feeReceiver))); 
+  
   const contractAMUSDCbalanceAfterBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
   
   const contractBNJIbalAfter = bigNumberToNumber(await benjaminsContract.balanceOf(benjaminsContract.address)); 
 
-  const callingAccBurnReturnReceivedInCents = callingAccUSDCBalanceAfterBurnInCents - callingAccUSDCBalanceBeforeBurnInCents;
+  const receivingAccBurnReturnReceivedInCents = receivingAccUSDCBalanceAfterBurnInCents - receivingAddressUSDCBalanceBeforeBurnInCents;
   const contractAMUSDCdiffBurnInCents = contractAMUSDCbalanceBeforeBurnInCents - contractAMUSDCbalanceAfterBurnInCents ;
   const feeReceiverUSDCdiffBurnInCents = feeReceiverUSDCBalanceAfterBurnInCents - feeReceiverUSDCBalanceBeforeBurnInCents;     
   
+  //const burningAccBNJIdifference = callingAddressBNJIbalBeforeBurn - callingAccBNJIbalAfter;
   
   console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeBurnInCents), `benjaminsContract amUSDC balance before ${burnName}`);
   console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterBurnInCents), `benjaminsContract amUSDC balance after ${burnName}`);
 
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeBurnInCents), `${callingAccAddress} USDC balance before ${burnName}`);
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterBurnInCents), `${callingAccAddress} USDC balance after ${burnName}`);    
+  console.log(fromCentsToUSDC(callingAddressBNJIbalBeforeBurn), `${callingAccAddress} BNJI balance before ${burnName}`);
+  console.log(fromCentsToUSDC(callingAccBNJIbalAfter), `${callingAccAddress} BNJI balance after ${burnName}`);    
 
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents), `feeReceiver USDC balance before ${burnName}`);
   console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents), `feeReceiver USDC balance after ${burnName}`);
   
-  console.log(fromCentsToUSDC(callingAccBurnReturnReceivedInCents), `${callingAccAddress} burn return received in USDC`);
+  console.log(fromCentsToUSDC(receivingAccBurnReturnReceivedInCents), `${callingAccAddress} burn return received in USDC`);
   console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `benjaminsContract paid out in amUSDC`);
 
   console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
-  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - callingAccBurnReturnReceivedInCents), `should be the fee received, in USDC`); 
+  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - receivingAccBurnReturnReceivedInCents), `should be the fee received, in USDC`); 
 
   console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
   console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
@@ -252,8 +263,11 @@ async function testBurning(burnName, amountToBurn, callingAccAddress) {
   burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(contractAMUSDCdiffBurnInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
+  console.log(`==============================================================================`);
+  console.log(`==============================================================================`);
+
 };
-*/
+
 
 function confirmMint(){  
   expect(tokensShouldExistNowGlobalV).to.equal( Number (tokensExistQueriedGlobalV));
@@ -261,12 +275,11 @@ function confirmMint(){
   expect(mintAllowanceInUSDCCentsShouldBeNowGlobalV).to.equal(Number (mintAllowanceInUSDCCentsWasNowGlobalV));
 };
 
-/*
-function confirmBurn(nrOfTokensExisting, amountToBurn){
-  calcBurnVariables(nrOfTokensExisting, amountToBurn);
+
+function confirmBurn(){  
   expect(tokensShouldExistNowGlobalV).to.equal(Number(tokensExistQueriedGlobalV));
   expect(burnReturnTotalInUSDCShouldBeNowGlobalV).to.equal(Number(burnReturnTotalInUSDCWasPaidNowGlobalV));
-};*/
+};
 
 async function calcMintApprovalAndPrep(amountToMint, accountMinting) {  
   
@@ -302,29 +315,37 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
 
   return toPayTotalIn6dec;
 }
-/*
-function calcBurnVariables(nrOfTokensExisting, amountToBurn) {
+
+async function calcBurnVariables(amountToBurn, accountBurning) {
+
+  const amountOfTokensBeforeBurn = bigNumberToNumber(await benjaminsContract.totalSupply());  
+  const amountOfTokensAfterBurn = amountOfTokensBeforeBurn - amountToBurn;
+
+  const usersTokenAtStart = bigNumberToNumber(await benjaminsContract.balanceOf(accountBurning));
+  const userLevel = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(accountBurning)); 
   
-  const amountOfTokensAfterBurn = nrOfTokensExisting - amountToBurn;
-  const totalReturnForTokensBurningNowInUSDC = ( (nrOfTokensExisting * nrOfTokensExisting) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
+  const totalReturnForTokensBurningNowInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
+  const totalReturnForTokensBurningNowInCents = totalReturnForTokensBurningNowInUSDC * 100;
+  const inCentsRoundedDownBurn = totalReturnForTokensBurningNowInCents - (totalReturnForTokensBurningNowInCents % 1);
+  
+  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.calcDiscount(accountBurning)); 
+  const baseFee = bigNumberToNumber(await benjaminsContract.showBaseFee());
+  const burnFeeStarterInCents = ((totalReturnForTokensBurningNowInCents * feeModifier * baseFee) /100 ) /100;
+  const burnFeeInCentsRoundedDown = burnFeeStarterInCents - (burnFeeStarterInCents % 1);
 
-  const inCentsTotalReturnForTokensBurningNow = totalReturnForTokensBurningNowInUSDC * 100;
-  const inCentsRoundedDownBurn = inCentsTotalReturnForTokensBurningNow - (inCentsTotalReturnForTokensBurningNow % 1);
-  const burnFeeStarter = inCentsTotalReturnForTokensBurningNow / 100;
-  const burnRoundingForFeeDifference = burnFeeStarter % 1;
+  const toReceiveTotalInCents = inCentsRoundedDownBurn - burnFeeInCentsRoundedDown;
+  const toReceiveTotalInUSDC = toReceiveTotalInCents / 100;
+  const toReceiveTotalIn6dec = toReceiveTotalInCents * 10000;
 
-  const burnFee = burnFeeStarter - burnRoundingForFeeDifference;
-  const inCentsToReceiveTotal = inCentsRoundedDownBurn - burnFee;
-  const inUSDCToReceiveTotal = inCentsToReceiveTotal / 100;
-  //console.log(`calcBurnVariables: Return before fee (math curve response): ` + totalReturnForTokensBurningNowInUSDC);
-  //console.log(`calcBurnVariables: User receives (after fee & rounded down cents):  ` + inUSDCToReceiveTotal);
-  //console.log(`calcBurnVariables: Burn fee is: ` + (burnFee / 100));
-  //console.log(`Burn End====================================`);
-   
   tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
-  burnReturnTotalInUSDCShouldBeNowGlobalV = inCentsRoundedDownBurn/100;
+  burnReturnTotalInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
+
+  console.log(usersTokenAtStart, "this is the burning users token balance found at start, calcBurnVariables");  
+  console.log(userLevel, "this is the burning users account level found at start, calcBurnVariables");
+  console.log(feeModifier/100, "this is the applicable fee modifier in percent found at start, calcBurnVariables");
+     
 }
-*/
+
 const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));  
 
 
@@ -554,6 +575,7 @@ describe("Benjamins Test", function () {
     */
   })      
   
+  /*
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {    
     
     // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
@@ -575,45 +597,44 @@ describe("Benjamins Test", function () {
     await testMinting("Test 2.2, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     confirmMint();
 
-    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1) )).to.equal(20);
-     
-    
-    
-   
-
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1) )).to.equal(20);  
   });
+  */
+
+  /*
+  it("Test 3. Should REVERT: testUser_1 tries to mint token amount that includes decimals", async function () {   
+
+    const callingAccSigner = await ethers.provider.getSigner(testUser_1);  
+
+    await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, 1000*10000);    
+
+    const bn126dot2 = ethers.BigNumber.from(126.2);
+
+    await benjaminsContract.connect(callingAccSigner).mintToBeneficiary(bn126dot2, testUser_1);  
+
+    confirmMint();    
+  });  
+  */
+
   
+  it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () {   
+
+    // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
+    await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
+    confirmMint();
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(20);
+
+    await mintBlocks(5);  
+    
+    await expect( testBurning("Test 4.2, should REVERT, burning after 5 blocks", 10, testUser_1, testUser_1) ).to.be.revertedWith(
+      "BNJ, specifiedAmountBurn: msg.sender is not yet allowed to withdraw/burn"
+    );
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(20);
+
+  });  
   
  
-  /*
-  it("8. testUser_1 - testUser_3 will buy 5 levels, i.e. mint 100 tokens", async function () {    
-    
-    //First three users in array will mint 100 tokens / buy 5 levels
-    for (let index = 0; index < 3; index++) {
-      const testingUser = testingUserAddressesArray[index];
-
-
-      let mintingAllowanceNeededin6dec = calcMintApprovalAndPrep(tokensExistQueriedGlobalV, 100);
-      let mintingAllowanceNeededinUSDCcents = dividefrom6decToUSDCcents(mintingAllowanceNeededin6dec);
-      console.log(mintingAllowanceNeededin6dec, `mintingAllowanceNeededin6dec in user mint nr ${index}`)
-
-      // args: testMinting(mintName, amountToMint, amountToApproveInCents, callingAccAddress)
-      await testMinting(`User mint nr ${index} `, 100, mintingAllowanceNeededinUSDCcents, testingUser);
-     
-      console.log(`==============${testingUser} is DONE, NEXT USER =================`)
-    }  
-    
-   
-
-  });*/
-
-  /* 
-  it("9. First burn", async function () {  
-    
-    await testBurning("First user burn", 80, testUser_2);
-    
-  
-    
-
-  })*/
+ 
 }); 

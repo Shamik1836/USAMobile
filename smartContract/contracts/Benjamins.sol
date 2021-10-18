@@ -106,7 +106,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     specifiedAmountMint(amountOfBNJIs, receiverOfTokens);
   }
 
-  function specifiedAmountMint(uint256 amount, address receiverOfTokens) internal whenNotPaused nonReentrant returns (uint256) {   
+  function specifiedAmountMint(uint256 amount, address receiverOfTokens) internal whenNotPaused nonReentrant returns (uint256) {  
+
+    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
     
     uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
     
@@ -150,6 +152,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }  
 
   function calcSpecMintReturn(uint256 amount) public view returns (uint256 mintPrice) {
+    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
     return calcPriceForTokenMint(totalSupply(), amount); 
   }    
 
@@ -162,6 +165,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function specifiedAmountBurn(uint256 amount, address receiverOfUSDC) internal whenNotPaused nonReentrant returns (uint256) { 
+
+    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.');
 
     require (checkWithdrawAllowed(msg.sender), "BNJ, specifiedAmountBurn: msg.sender is not yet allowed to withdraw/burn");
 
@@ -196,6 +201,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function calcSpecBurnReturn(uint256 amount) public view returns (uint256 burnReturn) { 
+    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
     return calcReturnForTokenBurn(totalSupply(), amount); 
   }         
 
