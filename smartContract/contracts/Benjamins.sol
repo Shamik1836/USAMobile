@@ -42,9 +42,9 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   IERC20 public polygonUSDC;
   IERC20 public polygonAMUSDC;
 
-  event SpecifiedMintEvent (address sender, address receiverOfTokens, uint256 tokenAmount, uint256 priceForMintingIn6dec);  
+  event SpecifiedMintEvent (address sender, address receiverOfTokens, uint256 tokenAmount, uint256 priceForMintingIn6dec, uint256 feeRoundedDownIn6dec);  
 
-  event SpecifiedBurnEvent (address sender, address receiverOfUSDC, uint256 tokenAmount, uint256 returnForBurning);  
+  event SpecifiedBurnEvent (address sender, address receiverOfUSDC, uint256 tokenAmount, uint256 returnForBurningIn6dec, uint256 feeRoundedDownIn6dec);  
 
   event LendingPoolDeposit (uint256 amount);
   
@@ -151,7 +151,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     // minting to receiverOfTokens
     _mint(receiverOfTokens, amount);    
 
-    emit SpecifiedMintEvent(msg.sender, receiverOfTokens, amount, priceForMintingIn6dec);    
+    emit SpecifiedMintEvent(msg.sender, receiverOfTokens, amount, priceForMintingIn6dec, feeRoundedDownIn6dec);    
 
     return priceForMintingIn6dec;   
   }  
@@ -195,7 +195,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDownIn6dec;            
 
     _burn(msg.sender, amount);      
-    emit SpecifiedBurnEvent(msg.sender, receiverOfUSDC, amount, returnForBurningIn6dec);     
+    emit SpecifiedBurnEvent(msg.sender, receiverOfUSDC, amount, returnForBurningIn6dec, feeRoundedDownIn6dec);     
 
     withdrawFromLendingPool(returnForBurningIn6dec); 
 
