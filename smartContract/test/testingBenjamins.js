@@ -127,7 +127,10 @@ async function getMaticBalance(adress) {
   return balanceInMATIC;
 }
 
-
+function decipherBlockFeedback(blockResponseObject) {
+  console.log("User is holding his BNJI this many blocks so far:", bigNumberToNumber( blockResponseObject.blocksHoldingSoFar));
+  console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
+}
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
@@ -573,6 +576,10 @@ describe("Benjamins Test", function () {
         await polygonUSDC.connect(deployerSigner).transfer(testingUser, (3000*scale6dec) );
       }       
     } 
+
+    await benjaminsContract.connect(deployerSigner).updateBlocksPerDay(2);
+
+
     /*
     const testUser_1_MATICbalance = await getMaticBalance(testUser_1);
     const testUser_1_USDCbalance = await polygonUSDC.balanceOf(testUser_1);
@@ -663,7 +670,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(5);  
     
     await expect( testBurning("Test 4.2, should REVERT, burning after 5 blocks", 10, testUser_1, testUser_1) ).to.be.revertedWith(
-      "BNJ, specifiedAmountBurn: msg.sender is not yet allowed to withdraw/burn"
+      "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn"
     );
 
     expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(20);
@@ -1189,7 +1196,7 @@ describe("Benjamins Test", function () {
     
   });  
   */
-
+  /*
   it("Test 20. It is possible to burn tokens and reward the USDC to another account", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
@@ -1205,7 +1212,7 @@ describe("Benjamins Test", function () {
     const user_1_USDCbalBefore = await balUSDC(testUser_1);
     const user_2_USDCbalBefore = await balUSDC(testUser_2);
 
-    await testBurning("Test 20, burning 70 BNJI, return goes to acc2", 50, testUser_1, testUser_2);    
+    await testBurning("Test 20, burning 50 BNJI, return goes to acc2", 50, testUser_1, testUser_2);    
     confirmBurn();
 
     expect(await balBNJI(testUser_1)).to.equal(70); 
@@ -1218,8 +1225,48 @@ describe("Benjamins Test", function () {
     expect(user_2_USDCbalBefore).to.equal(0);
 
     expect(user_1_USDCbalAfter).to.equal(2913.44);   
-    expect(user_2_USDCbalAfter).to.equal(34.8);   
-    
+    expect(user_2_USDCbalAfter).to.equal(34.8);       
   });  
+  */
+   
+  it("Test 21. Should REVERT: testUser_1 tries to burn tokens before holding period ends", async function () {   
+
+    await testMinting("Test 21, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
+    confirmMint();
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(60);
+
+    const user_1_LevelAfter60 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfter60 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    await mintBlocks(5);    
+    
+    await expect( benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 30) ).to.be.revertedWith(
+      "BNJ, transfer: sender is not yet allowed to withdraw/burn"
+    );
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(60);
+
+    await mintBlocks(8); 
+
+    await benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 30);
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(30);
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_2))).to.equal(30);
+
+    const user_1_LevelAfter30 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfter30 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    expect(user_1_LevelAfter60).to.equal(2);    
+    expect(user_1_DiscountAfter60).to.equal(10);
+
+    expect(user_1_LevelAfter30).to.equal(1);   
+    expect(user_1_DiscountAfter30).to.equal(5);       
+
+    //console.log ('blocksNeeded',bigNumberToNumber (blocksNeeded));
+    //await mintBlocks(5);  
+
+  });  
+  
  
 }); 

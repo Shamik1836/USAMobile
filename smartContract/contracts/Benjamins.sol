@@ -35,8 +35,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
   uint256 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
   uint256 blocksPerDay = 43200;
-  uint256 baseFee = 2; // in percent
- 
+  uint256 baseFee = 2; // in percent 
 
   ILendingPool public polygonLendingPool;
   IERC20 public polygonUSDC;
@@ -173,7 +172,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.');
 
-    require (checkWithdrawAllowed(msg.sender), "BNJ, specifiedAmountBurn: msg.sender is not yet allowed to withdraw/burn");
+    require (checkWithdrawAllowed(msg.sender), "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn");
 
     uint256 tokenBalance = balanceOf(msg.sender);    
      
@@ -211,13 +210,22 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }         
 
   function amountBlocksHoldingNeeded(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    return (levelHolds[calcCurrentLevel(userToCheck)] /** blocksPerDay*/);                // XXXXXX <===== drastically reduced only for testing
+    return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay);                // XXXXXX <===== drastically reduced only for testing
   }
+
+  function getBlockAmountStillToWait(address userToCheck) public view returns (uint256 blocksHoldingSoFar, uint256 blocksNecessaryTotal) {   // XXXXXX <===== public only for testing
+    uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);    
+    uint256 blocksNecessary = amountBlocksHoldingNeeded(userToCheck);    
+    return (holdTime, blocksNecessary);               
+  }  
 
   function showBaseFee() public view returns (uint256) {  
     return baseFee;
   }
 
+  function showBlocksPerDay() public view returns (uint256) {  
+    return blocksPerDay;
+  }
 
   function checkWithdrawAllowed (address userToCheck) internal view returns (bool) {
     uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
@@ -239,7 +247,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function transferFrom(address payingAddress, address receiver, uint256 amountOfBNJIs) public override returns (bool) {
-    require(checkWithdrawAllowed(payingAddress), "BNJ, transfer: payingAddress is not yet allowed to withdraw/burn");      
+    require(checkWithdrawAllowed(payingAddress), "BNJ, transferFrom: payingAddress is not yet allowed to withdraw/burn");      
     _transfer(payingAddress, receiver, amountOfBNJIs);
     address spender = _msgSender();
     uint256 currentAllowance =  allowance(payingAddress, spender);
@@ -274,7 +282,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function calcAllTokensValue() public view onlyOwner returns (uint256 allTokensReturn) {
     return calcReturnForTokenBurn(totalSupply(), totalSupply()); 
   }
-
+ 
   function updateFeeReceiver(address newAddress) public onlyOwner {
     require(newAddress != address(0), "BNJ, updateFeeReceiver: newAddress cannot be the zero address");
     feeReceiver = newAddress;
@@ -316,7 +324,13 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     levelDiscounts = newLevelDiscounts;
   }  
 
+  function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
+    blocksPerDay = newAmountOfBlocksPerDay;
+  }    
+
   function updateWhitelisted (address userToModifyWL, bool newStatus) public onlyOwner {      // <======= only for testing XXXXX
     whitelisted[userToModifyWL] = newStatus;          // <======= only for testing XXXXX
   }
+
+  
 }
