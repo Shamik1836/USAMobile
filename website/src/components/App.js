@@ -13,18 +13,18 @@ import { SendReceive } from "./Screens/SendReceive";
 import { SwapTrade } from "./Screens/SwapTrade";
 import { BottomFooter } from "./Screens/BottomFooter";
 
-const lightModeBG = "linear(to-br,blue.400,red.300,white,red.300,white)";
-const darkModeBG = "linear(to-br,blue.900,grey,blue.900,grey,blue.900)";
+import { useGradient } from "../contexts/gradientsContext";
 
 function App() {
   const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG } = useGradient();
   const { isAuthenticated } = useMoralis();
 
   var paddingLeft = { paddingLeft: "10px" };
   return (
     <VStack
-      height="100vh"
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+      style={{ minHeight: "100vh", backgroundAttachment: "fixed" }}
     >
       <br />
       <TopNavBar />

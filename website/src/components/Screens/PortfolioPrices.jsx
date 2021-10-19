@@ -9,7 +9,7 @@ export const PortfolioPrices = () => {
   useEffect(() => {
     setActionMode("portfolio");
     setDialog("Select a currency to view transaction histories.");
-  });
+  }, [setActionMode, setDialog]);
 
   return (
     <Box align="center">

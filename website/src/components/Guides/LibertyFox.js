@@ -1,5 +1,5 @@
 import { Image } from "@chakra-ui/react";
-import IconBadge from "../../media/characters/LibertyFox.svg";
+import BadgeIcon from "../../media/characters/LibertyFox.svg";
 export const LibertyFox = (props) => {
   return (
     <Image
@@ -7,7 +7,7 @@ export const LibertyFox = (props) => {
       height="200px"
       width="200px"
       transform="scale(1.78,1.78) translate(5px,9px)"
-      src={IconBadge}
+      src={BadgeIcon}
       alt="Liberty Fox"
       marginBottom="-2vh"
     />

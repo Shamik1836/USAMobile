@@ -6,15 +6,8 @@ import { useQuote } from "../../contexts/quoteContext";
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
-  const {
-    fromSymbol,
-    fromAddress,
-    setToSymbol,
-    setToAddress,
-    // toToken,
-    // setToToken,
-    txAmount,
-  } = useActions();
+  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } =
+    useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
@@ -25,8 +18,7 @@ export const ToSelect = () => {
     let selectedIndex = e.target.options.selectedIndex;
     console.log("selectedIndex:", selectedIndex);
     if (selectedIndex > 0) {
-      let selectedSymbol =
-        e.target.childNodes[selectedIndex].attributes.value.value;
+      let selectedSymbol = e.target.value;
       console.log("selectedOption:", selectedSymbol);
       setToSymbol(selectedSymbol.toUpperCase());
       let selectedRecord = TokenList.find(

@@ -7,13 +7,12 @@ import { useState, useEffect } from "react";
 
 export const CopyAddress = (props) => {
   const { isAuthenticated, user } = useMoralis();
-  const { setActionMode, setDialog } = useExperts();
+  const { setDialog } = useExperts();
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState("0x0");
 
   useEffect(() => {
     if (copied) {
-      setActionMode("recieve");
       setDialog(
         "Your wallet address has been copied to the clipboard.  " +
           "Paste your address as the destination " +

@@ -8,7 +8,6 @@ export const ModeSelect = () => {
 
   return (
     <>
-      {" "}
       <Text>Select an Action:</Text>
       <HStack>
         <Tooltip hasArrow label="Swap some of one token for another token.">
