@@ -1124,8 +1124,8 @@ describe("Benjamins Test", function () {
     const user_1_LevelAfter80 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
     const user_1_DiscountAfter80 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
 
-    const user_2_LevelAfter40 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
-    const user_2_DiscountAfter40 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+    const user_2_LevelAfter40 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_2)); 
+    const user_2_DiscountAfter40 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_2));
     
     expect(user_1_LevelStart).to.equal(0);    
     expect(user_1_LevelAfter120).to.equal(3);    
@@ -1136,10 +1136,48 @@ describe("Benjamins Test", function () {
     expect(user_1_DiscountAfter80).to.equal(10);
 
     expect(user_2_LevelStart).to.equal(0);    
-    expect(user_2_LevelAfter40).to.equal(2); 
+    expect(user_2_LevelAfter40).to.equal(1); 
 
     expect(user_2_DiscountStart).to.equal(0);    
-    expect(user_2_DiscountAfter40).to.equal(10);  
+    expect(user_2_DiscountAfter40).to.equal(5);  
+    
+  });  
+
+  it("Test 19. It is possible to mint tokens to another account", async function () {   
+
+    expect(await balBNJI(testUser_1)).to.equal(0);  
+    expect(await balBNJI(testUser_2)).to.equal(0);    
+
+    const user_1_LevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));   
+    
+    const user_2_LevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_2)); 
+    const user_2_DiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_2));    
+
+    await testMinting("Test 19, minting 120 BNJI from user 1 to user 2", 120, testUser_1, testUser_2);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(0); 
+    expect(await balBNJI(testUser_2)).to.equal(120);       
+    
+    const user_1_LevelShouldBeSame = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const user_1_DiscountShouldBeSame = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    const user_2_LevelAfter120Received = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_2)); 
+    const user_2_DiscountAfter120Received = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_2));
+
+    await mintBlocks(1);     
+    
+    expect(user_1_LevelStart).to.equal(0);    
+    expect(user_1_LevelShouldBeSame).to.equal(0);
+
+    expect(user_1_DiscountStart).to.equal(0);   
+    expect(user_1_DiscountShouldBeSame).to.equal(0);   
+
+    expect(user_2_LevelStart).to.equal(0);    
+    expect(user_2_LevelAfter120Received).to.equal(3); 
+
+    expect(user_2_DiscountStart).to.equal(0);    
+    expect(user_2_DiscountAfter120Received).to.equal(20);  
     
   });  
  
