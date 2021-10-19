@@ -677,6 +677,7 @@ describe("Benjamins Test", function () {
 
   });  
   */
+  /*
   it("Test 7. Token price should increase following bonding curve", async function () {   
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
@@ -711,6 +712,129 @@ describe("Benjamins Test", function () {
     expect(secondPriceForTenInCents).to.equal(717);    
 
   });  
+  */
+  
+  it("Test 8. Account level 1 should not be triggered by minting 19 tokens", async function () {   
 
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 8, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(19); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter19 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter19).to.equal(0);    
+    
+
+  });  
+
+  it("Test 9. Account level 1 should be triggered by minting 20 tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 9, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(20); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter20 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter20).to.equal(1);    
+  });  
+
+  it("Test 10. Account level 2 should be triggered by minting 60 tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 10, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(60); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter60 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter60).to.equal(2);    
+  });  
+  
+  it("Test 11. Account level 3 should be triggered by minting 100 tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 11, minting 100 BNJI to caller", 100, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(100); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter100 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter100).to.equal(3);    
+  });  
+  
+  it("Test 12. Account level 4 should be triggered by minting 500 tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 12, minting 500 BNJI to caller", 500, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(500); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter500 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter500).to.equal(4);    
+  });  
+
+  it("Test 13. Account level 5 should be triggered by minting 2000 tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 13, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2000); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter2000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter2000).to.equal(5);    
+  });  
+
+  it("Test 14. Only account level 5 should be triggered by minting 3000 tokens, in two steps", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    await testMinting("Test 14.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2000); 
+        
+    await mintBlocks(1);      
+
+    const userLevelAfter2000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+
+    await testMinting("Test 14.2, minting 1000 BNJI to caller", 1000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(3000); 
+
+    const userLevelAfter3000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);
+    expect(userLevelAfter2000).to.equal(5);    
+    expect(userLevelAfter3000).to.equal(5);  
+
+  });  
+ 
  
 }); 
