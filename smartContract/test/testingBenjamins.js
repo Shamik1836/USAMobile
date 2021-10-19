@@ -1265,7 +1265,7 @@ describe("Benjamins Test", function () {
 
   });  
   */
-
+  /*
   it("Test 22. It is possible to skip levels by burning larger amounts of tokens", async function () {
 
     await testMinting("Test 22.1, minting 600 BNJI to caller", 600, testUser_1, testUser_1);    
@@ -1292,7 +1292,43 @@ describe("Benjamins Test", function () {
     expect(user_1_DiscountAfter600).to.equal(40);
 
     expect(user_1_LevelAfter30).to.equal(1);   
-    expect(user_1_DiscountAfter30).to.equal(5);   
+    expect(user_1_DiscountAfter30).to.equal(5);  
+     
+  });
+  */
+  
+  it("Test 23. It is possible to skip levels by burning larger amounts of tokens", async function () {
+
+    await testMinting("Test 22.1, minting 506 BNJI to caller", 506, testUser_1, testUser_1);    
+    confirmMint();
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(506);
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_2))).to.equal(0);
+
+    const user_1_LevelAfter506 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfter506 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    await mintBlocks(180);        
+    
+    await benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 506); 
+      
+    const user_1_LevelAfterTransferAll = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfterTransferAll = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+    
+    const user_2_LevelAfter506 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_2));     
+    const user_2_DiscountAfter506 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_2));   
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(0); 
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_2))).to.equal(506);     
+
+    expect(user_1_LevelAfter506).to.equal(4);    
+    expect(user_1_DiscountAfter506).to.equal(40);     
+
+    expect(user_1_LevelAfterTransferAll).to.equal(0);   
+    expect(user_1_DiscountAfterTransferAll).to.equal(0);   
+
+    expect(user_2_LevelAfter506).to.equal(4);   
+    expect(user_2_DiscountAfter506).to.equal(40);   
      
   });
   
