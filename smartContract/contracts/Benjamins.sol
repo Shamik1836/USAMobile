@@ -211,7 +211,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }         
 
   function amountBlocksHoldingNeeded(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay);
+    return (levelHolds[calcCurrentLevel(userToCheck)] /** blocksPerDay*/);                // XXXXXX <===== drastically reduced only for testing
   }
 
   function showBaseFee() public view returns (uint256) {  
@@ -231,23 +231,21 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function transfer(address receiver, uint256 amountOfBNJIs ) public override returns (bool) {
-    if (checkWithdrawAllowed(msg.sender)) {     
-      lastDepositBlockHeight[receiver] = block.number;
-      _transfer(_msgSender(), receiver, amountOfBNJIs);      
-      return true;
-    }
+    require(checkWithdrawAllowed(msg.sender), "BNJ, transfer: sender is not yet allowed to withdraw/burn");        
+    lastDepositBlockHeight[receiver] = block.number;
+    _transfer(_msgSender(), receiver, amountOfBNJIs);      
+    return true;
+    
   }
 
   function transferFrom(address payingAddress, address receiver, uint256 amountOfBNJIs) public override returns (bool) {
-    if (checkWithdrawAllowed(payingAddress)) { 
-      _transfer(payingAddress, receiver, amountOfBNJIs);
-      address spender = _msgSender();
-      uint256 currentAllowance =  allowance(payingAddress, spender);
-      require(currentAllowance >= amountOfBNJIs, "ERC20: transfer amount exceeds allowance");
-      _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
-
-      return true;
-    }
+    require(checkWithdrawAllowed(payingAddress), "BNJ, transfer: payingAddress is not yet allowed to withdraw/burn");      
+    _transfer(payingAddress, receiver, amountOfBNJIs);
+    address spender = _msgSender();
+    uint256 currentAllowance =  allowance(payingAddress, spender);
+    require(currentAllowance >= amountOfBNJIs, "ERC20: transfer amount exceeds allowance");
+    _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
+    return true;    
   }
 
   function approveLendingPool (uint256 amountToApprove) private {   

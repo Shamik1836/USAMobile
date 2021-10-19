@@ -55,6 +55,9 @@ const polygonQuickswapRouterAddress = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678f
 
 let whaleSignerAddress;
 
+let testUser_1_Signer;
+let testUser_2_Signer;
+
 // simulate the passing of blocks
 async function mintBlocks (amountOfBlocksToMint) {
   for (let i = 0; i < amountOfBlocksToMint; i++) {
@@ -67,7 +70,7 @@ async function balUSDC(userToQuery) {
 }
 
 async function balBNJI(userToQuery) {
-  return bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1));
+  return bigNumberToNumber (await benjaminsContract.balanceOf(userToQuery));
 }
 
 // converting BN big numbers to normal numbers
@@ -370,15 +373,14 @@ describe("Benjamins Test", function () {
   // setting instances of contracts
   beforeEach(async function() {
 
-    //console.log("starting before part here ------");
+   
 
     ({ deployer, feeReceiver, accumulatedReceiver, testUser_1, testUser_2, testUser_3, testUser_4, testUser_5 } = await getNamedAccounts());
 
-    //console.log("got through getNamedAccounts here ------");
-
-    deployerSigner = await ethers.provider.getSigner(deployer); 
     
-    //console.log("got through getSigner for deployer here ------");
+    deployerSigner = await ethers.provider.getSigner(deployer);   
+    testUser_1_Signer = await ethers.provider.getSigner(testUser_1); 
+    testUser_2_Signer = await ethers.provider.getSigner(testUser_2); 
 
     testingUserAddressesArray.push(testUser_1);
     testingUserAddressesArray.push(testUser_2);
@@ -1019,6 +1021,7 @@ describe("Benjamins Test", function () {
    
   });  
   */
+  /*
   it("Test 16. There is no time-lock for buying and discounts are effective immediately upon having the needed balance ", async function () {   
 
     const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
@@ -1086,9 +1089,58 @@ describe("Benjamins Test", function () {
    
     expect(userDiscountStart).to.equal(0);   
     expect(userDiscountAfter25).to.equal(5);
-    expect(userDiscountAfter100).to.equal(20);
+    expect(userDiscountAfter100).to.equal(20);     
+  });  */
+
+  it("Test 18. It is possible to transfer tokens", async function () {   
+
+    expect(await balBNJI(testUser_1)).to.equal(0);  
+    expect(await balBNJI(testUser_2)).to.equal(0);    
+
+    const user_1_LevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));   
     
+    const user_2_LevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_2)); 
+    const user_2_DiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_2));    
+
+    await testMinting("Test 18.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(120);       
+    
+    const user_1_LevelAfter120 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const user_1_DiscountAfter120 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    await mintBlocks(30); 
+
+    await benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 40); 
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(80);    
+    expect(await balBNJI(testUser_2)).to.equal(40); 
+    
+    console.log("BNJI bal user 1:", await balBNJI(testUser_1));
+    console.log("BNJI bal user 2:", await balBNJI(testUser_2));
+
+    
+    const user_1_LevelAfter80 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const user_1_DiscountAfter80 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    const user_2_LevelAfter40 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const user_2_DiscountAfter40 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+    
+    expect(user_1_LevelStart).to.equal(0);    
+    expect(user_1_LevelAfter120).to.equal(3);    
+    expect(user_1_LevelAfter80).to.equal(2);     
    
+    expect(user_1_DiscountStart).to.equal(0);   
+    expect(user_1_DiscountAfter120).to.equal(20);
+    expect(user_1_DiscountAfter80).to.equal(10);
+
+    expect(user_2_LevelStart).to.equal(0);    
+    expect(user_2_LevelAfter40).to.equal(2); 
+
+    expect(user_2_DiscountStart).to.equal(0);    
+    expect(user_2_DiscountAfter40).to.equal(10);  
+    
   });  
  
 }); 
