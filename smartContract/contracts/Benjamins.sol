@@ -81,14 +81,14 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   function calcCurrentLevel(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
     uint256 userBalance = balanceOf(userToCheck);
     uint256 currentLevel = 0;
-    for (uint256 index = 0; levelAntes[currentLevel] < userBalance; index ++){
-      if (index == 6){
+
+    for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
+      if (userBalance >= 2000) {
         return 5;
       }
-      currentLevel + 1;
-    }
-    //console.log("currentLevel after loop is:", currentLevel);
-    return currentLevel;     
+    }   
+    return currentLevel; 
+     
   }
 
   function calcDiscount(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
