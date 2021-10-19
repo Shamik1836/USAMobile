@@ -593,9 +593,8 @@ describe("Benjamins Test", function () {
 
   });
   
-  it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () {    
+  it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () {        
     
-    // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
     await testMinting("Test 2.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     confirmMint();
 
@@ -626,7 +625,6 @@ describe("Benjamins Test", function () {
   /*  
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () {   
 
-    // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
     await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
     confirmMint();
 
@@ -643,11 +641,10 @@ describe("Benjamins Test", function () {
   });  
   */
 
-  
+  /*
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
-
-    // args: testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
-    await testMinting("Test 5.1, minting 20 BNJI to caller", 19, testUser_1, testUser_1);    
+    
+    await testMinting("Test 5.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
     confirmMint();
 
     expect(await balBNJI(testUser_1)).to.equal(19);   
@@ -661,9 +658,59 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(0);
 
   });  
+  */
+  /*
+  it("Test 6. Should REVERT: testUser_1 tries to burn more tokens than they have", async function () {   
+    
+    await testMinting("Test 6.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
+    confirmMint();
 
-  
-  
- 
+    expect(await balBNJI(testUser_1)).to.equal(10);   
+    
+    await mintBlocks(11);    
+
+    await expect( testBurning("Test 6.2, should REVERT, burning more BNJIs than user has", 12, testUser_1, testUser_1) ).to.be.revertedWith(
+      "BNJ, Users tokenBalance must be equal to or more than amount to burn."
+    );
+
+    expect(await balBNJI(testUser_1)).to.equal(10);
+
+  });  
+  */
+  it("Test 7. Token price should increase following bonding curve", async function () {   
+
+    await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2000);
+    
+    await mintBlocks(1);  
+    
+    const balanceUSDCbefore1st = await polygonUSDC.balanceOf(testUser_1);    
+    await testMinting("Test 7.2, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2010); 
+    const balanceUSDCafter1st = await polygonUSDC.balanceOf(testUser_1);
+    const firstPriceForTenInCents = dividefrom6decToUSDCcents(bigNumberToNumber(balanceUSDCbefore1st-balanceUSDCafter1st));        
+    
+    await mintBlocks(1);    
+
+    await testMinting("Test 7.3, minting 1000 BNJI to caller", 1000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(3010);
+
+    await mintBlocks(1);    
+
+    const balanceUSDCbefore2nd = await polygonUSDC.balanceOf(testUser_1);
+    await testMinting("Test 7.4, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(3020);
+    const balanceUSDCafter2nd = await polygonUSDC.balanceOf(testUser_1);
+    const secondPriceForTenInCents = dividefrom6decToUSDCcents(bigNumberToNumber(balanceUSDCbefore2nd-balanceUSDCafter2nd));
+
+    expect(firstPriceForTenInCents).to.equal(715);
+    expect(secondPriceForTenInCents).to.equal(717);    
+
+  });  
+
  
 }); 

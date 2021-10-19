@@ -21,7 +21,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   uint8 private amountDecimals;
 
   mapping (address => uint256) lastDepositBlockHeight;
-  mapping (address => bool) private whitelisted;
+  mapping (address => bool) private whitelisted;    // <======= only for testing XXXXX
 
   // amount of BNJI needed for each level;
   uint256[] levelAntes; 
@@ -54,7 +54,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     addressOfThisContract = address(this);
     feeReceiver = 0xa9ECE84E3139CBa81F60F648002D38c635cd857d;                      // <==== changed_ for testing XXXXX
     accumulatedReceiver = 0x7c976677499803bbc72262784ec45088715c0221;              // <==== changed_ for testing XXXXX
-    updateWhitelisted(owner(), true);
+    updateWhitelisted(owner(), true);                                              // <======= only for testing XXXXX
     amountDecimals = 0;
     polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);              
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             
@@ -80,28 +80,27 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   
   function calcCurrentLevel(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
     uint256 userBalance = balanceOf(userToCheck);
-    uint256 currentLevel;
-    for (currentLevel = 0; (levelAntes[currentLevel+1]-1)< userBalance; currentLevel ++){
-      console.log("userBalance is:", userBalance);
-      console.log("currentLevel is:", currentLevel);
-      console.log("levelAntes[currentLevel] is:", levelAntes[currentLevel]);      
+    uint256 currentLevel = 0;
+    for (uint256 index = 0; levelAntes[currentLevel] < userBalance; index ++){
+      if (index == 6){
+        return 5;
+      }
+      currentLevel + 1;
     }
-    console.log("currentLevel after loop is:", currentLevel);
-    return currentLevel;
-    
-    
+    //console.log("currentLevel after loop is:", currentLevel);
+    return currentLevel;     
   }
 
   function calcDiscount(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    if (isWhitelisted(userToCheck)){
+    if (isWhitelisted(userToCheck)){                                            // <======= only for testing XXXXX
       return 100;
     }
 
     return levelDiscounts[calcCurrentLevel(userToCheck)];
   }
 
-  function isWhitelisted(address userToCheck) internal view returns (bool){
-    return whitelisted[userToCheck];
+  function isWhitelisted(address userToCheck) internal view returns (bool){     // <======= only for testing XXXXX
+    return whitelisted[userToCheck];      // <======= only for testing XXXXX
   }
 
   function mintToSelf (uint256 amountOfBNJIs) public {
@@ -178,8 +177,8 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     uint256 tokenBalance = balanceOf(msg.sender);    
      
-    require(amount > 0, "Amount to burn must be more than zero.");  
-    require(tokenBalance >= amount, "Users tokenBalance must be equal to or more than amount to burn.");             
+    require(amount > 0, "BNJ, Amount to burn must be more than zero.");  
+    require(tokenBalance >= amount, "BNJ, Users tokenBalance must be equal to or more than amount to burn.");             
     
     uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
     
@@ -279,27 +278,27 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
   }
 
   function updateFeeReceiver(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "updateFeeReceiver: newAddress cannot be the zero address");
+    require(newAddress != address(0), "BNJ, updateFeeReceiver: newAddress cannot be the zero address");
     feeReceiver = newAddress;
   }
 
   function updateAccumulatedReceiver(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "updateAccumulatedReceiver: newAddress cannot be the zero address");
+    require(newAddress != address(0), "BNJ, updateAccumulatedReceiver: newAddress cannot be the zero address");
     accumulatedReceiver = newAddress;
   }  
 
   function updatePolygonUSDC(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "updatePolygonUSDC: newAddress cannot be the zero address");
+    require(newAddress != address(0), "BNJ, updatePolygonUSDC: newAddress cannot be the zero address");
     polygonUSDC = IERC20(newAddress);
   }
 
   function updatePolygonAMUSDC(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "updatePolygonAMUSDC: newAddress cannot be the zero address");
+    require(newAddress != address(0), "BNJ, updatePolygonAMUSDC: newAddress cannot be the zero address");
     polygonAMUSDC = IERC20(newAddress);
   }
 
   function updatePolygonLendingPool(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "updatePolygonLendingPool: newAddress cannot be the zero address");
+    require(newAddress != address(0), "update PolygonLendingPool: newAddress cannot be the zero address");
     polygonLendingPool = ILendingPool(newAddress);
   }
 
@@ -319,7 +318,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
     levelDiscounts = newLevelDiscounts;
   }  
 
-  function updateWhitelisted (address userToModifyWL, bool newStatus) public onlyOwner {
-    whitelisted[userToModifyWL] = newStatus;
+  function updateWhitelisted (address userToModifyWL, bool newStatus) public onlyOwner {      // <======= only for testing XXXXX
+    whitelisted[userToModifyWL] = newStatus;          // <======= only for testing XXXXX
   }
 }
