@@ -81,6 +81,7 @@ function App() {
       ) : (
         <BottomFooter />
       )}
+      <br />
     </VStack>
   );
 }
