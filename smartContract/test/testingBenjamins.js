@@ -1228,8 +1228,8 @@ describe("Benjamins Test", function () {
     expect(user_2_USDCbalAfter).to.equal(34.8);       
   });  
   */
-   
-  it("Test 21. Should REVERT: testUser_1 tries to burn tokens before holding period ends", async function () {   
+  /* 
+  it("Test 21. Should first REVERT: testUser_1 tries to burn tokens before holding period ends, then correctly", async function () {   
 
     await testMinting("Test 21, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
     confirmMint();
@@ -1261,12 +1261,40 @@ describe("Benjamins Test", function () {
     expect(user_1_DiscountAfter60).to.equal(10);
 
     expect(user_1_LevelAfter30).to.equal(1);   
-    expect(user_1_DiscountAfter30).to.equal(5);       
-
-    //console.log ('blocksNeeded',bigNumberToNumber (blocksNeeded));
-    //await mintBlocks(5);  
+    expect(user_1_DiscountAfter30).to.equal(5);     
 
   });  
+  */
+
+  it("Test 22. It is possible to skip levels by burning larger amounts of tokens", async function () {
+
+    await testMinting("Test 22.1, minting 600 BNJI to caller", 600, testUser_1, testUser_1);    
+    confirmMint();
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(600);
+
+    const user_1_LevelAfter600 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfter600 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    await mintBlocks(180);    
+
+    //const needed = await benjaminsContract.getBlockAmountStillToWait(testUser_1);
+    //decipherBlockFeedback(needed);     
+    
+    await testBurning("Test 22.2, burning 570 tokens after needed amount of blocks", 570, testUser_1, testUser_1);
+
+    expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1))).to.equal(30);    
+
+    const user_1_LevelAfter30 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));     
+    const user_1_DiscountAfter30 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));
+
+    expect(user_1_LevelAfter600).to.equal(4);    
+    expect(user_1_DiscountAfter600).to.equal(40);
+
+    expect(user_1_LevelAfter30).to.equal(1);   
+    expect(user_1_DiscountAfter30).to.equal(5);   
+     
+  });
   
  
 }); 
