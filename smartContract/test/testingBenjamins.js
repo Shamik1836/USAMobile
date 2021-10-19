@@ -18,6 +18,8 @@ let burnReturnTotalInUSDCWasPaidNowGlobalV;
 const scale6dec = 1000000;
 
 let testingUserAddressesArray = [];
+const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75];
+const levelAntesArray = [ 0, 20, 60, 100, 500, 2000];
 
 let loopCounterTotal = 0;
 let mintCounterTotal = 0;
@@ -593,20 +595,38 @@ describe("Benjamins Test", function () {
 
   });
   
-  it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () {        
+  it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () { 
+    
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
     
     await testMinting("Test 2.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     confirmMint();
 
     await mintBlocks(1);
 
+    const userLevelAfter10 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter10 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
     await testMinting("Test 2.2, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     confirmMint();
 
     expect(bigNumberToNumber (await benjaminsContract.balanceOf(testUser_1) )).to.equal(20);  
-  });
-  */
 
+    const userLevelAfter20 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter20 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+   
+
+    expect(userLevelStart).to.equal(0); 
+    expect(userLevelAfter10).to.equal(0); 
+    expect(userLevelAfter20).to.equal(1);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter10).to.equal(0);   
+    expect(userDiscountAfter20).to.equal(5);
+  });
+  
+  */
   /*
   it("Test 3. Should REVERT: testUser_1 tries to mint token amount that includes decimals", async function () {   
 
@@ -713,10 +733,11 @@ describe("Benjamins Test", function () {
 
   });  
   */
-  
-  it("Test 8. Account levels should not be triggered below threshold", async function () {   
+  /*
+  it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
 
     const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 8.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
     confirmMint();
@@ -724,13 +745,15 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter19 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter19 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 8.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     confirmMint();
     expect(await balBNJI(testUser_1)).to.equal(59);         
     await mintBlocks(1);      
 
-    const userLevelAfter59 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userLevelAfter59 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));
+    const userDiscountAfter59 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));  
 
     await testMinting("Test 8.3, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     confirmMint();
@@ -738,6 +761,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter99 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter99 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 8.4, minting 400 BNJI to caller", 400, testUser_1, testUser_1);    
     confirmMint();
@@ -745,6 +769,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter499 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter499 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 8.5, minting 1500 BNJI to caller", 1500, testUser_1, testUser_1);    
     confirmMint();
@@ -752,23 +777,29 @@ describe("Benjamins Test", function () {
         
     await mintBlocks(1);      
 
-    const userLevelAfter1999 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userLevelAfter1999 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1));
+    const userDiscountAfter1999 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));  
 
     expect(userLevelStart).to.equal(0);
     expect(userLevelAfter19).to.equal(0);  
     expect(userLevelAfter59).to.equal(1);
     expect(userLevelAfter99).to.equal(2);  
     expect(userLevelAfter499).to.equal(3);
-    expect(userLevelAfter1999).to.equal(4);
+    expect(userLevelAfter1999).to.equal(4);   
 
-
-    
+    expect(userDiscountStart).to.equal(0);
+    expect(userDiscountAfter19).to.equal(0);  
+    expect(userDiscountAfter59).to.equal(5);
+    expect(userDiscountAfter99).to.equal(10);  
+    expect(userDiscountAfter499).to.equal(20);
+    expect(userDiscountAfter1999).to.equal(40);       
 
   });  
 
   it("Test 9. Account levels should be triggered when reching threshold", async function () {   
 
     const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
     confirmMint();
@@ -776,6 +807,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter20 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter20 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 9.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     confirmMint();
@@ -783,6 +815,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter60 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter60 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 9.3, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     confirmMint();
@@ -790,6 +823,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter100 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter100 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 9.4, minting 400 BNJI to caller", 400, testUser_1, testUser_1);    
     confirmMint();
@@ -797,6 +831,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter500 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter500 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     await testMinting("Test 9.5, minting 1500 BNJI to caller", 1500, testUser_1, testUser_1);    
     confirmMint();
@@ -805,6 +840,7 @@ describe("Benjamins Test", function () {
     await mintBlocks(1);      
 
     const userLevelAfter2000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter2000 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
 
     expect(userLevelStart).to.equal(0);
     expect(userLevelAfter20).to.equal(1);  
@@ -812,8 +848,247 @@ describe("Benjamins Test", function () {
     expect(userLevelAfter100).to.equal(3);  
     expect(userLevelAfter500).to.equal(4);
     expect(userLevelAfter2000).to.equal(5); 
+
+    expect(userDiscountStart).to.equal(0);
+    expect(userDiscountAfter20).to.equal(5);  
+    expect(userDiscountAfter60).to.equal(10);
+    expect(userDiscountAfter100).to.equal(20);  
+    expect(userDiscountAfter500).to.equal(40);
+    expect(userDiscountAfter2000).to.equal(75); 
   });  
- 
- 
+
+  it("Test 10. Account Level 2 can be purchased in one go ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 10, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(60);       
+
+    const userLevelAfter60 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter60 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter60).to.equal(2);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter60).to.equal(10);
+   
+  });  
+
+  it("Test 11. Account Level 3 can be purchased in one go ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 11, minting 100 BNJI to caller", 100, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(100);       
+
+    const userLevelAfter100 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter100 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter100).to.equal(3);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter100).to.equal(20);
+   
+  });  
+
+  it("Test 12. Account Level 4 can be purchased in one go ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 12, minting 500 BNJI to caller", 500, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(500);       
+
+    const userLevelAfter500 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter500 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter500).to.equal(4);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter500).to.equal(40);
+   
+  });  
+
+  it("Test 13. Account Level 5 can be purchased in one go ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 13, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2000);       
+
+    const userLevelAfter2000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter2000 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter2000).to.equal(5);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter2000).to.equal(75);
+   
+  });  
+
+  it("Test 14. Minting inside of levels works as expected", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 14.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(10);       
+
+    const userLevelAfter10 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter10 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await mintBlocks(1); 
+
+    await testMinting("Test 14.1, minting 9 BNJI to caller", 9, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(19);       
+
+    const userLevelAfter19 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter19 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter10).to.equal(0);    
+    expect(userLevelAfter19).to.equal(0);
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter10).to.equal(0);   
+    expect(userDiscountAfter19).to.equal(0);   
+  });  
+  */
+  /*
+  it("Test 15. Account Level 1 is purchased by buying more than threshold, less than next threshold ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 15, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(25);       
+
+    const userLevelAfter25 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter25 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter25).to.equal(1);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter25).to.equal(5);
+   
+  });  
+
+  it("Test 15. Larger purchases do not trigger more than account level 5 ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 15.1, minting 2500 BNJI to caller", 2500, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(2500);       
+
+    const userLevelAfter2500 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter2500 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    await mintBlocks(1); 
+
+    await testMinting("Test 15.2, minting 2500 BNJI to caller", 1500, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(4000);       
+
+    const userLevelAfter4000 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter4000 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter2500).to.equal(5);    
+    expect(userLevelAfter4000).to.equal(5);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter2500).to.equal(75);
+    expect(userDiscountAfter4000).to.equal(75);
+   
+  });  
+  */
+  it("Test 16. There is no time-lock for buying and discounts are effective immediately upon having the needed balance ", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 16.1, minting 2500 BNJI to caller", 25, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(25);       
+
+    const userLevelAfter25 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter25 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    await mintBlocks(1); 
+
+    await testMinting("Test 16.2, minting 35 BNJI to caller", 35, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(60);       
+
+    const userLevelAfter60 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter60 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 16.3, minting 39 BNJI to caller", 39, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(99);       
+
+    const userLevelAfter99 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter99 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter25).to.equal(1);    
+    expect(userLevelAfter60).to.equal(2); 
+    expect(userLevelAfter99).to.equal(2);    
+
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter25).to.equal(5);
+    expect(userDiscountAfter60).to.equal(10);
+    expect(userDiscountAfter99).to.equal(10);
+   
+  });  
+
+  it("Test 17. It is possible to skip levels by minting larger amounts of tokens", async function () {   
+
+    const userLevelStart = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountStart = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1)); 
+
+    await testMinting("Test 17.1, minting 2500 BNJI to caller", 25, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(25);       
+
+    const userLevelAfter25 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter25 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    await mintBlocks(1); 
+
+    await testMinting("Test 17.2, minting 35 BNJI to caller", 75, testUser_1, testUser_1);    
+    confirmMint();
+    expect(await balBNJI(testUser_1)).to.equal(100);       
+
+    const userLevelAfter100 = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(testUser_1)); 
+    const userDiscountAfter100 = bigNumberToNumber (await benjaminsContract.calcDiscount(testUser_1));    
+
+    expect(userLevelStart).to.equal(0);    
+    expect(userLevelAfter25).to.equal(1);    
+    expect(userLevelAfter100).to.equal(3); 
+   
+    expect(userDiscountStart).to.equal(0);   
+    expect(userDiscountAfter25).to.equal(5);
+    expect(userDiscountAfter100).to.equal(20);
+    
+   
+  });  
  
 }); 
