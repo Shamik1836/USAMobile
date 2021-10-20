@@ -1,515 +1,312 @@
-//SPDX-License-Identifier: NONE
+// SPDX-License-Identifier: NONE
 pragma solidity ^0.8.0;
+
+import "./ILendingPool.sol"; // TODO: maybe get interface from some specific source?
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+// importing openzeppelin interface for ERC20 tokens
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
 
-import "./BNJICurve.sol";
-import "./ILendingPool.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
+// BNJI Utility Token.
+// Price is set via bonding curve vs. USDC.
+// All USDC is deposited in a singular lending pool (nominaly at AAVE).
+// 100% reserveInUSDC USDC is maintained against burning.
+// Collected fees and interest are withdrawable to the owner to a set recipient address.
+// Fee discounts are calculated based on balance.
+// There is a 10 block lockup vs. flash loan attacks.
+// Discounts and level holds are staged vs. a lookup table.
+contract OurToken is Ownable, ERC20, Pausable {
     using SafeMath for uint256;
 
-    address public addressOfThisContract;
-
-    address private feeReceiver;
-    address private accumulatedReceiver;
-
-    uint8 private amountDecimals;
-
-    mapping(address => uint256) lastDepositBlockHeight;
-    mapping(address => bool) private whitelisted; // <======= only for testing TODO: remove on deploy.
-
-    // amount of BNJI needed for each level;
-    uint256[] levelAntes;
-
-    // amount of blocks necessary to pass before withdrawal is permitted
-    // each level has its own requirements
-    uint256[] levelHolds;
-
-    // percentage discount given by each level;
-    uint256[] levelDiscounts;
-
-    uint256 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
-    uint256 blocksPerDay = 43200;
-    uint256 baseFee = 2; // in percent
-
+    // Manage Benjamins
     ILendingPool public polygonLendingPool;
     IERC20 public polygonUSDC;
     IERC20 public polygonAMUSDC;
 
-    event SpecifiedMintEvent(
-        address sender,
-        address receiverOfTokens,
-        uint256 tokenAmount,
-        uint256 priceForMintingIn6dec,
-        uint256 feeRoundedDownIn6dec
-    );
+    address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
+    uint256 reserveInUSDC; // end user USDC on deposit
+    address feeReceiver; // beneficiary address for amUSDC interest
+    uint256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
+    uint8 private _decimals;
 
-    event SpecifiedBurnEvent(
-        address sender,
-        address receiverOfUSDC,
-        uint256 tokenAmount,
-        uint256 returnForBurningIn6dec,
-        uint256 feeRoundedDownIn6dec
-    );
-
-    event LendingPoolDeposit(uint256 amount);
-
-    event LendingPoolWithdrawal(uint256 amount);
+    // Manage Discounts
+    mapping (address => uint256) lastUpgradeBlockHeight;
+    uint[] levelAntes; // how many BNJI needed for each level;
+    uint[] levelHolds; // how many blocks to hold b4 withdraw @ each level;
+    uint8[] levelDiscounts; // percentage discount given by each level;
+    uint8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
+    uint blocksPerDay = 2; // TODO: change to 43200
+    uint32 curveFactor = 800000; // Inverselope of the bonding curve.
+    uint8 baseFee = 2; // in percent as an integer
 
     constructor() ERC20("Benjamins", "BNJI") {
-        addressOfThisContract = address(this);
-        feeReceiver = 0xa9ECE84E3139CBa81F60F648002D38c635cd857d; // <==== changed_ for testing XXXXX
-        accumulatedReceiver = 0x7c976677499803bbc72262784ec45088715c0221; // <==== changed_ for testing XXXXX
-        updateWhitelisted(owner(), true); // <======= only for testing XXXXX
-        amountDecimals = 0;
+        // Manage Benjamins        
+        reserveInUSDC = 0;
+        feeReceiver = owner();
         polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
         polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
-        polygonLendingPool = ILendingPool(
-            0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf
-        );
+        polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
-        //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet XXXXX
-        //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet XXXXX
-        //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet XXXXX
-
-        levelAntes = [0, 20, 60, 100, 500, 2000];
-        levelHolds = [0, 2, 7, 30, 90, 360]; // days needed to hold tokens
-        levelDiscounts = [0, 5, 10, 20, 40, 75]; // in percent*100
-
+        // Manage discounts TODO: finalize real numbers
+        levelAntes =    [ 0, 20, 60, 100, 500, 2000]; // in Benjamins
+        levelHolds =    [ 0, 2,   7,  30,  90,  360]; // days
+        levelDiscounts = [ 0, 5,  10,  20,  40,   75]; // in percent*100
         pause();
     }
 
-    receive() external payable {}
+    event newDepositAccount(address account);
+    event newFeeReceiver(address beneficiary);
+    event exchanged(
+        address fromAddress,
+        address toAddress,
+        int256 inTokens,
+        int256 inUSDC,
+        uint256 fee
+    );
+    event profitTaken(uint256 available, uint256 _amountUSDCin6dec);
+    event LendingPoolDeposit (uint256 amount);  
+    event LendingPoolWithdrawal (uint256 amount);
 
-    function decimals() public view override returns (uint8) {
-        return amountDecimals;
+    // owner overrides paused.
+    modifier whenAvailable() {
+        require(!paused() || (msg.sender == owner()), "Benjamins is paused.");
+        _;
+    }
+    // Account has sufficient funds
+    modifier hasTheBenjamins(uint256 want2Spend) {
+        require(balanceOf(msg.sender) >= want2Spend, "Insufficient Benjamins.");
+        _;
+    }
+    /*
+    // Update lending pool deposit account address
+    function setDepositAccount(address lendingPool) public whenAvailable {
+        // BC TODO: transfer all funds from old to new account...
+        depositAccount = lendingPool;
+        emit newDepositAccount(lendingPool);
+    }
+    */
+    function updatePolygonLendingPool(address newAddress) public onlyOwner whenAvailable {        
+        polygonLendingPool = ILendingPool(newAddress);
+        emit newDepositAccount(newAddress);
+    }
+    
+    // Update the feeReceiver address.
+    function setFeeReceiver(address beneficiary) public whenAvailable {
+        feeReceiver = beneficiary;
+        emit newFeeReceiver(beneficiary);
+    }
+    
+    // pausing funcionality from OpenZeppelin's Pausable
+    function pause() public onlyOwner {
+        _pause();
     }
 
-    function calcCurrentLevel(address userToCheck)
-        public
-        view
-        returns (uint256)
-    {
-        // XXXXXX <===== public only for testing
-        uint256 userBalance = balanceOf(userToCheck);
-        uint256 currentLevel = 0;
+    // unpausing funcionality from OpenZeppelin's Pausable
+    function unpause() public onlyOwner {
+        _unpause();
+    }
 
-        for (
-            currentLevel = 0;
-            levelAntes[currentLevel + 1] <= userBalance;
-            currentLevel++
-        ) {
-            if (userBalance >= 2000) {
-                return 5;
-            }
-        }
+    // OZ recommends overriding this vs. setting it.
+    function decimals() public view override returns (uint8) {
+        return _decimals;
+    }
+
+    // Quote USDC for mint(positive) or burn(negative)
+    // based on circulation and amount (and sign of amount)
+    function quoteUSDC(int256 _amount) public view returns (int256) {
+        // Basic integral
+        uint256 supply = totalSupply();
+        uint256 supply2 = supply*supply;  // Supply squared
+        uint256 supplyAfterTx = supply + _amount; // post-mint supply squared
+        uint256 supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
+        int256 squareDiff = int256(supplyAfterTx2) - int256(supply2);
+        int256 scaledSquareDiff = squareDiff * USDCscaleFactor;
+        int256 amountInUSDC6decimals = scaledSquareDiff / curveFactor;
+        int256 stubble = amountInUSDC6decimals % 10000; // shave to USDC cents
+        return amountInUSDC6decimals - stubble;
+    }
+
+    // Return address discount level as an uint8 as a function of balance.
+    function discountLevel(address _whom) public view returns(uint8) {
+        uint256 userBalance = balanceOf(_whom); // lookup once.
+        uint8 currentLevel;
+        for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
+            if (currentLevel == levelAntes.length) {break;}
+        }   
         return currentLevel;
     }
 
-    function calcDiscount(address userToCheck) public view returns (uint256) {
-        // XXXXXX <===== public only for testing
-        if (isWhitelisted(userToCheck)) {
-            // <======= only for testing XXXXX
-            return 100;
+        // Are we past the withdraw timeout?
+    modifier withdrawAllowed(address userToCheck) {
+        uint256 holdTime = (block.number - lastUpgradeBlockHeight[msg.sender]); 
+        require(holdTime > antiFlashLoan, 
+            'Anti-flashloan withdraw timeout in effect.');
+        require(holdTime > blocksPerDay*levelHolds[discountLevel(msg.sender)], 
+            'Discount level withdraw timeout in effect.');
+        _;
+    }
+    // Redundant reserveInUSDC protection vs. user withdraws.
+    modifier wontBreakTheBank(uint256 want2Burn) {
+        require(reserveInUSDC >= quoteUSDC(int256(want2Burn)));
+        _;
+    }
+
+    // Quote % fee the given user will be charged based on their
+    // current balance, Tx amount, and contents of the discount lookup table.
+    // Returns a percentage * 10,000.
+    function quoteFeePercentage(address forWhom)
+        public
+        view
+        returns (uint16)
+    {
+        return uint16(100*baseFee)*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+    }
+
+    // Move USDC for a supply chainge.  Note: sign of amount is the mint/burn direction.
+    function moveUSDC(
+        address _payer,
+        address _payee,
+        int256 _amount
+    ) internal {
+        if (_amount > 0) {
+            // pull USDC from user (_payer), push to lending pool (_payee)            
+            // BC TODO: AAVE/USDC function goes here.
+            // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit)  
+            polygonUSDC.approve(address(polygonLendingPool), _amount); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
+            // lending pool is queried to pull in the approved USDC (in 6 decimals unit)  
+            polygonLendingPool.deposit(address(polygonUSDC), _amount, address(this), 0); // TODO: also needs 6 decimals format
+            emit LendingPoolDeposit(_amount);
+        } else {
+            // pull USDC from lending pool (_payer), push to user (_payee)
+            // BC TODO: AAVE/USDC function goes here.
+           polygonLendingPool.withdraw(address(polygonUSDC), _amount, address(this)); // TODO: also needs 6 decimals format
+           emit LendingPoolWithdrawal(_amount);
+        }
+    }
+
+    // Absolute value function needed to make fee work for burn
+    function abs(int x) private pure returns (int) {
+        return x >= 0 ? x : -x;
+    }
+
+    // Execute mint (positive amount) or burn (negative amount).
+    function changeSupply(address _forWhom, int256 _amount) internal {
+        // Calculate change
+        int256 principleInUSDCcents = quoteUSDC(_amount); // negative on burn
+        int256 fee = abs(principleInUSDCcents * quoteFeePercentage(msg.sender))/10000; // always positive
+        int256 endAmountInUSDCcents = principleInUSDCcents + fee; // User will be charged this in USDC cents
+
+        // Execute exchange
+        if (_amount > 0) {
+            // minting
+            moveUSDC(msg.sender, depositAccount, endAmountInUSDCcents);
+            _mint(_forWhom, _amount);
+        } else {
+            // burning
+            moveUSDC(depositAccount, _forWhom, endAmountInUSDCcents);
+            _burn(msg.sender, -_amount);
         }
 
-        return levelDiscounts[calcCurrentLevel(userToCheck)];
+        // Record change.
+        reserveInUSDC += principleInUSDCcents;
+        emit exchanged(msg.sender, _forWhom, _amount, -endAmountInUSDCcents, fee);
     }
 
-    function isWhitelisted(address userToCheck) internal view returns (bool) {
-        // <======= only for testing XXXXX
-        return whitelisted[userToCheck]; // <======= only for testing XXXXX
+    // Only reset last upgrade block height if its a new hold.
+    function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
+        uint256 timeSinceLastHoldStart = block.number - lastUpgradeBlockHeight[_toWhom];
+        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
+        if (timeSinceLastHoldEnd > 0) {
+            lastUpgradeBlockHeight[_toWhom] = block.number; 
+        }
     }
 
-    function mintToSelf(uint256 amountOfBNJIs) public {
-        specifiedAmountMint(amountOfBNJIs, msg.sender);
+    // Buy BNJI with USDC for another address
+    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
+        uint8 originalUserDiscountLevel = discountLevel(_toWhom);
+        changeSupply(_toWhom, int256(_amount));
+        uint8 newUserDiscountLevel = discountLevel(_toWhom);
+        if ( newUserDiscountLevel > originalUserDiscountLevel){
+            adjustUpgradeTimeouts(_toWhom);
+        }
     }
 
-    function mintToBeneficiary(uint256 amountOfBNJIs, address receiverOfTokens)
+    // Buy BNJI with USDC.
+    function mint(uint256 _amount) public {
+        mintTo(_amount, msg.sender);
+    }
+
+    // Sell your BNJI and send USDC to another address.
+    function burnTo(uint256 _amount, address _toWhom)
         public
+        whenAvailable
+        hasTheBenjamins(_amount)
+        wontBreakTheBank(_amount)
+        withdrawAllowed(msg.sender)
     {
-        specifiedAmountMint(amountOfBNJIs, receiverOfTokens);
+        changeSupply(_toWhom, int256(-_amount));
     }
 
-    function specifiedAmountMint(uint256 amount, address receiverOfTokens)
-        internal
-        whenNotPaused
-        nonReentrant
-        returns (uint256)
-    {
-        require(
-            amount % 1 == 0,
-            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
-        );
-
-        uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
-
-        uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender));
-
-        uint256 feeIn6dec = ((priceForMintingIn6dec *
-            usersFeeModifier *
-            baseFee) / 100) / 100;
-
-        uint256 roundThisDown = feeIn6dec % (10000);
-
-        uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-
-        uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
-
-        uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf(msg.sender);
-
-        uint256 USDCAllowancein6dec = polygonUSDC.allowance(
-            msg.sender,
-            addressOfThisContract
-        );
-
-        require(
-            endPriceIn6dec <= polygonUSDCbalanceIn6dec,
-            "BNJ, specifiedAmountMint: Not enough USDC"
-        );
-        require(
-            endPriceIn6dec <= USDCAllowancein6dec,
-            "BNJ, specifiedAmountMint: Not enough allowance in USDC for payment"
-        );
-        require(
-            priceForMintingIn6dec >= 5000000,
-            "BNJ, specifiedAmountMint: Minimum minting value of $5 USDC"
-        );
-
-        polygonUSDC.transferFrom(msg.sender, feeReceiver, feeRoundedDownIn6dec);
-
-        polygonUSDC.transferFrom(
-            msg.sender,
-            addressOfThisContract,
-            priceForMintingIn6dec
-        );
-
-        approveLendingPool(priceForMintingIn6dec);
-
-        uint256 LendingPoolAllowancein6dec = polygonUSDC.allowance(
-            addressOfThisContract,
-            address(polygonLendingPool)
-        );
-        console.log(
-            LendingPoolAllowancein6dec,
-            "BNJ, LendingPoolAllowancein6dec "
-        ); // take out later XXXXX
-
-        depositIntoLendingPool(priceForMintingIn6dec);
-
-        lastDepositBlockHeight[receiverOfTokens] = block.number;
-
-        // minting to receiverOfTokens
-        _mint(receiverOfTokens, amount);
-
-        emit SpecifiedMintEvent(
-            msg.sender,
-            receiverOfTokens,
-            amount,
-            priceForMintingIn6dec,
-            feeRoundedDownIn6dec
-        );
-
-        return priceForMintingIn6dec;
+    // Sell BNJI for USDC.
+    function burn(uint256 _amount) public {
+        burnTo(_amount, msg.sender);
     }
 
-    function calcSpecMintReturn(uint256 amount)
-        public
-        view
-        returns (uint256 mintPrice)
-    {
-        require(
-            amount % 1 == 0,
-            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
-        );
-        return calcPriceForTokenMint(totalSupply(), amount);
+    // modify ERC20 transferFrom()
+    // Cannot send until holding time is passed for sender.
+    // Creates possible lockout time for receiver.
+    function transferFrom(address sender, address recipiant, uint256 amount) 
+        public 
+        override 
+        withdrawAllowed(sender) 
+        returns (bool) {
+            uint8 originalUserDiscountLevel = discountLevel(recipiant);
+            /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
+            uint8 newUserDiscountLevel = discountLevel(recipiant);
+            if ( newUserDiscountLevel > originalUserDiscountLevel){
+                adjustUpgradeTimeouts(recipiant);
+            }
+            return true;
+        }
+    
+    // modify ERC20 transfer()
+    function transfer(address recipiant, uint256 amount) 
+        public 
+        override 
+        returns(bool) {
+        return transferFrom(msg.sender, recipiant, amount);
     }
 
-    function burnForSelf(uint256 amountOfBNJIs) public {
-        specifiedAmountBurn(amountOfBNJIs, msg.sender);
+    // Withdraw available fees and interest gains from lending pool to receiver address.
+    function withdrawGains(uint256 _amountIn6dec) public onlyOwner {       
+        uint256 available = polygonAMUSDC.balanceOf(address(this)) - reserveInUSDC;
+        require(available > _amountIn6dec, "Insufficient funds.");        
+        polygonAMUSDC.transfer(feeReceiver, _amountIn6dec);
+        emit profitTaken(available, _amountIn6dec);
     }
 
-    function burnForBeneficiary(uint256 amountOfBNJIs, address receiverOfUSDC)
-        public
-    {
-        specifiedAmountBurn(amountOfBNJIs, receiverOfUSDC);
+    // function for owner to withdraw errant ERC20 tokens
+    function scavengeERC20Tip(address ERC20ContractAddress) public onlyOwner {
+        IERC20 USDCcontractIF = IERC20(ERC20ContractAddress);
+        uint256 accumulatedTokens = USDCcontractIF.balanceOf(address(this));
+        USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
     }
 
-    function specifiedAmountBurn(uint256 amount, address receiverOfUSDC)
-        internal
-        whenNotPaused
-        nonReentrant
-        returns (uint256)
-    {
-        require(
-            amount % 1 == 0,
-            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
-        );
-
-        require(
-            checkWithdrawAllowed(msg.sender),
-            "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn"
-        );
-
-        uint256 tokenBalance = balanceOf(msg.sender);
-
-        require(amount > 0, "BNJ, Amount to burn must be more than zero.");
-        require(
-            tokenBalance >= amount,
-            "BNJ, Users tokenBalance must be equal to or more than amount to burn."
-        );
-
-        uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
-
-        require(
-            returnForBurningIn6dec >= 5000000,
-            "BNJ, specifiedAmountBurn: Minimum burning value is $5 USDC"
-        );
-
-        uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender));
-
-        uint256 feeIn6dec = ((returnForBurningIn6dec *
-            usersFeeModifier *
-            baseFee) / 100) / 100;
-
-        uint256 roundThisDown = feeIn6dec % (10000);
-
-        uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-
-        uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDownIn6dec;
-
-        _burn(msg.sender, amount);
-        emit SpecifiedBurnEvent(
-            msg.sender,
-            receiverOfUSDC,
-            amount,
-            returnForBurningIn6dec,
-            feeRoundedDownIn6dec
-        );
-
-        withdrawFromLendingPool(returnForBurningIn6dec);
-
-        polygonUSDC.transfer(feeReceiver, feeRoundedDownIn6dec);
-        polygonUSDC.transfer(receiverOfUSDC, endReturnIn6dec);
-
-        return returnForBurningIn6dec;
+    /* TODO: needs testing, is not supposed to call the imported ERC20 transfer function, but instead the original Ethereum function to transfer network native funds, MATIC
+    // function for owner to withdraw all errant MATIC to feeReceiver
+    function scavengeTips() public onlyOwner {
+        address payable receiver = payable(msg.sender);
+        (bool success, ) = receiver.call.value(amount)("");
+        require(success, "Transfer failed.");
     }
+    */
 
-    function calcSpecBurnReturn(uint256 amount)
-        public
-        view
-        returns (uint256 burnReturn)
-    {
-        require(
-            amount % 1 == 0,
-            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
-        );
-        return calcReturnForTokenBurn(totalSupply(), amount);
-    }
-
-    function amountBlocksHoldingNeeded(address userToCheck)
-        public
-        view
-        returns (uint256)
-    {
-        // XXXXXX <===== public only for testing
-        return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay); // XXXXXX <===== drastically reduced only for testing
-    }
-
-    function getBlockAmountStillToWait(address userToCheck)
-        public
-        view
-        returns (uint256 blocksHoldingSoFar, uint256 blocksNecessaryTotal)
-    {
-        // XXXXXX <===== public only for testing
-        uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
-        uint256 blocksNecessary = amountBlocksHoldingNeeded(userToCheck);
-        return (holdTime, blocksNecessary);
-    }
-
-    function showBaseFee() public view returns (uint256) {
-        return baseFee;
-    }
-
-    function showBlocksPerDay() public view returns (uint256) {
-        return blocksPerDay;
-    }
-
-    function checkWithdrawAllowed(address userToCheck)
-        internal
-        view
-        returns (bool)
-    {
-        uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
-
-        //console.log("checkWithdrawAllowed, antiFlashLoan:", antiFlashLoan);
-        //console.log("checkWithdrawAllowed, holdTime:", holdTime);
-        //console.log("checkWithdrawAllowed, msg.sender:", msg.sender);
-        //console.log("checkWithdrawAllowed, amountBlocksHoldingNeeded(userToCheck):", amountBlocksHoldingNeeded(userToCheck));
-
-        return ((holdTime > antiFlashLoan) &&
-            (holdTime > amountBlocksHoldingNeeded(userToCheck)));
-    }
-
-    function transfer(address receiver, uint256 amountOfBNJIs)
-        public
-        override
-        returns (bool)
-    {
-        require(
-            checkWithdrawAllowed(msg.sender),
-            "BNJ, transfer: sender is not yet allowed to withdraw/burn"
-        );
-        lastDepositBlockHeight[receiver] = block.number;
-        _transfer(_msgSender(), receiver, amountOfBNJIs);
-        return true;
-    }
-
-    function transferFrom(
-        address payingAddress,
-        address receiver,
-        uint256 amountOfBNJIs
-    ) public override returns (bool) {
-        require(
-            checkWithdrawAllowed(payingAddress),
-            "BNJ, transferFrom: payingAddress is not yet allowed to withdraw/burn"
-        );
-        _transfer(payingAddress, receiver, amountOfBNJIs);
-        address spender = _msgSender();
-        uint256 currentAllowance = allowance(payingAddress, spender);
-        require(
-            currentAllowance >= amountOfBNJIs,
-            "ERC20: transfer amount exceeds allowance"
-        );
-        _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
-        return true;
-    }
-
-    function approveLendingPool(uint256 amountToApprove) private {
-        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
-    }
-
-    function depositIntoLendingPool(uint256 amount) private {
-        polygonLendingPool.deposit(
-            address(polygonUSDC),
-            amount,
-            addressOfThisContract,
-            0
-        );
-        emit LendingPoolDeposit(amount);
-    }
-
-    function withdrawFromLendingPool(uint256 amount) private whenNotPaused {
-        polygonLendingPool.withdraw(
-            address(polygonUSDC),
-            amount,
-            addressOfThisContract
-        );
-        emit LendingPoolWithdrawal(amount);
-    }
-
-    function withdrawAccumulated(uint256 amount) public onlyOwner {
-        polygonAMUSDC.transfer(accumulatedReceiver, amount);
-    }
-
-    function depositUSDCBuffer(uint256 amount) public onlyOwner {
-        polygonLendingPool.deposit(
-            address(polygonUSDC),
-            amount,
-            addressOfThisContract,
-            0
-        );
-        emit LendingPoolDeposit(amount);
-    }
-
-    function calcAllTokensValue()
-        public
-        view
-        onlyOwner
-        returns (uint256 allTokensReturn)
-    {
-        return calcReturnForTokenBurn(totalSupply(), totalSupply());
-    }
-
-    function updateFeeReceiver(address newAddress) public onlyOwner {
-        require(
-            newAddress != address(0),
-            "BNJ, updateFeeReceiver: newAddress cannot be the zero address"
-        );
-        feeReceiver = newAddress;
-    }
-
-    function updateAccumulatedReceiver(address newAddress) public onlyOwner {
-        require(
-            newAddress != address(0),
-            "BNJ, updateAccumulatedReceiver: newAddress cannot be the zero address"
-        );
-        accumulatedReceiver = newAddress;
-    }
-
-    function updatePolygonUSDC(address newAddress) public onlyOwner {
-        require(
-            newAddress != address(0),
-            "BNJ, updatePolygonUSDC: newAddress cannot be the zero address"
-        );
-        polygonUSDC = IERC20(newAddress);
-    }
-
-    function updatePolygonAMUSDC(address newAddress) public onlyOwner {
-        require(
-            newAddress != address(0),
-            "BNJ, updatePolygonAMUSDC: newAddress cannot be the zero address"
-        );
-        polygonAMUSDC = IERC20(newAddress);
-    }
-
-    function updatePolygonLendingPool(address newAddress) public onlyOwner {
-        require(
-            newAddress != address(0),
-            "update PolygonLendingPool: newAddress cannot be the zero address"
-        );
-        polygonLendingPool = ILendingPool(newAddress);
-    }
-
-    function updateApproveLendingPool(uint256 amountToApprove)
-        public
-        onlyOwner
-    {
-        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
-    }
-
-    function updateLevelAntes(uint256[] memory newLevelAntes) public onlyOwner {
-        levelAntes = newLevelAntes;
-    }
-
-    function updateLevelHolds(uint256[] memory newLevelHolds) public onlyOwner {
-        levelHolds = newLevelHolds;
-    }
-
-    function updateLevelDiscounts(uint256[] memory newLevelDiscounts)
-        public
-        onlyOwner
-    {
-        levelDiscounts = newLevelDiscounts;
-    }
-
-    function updateBlocksPerDay(uint256 newAmountOfBlocksPerDay)
-        public
-        onlyOwner
-    {
-        blocksPerDay = newAmountOfBlocksPerDay;
-    }
-
-    function updateWhitelisted(address userToModifyWL, bool newStatus)
-        public
-        onlyOwner
-    {
-        // <======= only for testing XXXXX
-        whitelisted[userToModifyWL] = newStatus; // <======= only for testing XXXXX
+    // Fallback receives all incoming funds of any type.
+    receive() external payable {
+        // blind accumulate all other payment types and tokens.
     }
 }
