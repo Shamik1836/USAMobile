@@ -35,7 +35,7 @@ export const SwapPanel = () => {
         <>
           <HStack>
             <AmountSelect />
-            <ToSelect visible={fromSymbol === "" ? "hidden" : "visible"} />
+            <ToSelect />
           </HStack>
           <RequestQuote />
         </>
