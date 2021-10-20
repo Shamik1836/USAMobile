@@ -3,8 +3,11 @@ import { Button } from "@chakra-ui/react";
 import { Moralis } from "moralis";
 
 // const apiKey = "pk_test_hs1NrnFxqmMLHWTNAwnr6yXC08raWH7JAThOpswFb3E0";
-const appId = "UeAbfYO3C29W5EHdz5c5BuCItODRdOw8RcHDpAud";
-const serverUrl = "https://qvgfrpeymufw.bigmoralis.com:2053/server";
+// const appId = "UeAbfYO3C29W5EHdz5c5BuCItODRdOw8RcHDpAud";
+// const serverUrl = "https://qvgfrpeymufw.bigmoralis.com:2053/server";
+
+const appId = "bGqMnb18qnDTb5UCEkXKQcrzjZSKMQV8zbyNxiMC";
+const serverUrl = "https://c9amlzqi9ar9.usemoralis.com:2053/server";
 
 export const FiatBridgeButton = () => {
   //const { Moralis } = useMoralis();
