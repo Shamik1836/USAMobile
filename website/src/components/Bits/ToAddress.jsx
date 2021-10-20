@@ -15,6 +15,13 @@ export const ToAddress = () => {
     }
   }, [isWeb3Enabled, enableWeb3]);
 
+  useEffect(() => {
+    return () => {
+      setToSymbol("");
+      setToAddress("");
+    };
+  }, [setToAddress, setToSymbol]);
+
   return (
     <Flex width="100%">
       {isWeb3Enabled && (
