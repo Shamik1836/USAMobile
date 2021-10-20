@@ -159,7 +159,8 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
-  await benjaminsContract.connect(callingAccSigner).mintToBeneficiary(amountToMint, receivingAddress);  
+  // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
+  await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
 
   console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
 
@@ -230,7 +231,8 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
 
   await calcBurnVariables(amountToBurn, callingAccAddress);
 
-  await benjaminsContract.connect(callingAccSigner).burnForBeneficiary(amountToBurn, receivingAddress);  
+  // descr: function burnTo(uint256 _amount, address _toWhom)
+  await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);  
   
   console.log(`${callingAccAddress} is burning this many tokens:`, amountToBurn, 'for:', receivingAddress );
 
@@ -283,13 +285,11 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
 
 };
 
-
 function confirmMint(){  
   expect(tokensShouldExistNowGlobalV).to.equal( Number (tokensExistQueriedGlobalV));
   expect(mintPriceTotalInUSDCShouldBeNowGlobalV).to.equal(Number (mintPriceTotalInUSDCWasPaidNowGlobalV));
   expect(mintAllowanceInUSDCCentsShouldBeNowGlobalV).to.equal(Number (mintAllowanceInUSDCCentsWasNowGlobalV));
 };
-
 
 function confirmBurn(){  
   expect(tokensShouldExistNowGlobalV).to.equal(Number(tokensExistQueriedGlobalV));
@@ -302,7 +302,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);
 
   const usersTokenAtStart = bigNumberToNumber(await benjaminsContract.balanceOf(accountMinting));
-  const userLevel = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(accountMinting)); 
+  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
   
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
@@ -310,9 +310,9 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const mintingCostInCentsRoundedDown = mintingCostInCents - (mintingCostInCents % 1);
 
   // getting accounts' feeModifier and starting with calculated fee, then rounding down to cents
-  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.calcDiscount(accountMinting)); 
-  const baseFee = bigNumberToNumber(await benjaminsContract.showBaseFee());
-  const mintFeeStarterInCents = ((mintingCostInCents * feeModifier * baseFee) /100) / 100;
+  // descr.: quoteFeePercentage(address forWhom, int256 amount)  
+  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountMinting));  
+  const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100) / 100;   // TODO: needs to change, reply will come in different format
   const mintFeeInCentsRoundedDown = mintFeeStarterInCents - (mintFeeStarterInCents % 1);
 
   // results, toPayTotalInUSDC can be displayed to user
@@ -346,10 +346,9 @@ async function calcBurnVariables(amountToBurn, accountBurning) {
   const inCentsRoundedDownBurn = totalReturnForTokensBurningNowInCents - (totalReturnForTokensBurningNowInCents % 1);
   
   
-
-  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.calcDiscount(accountBurning)); 
-  const baseFee = bigNumberToNumber(await benjaminsContract.showBaseFee());
-  const burnFeeStarterInCents = ((totalReturnForTokensBurningNowInCents * feeModifier * baseFee) /100 ) /100;
+// descr.: quoteFeePercentage(address forWhom, int256 amount)  
+  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountBurning));   
+  const burnFeeStarterInCents = ((totalReturnForTokensBurningNowInCents * feeModifier * baseFee) /100 ) /100; // TODO: needs to change, reply will come in different format
   const burnFeeInCentsRoundedDown = burnFeeStarterInCents - (burnFeeStarterInCents % 1);
 
   const toReceiveTotalInCents = inCentsRoundedDownBurn - burnFeeInCentsRoundedDown;
