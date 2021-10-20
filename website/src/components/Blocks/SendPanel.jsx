@@ -33,9 +33,7 @@ export const SendPanel = () => {
         <VStack>
           <HStack>
             <AmountSelect />
-            {txAmount && (
-              <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
-            )}
+            {txAmount && <ToAddress />}
           </HStack>
           <br />
           {toAddress && <StartSend />}
