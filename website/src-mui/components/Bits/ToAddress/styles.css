@@ -1,18 +1,18 @@
-/*.cmp-address-wrapper {
+.cmp-address-wrapper {
   background: inherit;
   border-radius: 15px;
   border-width: 1px;
   border-color: grey;
   height: 80px;
 }
+.cmp-address {
+  height: 56px;
+}
 .cmp-address.resolved {
   background: inherit;
   border-radius: 15px;
   border-width: 1px;
   height: 80px;
-}
-.cmp-address{
-  height: 56px;
 }
 .input-wrapper {
   background: inherit;
@@ -27,4 +27,3 @@
 .resolved {
   background: inherit;
 }
-*/

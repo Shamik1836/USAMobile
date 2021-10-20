@@ -1,0 +1,11 @@
+.FAIcon {
+  color: blue;
+}
+.OneInchLogo {
+  background-image: "../../media/logos/1Inch.jpg";
+  object-fit: cover;
+  margin-left: "1vw";
+  width: "10vw";
+  border-radius: full;
+  border-width: "2px";
+}

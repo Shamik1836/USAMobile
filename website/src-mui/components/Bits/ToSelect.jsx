@@ -1,24 +1,31 @@
-import { FormControl, Flex, FormErrorMessage, Select } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
 
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
-  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } =
-    useActions();
+  const [ value, setValue ] =  useState('');
+  const { darkBoxShadow } = useGradient();
+
+
+  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
   const handleChange = async (e) => {
     console.groupCollapsed("ToSelect::handleChange():");
     console.log("TokenList:", TokenList);
-    console.log("event:", e);
-    let selectedIndex = e.target.options.selectedIndex;
-    console.log("selectedIndex:", selectedIndex);
-    if (selectedIndex > 0) {
-      let selectedSymbol = e.target.value;
+    let selectedToken = e.target.value;
+    setValue(selectedToken)
+    console.log("selectedToken:", selectedToken);
+    if (selectedToken) {
+      let selectedSymbol =selectedToken.symbol;
       console.log("selectedOption:", selectedSymbol);
       setToSymbol(selectedSymbol.toUpperCase());
       let selectedRecord = TokenList.find(
@@ -54,29 +61,30 @@ export const ToSelect = () => {
   };
 
   return (
-    <Flex width="100%">
-      <FormControl id="swapto" isRequired>
+    <Box>
+      <FormControl id="swapto" fullWidth>
+        <InputLabel id="form-select-label">Select a token to receive.</InputLabel>
         <Select
           id="toToken"
           placeholder="Select a token to receive."
-          boxShadow="dark-lg"
+          sx={{ 
+            // boxShadow: darkBoxShadow, 
+            width:320
+          }}
           onChange={handleChange}
-          value={value}
+          value = {value}
         >
           {TokenList.filter(
             (token) => token.symbol.toUpperCase() !== fromSymbol.toUpperCase()
           ).map((token) => {
             return (
-              <option key={token.networkId + token.name} value={token.symbol}>
-                Into {token.name}
-              </option>
+              <MenuItem key={token.networkId + token.name} value={token}>
+                   Into {token.name}
+              </MenuItem>
             );
           })}
         </Select>
-        <FormErrorMessage>
-          Please select from the given list of input tokens.
-        </FormErrorMessage>
       </FormControl>
-    </Flex>
+    </Box>
   );
 };

@@ -1,0 +1,12 @@
+@import "../../../fonts/logofont.css";
+/*@import "../../../fonts/unibomber.css";*/
+* {
+  font-family: P22-Typewriter;
+}
+.BrandName {
+  font-family: LogoFont !important;
+  font-size: 3rem !important;
+  background: linear-gradient(to bottom,white,#0000FF,black);
+  background-clip: text;
+  color:transparent !important;
+}
