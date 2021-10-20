@@ -47,7 +47,7 @@ export const AmountSelect = () => {
   }, [positions, fromSymbol, waiting]);
 
   return (
-    <Box>
+    <Box w="150px">
       <FormControl id="swapamount" isRequired>
         <NumberInput
           enable={fromSymbol ? 1 : 0}

@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Flex } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import ENSAddress from "@ensdomains/react-ens-address";
 import { useActions } from "../../contexts/actionsContext";
-import "./ToAddress.css";
+import "./ToAddress.scss";
 
 export const ToAddress = () => {
   const { web3, enableWeb3, isWeb3Enabled } = useMoralis();
@@ -22,7 +22,7 @@ export const ToAddress = () => {
   }, [setToToken]);
 
   return (
-    <Flex width="100%">
+    <Box w="430px" className="to-address">
       {isWeb3Enabled && (
         <ENSAddress
           provider={web3.givenProvider || web3.currentProvider}
@@ -47,6 +47,6 @@ export const ToAddress = () => {
           }}
         />
       )}
-    </Flex>
+    </Box>
   );
 };

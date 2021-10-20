@@ -31,7 +31,7 @@ export const SendPanel = () => {
       <FromSelect />
       {!!fromSymbol && (
         <VStack>
-          <HStack>
+          <HStack alignItems="flex-start">
             <AmountSelect />
             {txAmount && <ToAddress />}
           </HStack>

@@ -1,0 +1,51 @@
+.to-address {
+  .loader {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cmp-address-wrapper {
+    .cmp-address {
+      height: auto;
+      background: inherit;
+      border: 1px solid var(--chakra-colors-whiteAlpha-300);
+      box-shadow: var(--chakra-shadows-dark-lg);
+
+      .input-wrapper {
+        margin-top: 0;
+
+        .indicator {
+          display: flex;
+          top: initial;
+          margin-top: 0;
+
+          .blockies {
+            width: 25px !important;
+            height: 25px !important;
+          }
+        }
+
+        input {
+          width: 100%;
+          height: calc(var(--chakra-sizes-10) - 2px);
+          margin-right: 5px;
+          background: inherit;
+          color: inherit;
+          font-size: inherit;
+        }
+      }
+
+      .info-wrapper {
+        .resolved {
+          position: initial;
+          width: 100%;
+          text-align: left;
+          color: inherit;
+          opacity: 0.3;
+        }
+      }
+    }
+  }
+}
