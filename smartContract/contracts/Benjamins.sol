@@ -10,327 +10,506 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {  
-  using SafeMath for uint256;
- 
-  address public addressOfThisContract;
+contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
+    using SafeMath for uint256;
 
-  address private feeReceiver; 
-  address private accumulatedReceiver;    
+    address public addressOfThisContract;
 
-  uint8 private amountDecimals;
+    address private feeReceiver;
+    address private accumulatedReceiver;
 
-  mapping (address => uint256) lastDepositBlockHeight;
-  mapping (address => bool) private whitelisted;    // <======= only for testing XXXXX
+    uint8 private amountDecimals;
 
-  // amount of BNJI needed for each level;
-  uint256[] levelAntes; 
+    mapping(address => uint256) lastDepositBlockHeight;
+    mapping(address => bool) private whitelisted; // <======= only for testing TODO: remove on deploy.
 
-  // amount of blocks necessary to pass before withdrawal is permitted
-  // each level has its own requirements
-  uint256[] levelHolds; 
+    // amount of BNJI needed for each level;
+    uint256[] levelAntes;
 
-  // percentage discount given by each level;
-  uint256[] levelDiscounts; 
+    // amount of blocks necessary to pass before withdrawal is permitted
+    // each level has its own requirements
+    uint256[] levelHolds;
 
-  uint256 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
-  uint256 blocksPerDay = 43200;
-  uint256 baseFee = 2; // in percent 
+    // percentage discount given by each level;
+    uint256[] levelDiscounts;
 
-  ILendingPool public polygonLendingPool;
-  IERC20 public polygonUSDC;
-  IERC20 public polygonAMUSDC;
+    uint256 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
+    uint256 blocksPerDay = 43200;
+    uint256 baseFee = 2; // in percent
 
-  event SpecifiedMintEvent (address sender, address receiverOfTokens, uint256 tokenAmount, uint256 priceForMintingIn6dec, uint256 feeRoundedDownIn6dec);  
+    ILendingPool public polygonLendingPool;
+    IERC20 public polygonUSDC;
+    IERC20 public polygonAMUSDC;
 
-  event SpecifiedBurnEvent (address sender, address receiverOfUSDC, uint256 tokenAmount, uint256 returnForBurningIn6dec, uint256 feeRoundedDownIn6dec);  
+    event SpecifiedMintEvent(
+        address sender,
+        address receiverOfTokens,
+        uint256 tokenAmount,
+        uint256 priceForMintingIn6dec,
+        uint256 feeRoundedDownIn6dec
+    );
 
-  event LendingPoolDeposit (uint256 amount);
-  
-  event LendingPoolWithdrawal (uint256 amount);
+    event SpecifiedBurnEvent(
+        address sender,
+        address receiverOfUSDC,
+        uint256 tokenAmount,
+        uint256 returnForBurningIn6dec,
+        uint256 feeRoundedDownIn6dec
+    );
 
-  constructor() ERC20("Benjamins", "BNJI") {    
-    addressOfThisContract = address(this);
-    feeReceiver = 0xa9ECE84E3139CBa81F60F648002D38c635cd857d;                      // <==== changed_ for testing XXXXX
-    accumulatedReceiver = 0x7c976677499803bbc72262784ec45088715c0221;              // <==== changed_ for testing XXXXX
-    updateWhitelisted(owner(), true);                                              // <======= only for testing XXXXX
-    amountDecimals = 0;
-    polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);              
-    polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);             
-    polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);         
-    
-    //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet XXXXX
-    //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet XXXXX
-    //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet XXXXX   
+    event LendingPoolDeposit(uint256 amount);
 
-    levelAntes =     [ 0, 20, 60, 100, 500, 2000];
-    levelHolds =     [ 0, 2,   7,  30,  90,  360];              // days needed to hold tokens
-    levelDiscounts = [ 0, 5,  10,  20,  40,   75];              // in percent*100
-    
-    pause();
-  }
+    event LendingPoolWithdrawal(uint256 amount);
 
-  receive() external payable {   
-  }  
-  
-  function decimals() public view override returns (uint8) {
-    return amountDecimals;
-  }
-  
-  function calcCurrentLevel(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    uint256 userBalance = balanceOf(userToCheck);
-    uint256 currentLevel = 0;
+    constructor() ERC20("Benjamins", "BNJI") {
+        addressOfThisContract = address(this);
+        feeReceiver = 0xa9ECE84E3139CBa81F60F648002D38c635cd857d; // <==== changed_ for testing XXXXX
+        accumulatedReceiver = 0x7c976677499803bbc72262784ec45088715c0221; // <==== changed_ for testing XXXXX
+        updateWhitelisted(owner(), true); // <======= only for testing XXXXX
+        amountDecimals = 0;
+        polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
+        polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
+        polygonLendingPool = ILendingPool(
+            0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf
+        );
 
-    for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
-      if (userBalance >= 2000) {
-        return 5;
-      }
-    }   
-    return currentLevel; 
-     
-  }
+        //mumbaiUSDC = IERC20(0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e);               // <==== changed_ for Mumbai testnet XXXXX
+        //mumbaiAMUSDC = IERC20(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);             // <==== changed_ for Mumbai testnet XXXXX
+        //mumbaiLendingPool = ILendingPool(0x9198F13B08E299d85E096929fA9781A1E3d5d827);  // <==== changed_ for Mumbai testnet XXXXX
 
-  function calcDiscount(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    if (isWhitelisted(userToCheck)){                                            // <======= only for testing XXXXX
-      return 100;
+        levelAntes = [0, 20, 60, 100, 500, 2000];
+        levelHolds = [0, 2, 7, 30, 90, 360]; // days needed to hold tokens
+        levelDiscounts = [0, 5, 10, 20, 40, 75]; // in percent*100
+
+        pause();
     }
 
-    return levelDiscounts[calcCurrentLevel(userToCheck)];
-  }
+    receive() external payable {}
 
-  function isWhitelisted(address userToCheck) internal view returns (bool){     // <======= only for testing XXXXX
-    return whitelisted[userToCheck];      // <======= only for testing XXXXX
-  }
+    function decimals() public view override returns (uint8) {
+        return amountDecimals;
+    }
 
-  function mintToSelf (uint256 amountOfBNJIs) public {
-    specifiedAmountMint(amountOfBNJIs, msg.sender);
-  }
+    function calcCurrentLevel(address userToCheck)
+        public
+        view
+        returns (uint256)
+    {
+        // XXXXXX <===== public only for testing
+        uint256 userBalance = balanceOf(userToCheck);
+        uint256 currentLevel = 0;
 
-  function mintToBeneficiary (uint256 amountOfBNJIs, address receiverOfTokens) public {
-    specifiedAmountMint(amountOfBNJIs, receiverOfTokens);
-  }
+        for (
+            currentLevel = 0;
+            levelAntes[currentLevel + 1] <= userBalance;
+            currentLevel++
+        ) {
+            if (userBalance >= 2000) {
+                return 5;
+            }
+        }
+        return currentLevel;
+    }
 
-  function specifiedAmountMint(uint256 amount, address receiverOfTokens) internal whenNotPaused nonReentrant returns (uint256) {  
+    function calcDiscount(address userToCheck) public view returns (uint256) {
+        // XXXXXX <===== public only for testing
+        if (isWhitelisted(userToCheck)) {
+            // <======= only for testing XXXXX
+            return 100;
+        }
 
-    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
-    
-    uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
-    
-    uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender)); 
+        return levelDiscounts[calcCurrentLevel(userToCheck)];
+    }
 
-    uint256 feeIn6dec = ((priceForMintingIn6dec * usersFeeModifier * baseFee) /100) /100;
-    
-    uint256 roundThisDown = feeIn6dec % (10000);
-    
-    uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-    
-    uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
-    
-    uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf( msg.sender ) ;
-    
-    uint256 USDCAllowancein6dec = polygonUSDC.allowance(msg.sender, addressOfThisContract); 
-    
-    require (endPriceIn6dec <= polygonUSDCbalanceIn6dec, "BNJ, specifiedAmountMint: Not enough USDC"); 
-    require (endPriceIn6dec <= USDCAllowancein6dec, "BNJ, specifiedAmountMint: Not enough allowance in USDC for payment" );
-    require (priceForMintingIn6dec >= 5000000, "BNJ, specifiedAmountMint: Minimum minting value of $5 USDC" );
-    
-    polygonUSDC.transferFrom(msg.sender, feeReceiver, feeRoundedDownIn6dec);   
+    function isWhitelisted(address userToCheck) internal view returns (bool) {
+        // <======= only for testing XXXXX
+        return whitelisted[userToCheck]; // <======= only for testing XXXXX
+    }
 
-    polygonUSDC.transferFrom(msg.sender, addressOfThisContract, priceForMintingIn6dec);  
+    function mintToSelf(uint256 amountOfBNJIs) public {
+        specifiedAmountMint(amountOfBNJIs, msg.sender);
+    }
 
-    approveLendingPool(priceForMintingIn6dec);
+    function mintToBeneficiary(uint256 amountOfBNJIs, address receiverOfTokens)
+        public
+    {
+        specifiedAmountMint(amountOfBNJIs, receiverOfTokens);
+    }
 
-    uint256 LendingPoolAllowancein6dec = polygonUSDC.allowance(addressOfThisContract, address(polygonLendingPool)); 
-    console.log(LendingPoolAllowancein6dec, 'BNJ, LendingPoolAllowancein6dec ');  // take out later XXXXX
+    function specifiedAmountMint(uint256 amount, address receiverOfTokens)
+        internal
+        whenNotPaused
+        nonReentrant
+        returns (uint256)
+    {
+        require(
+            amount % 1 == 0,
+            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
+        );
 
-    depositIntoLendingPool(priceForMintingIn6dec);      
+        uint256 priceForMintingIn6dec = calcSpecMintReturn(amount);
 
-    lastDepositBlockHeight[receiverOfTokens] = block.number;
+        uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender));
 
-    // minting to receiverOfTokens
-    _mint(receiverOfTokens, amount);    
+        uint256 feeIn6dec = ((priceForMintingIn6dec *
+            usersFeeModifier *
+            baseFee) / 100) / 100;
 
-    emit SpecifiedMintEvent(msg.sender, receiverOfTokens, amount, priceForMintingIn6dec, feeRoundedDownIn6dec);    
+        uint256 roundThisDown = feeIn6dec % (10000);
 
-    return priceForMintingIn6dec;   
-  }  
+        uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
 
-  function calcSpecMintReturn(uint256 amount) public view returns (uint256 mintPrice) {
-    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
-    return calcPriceForTokenMint(totalSupply(), amount); 
-  }    
+        uint256 endPriceIn6dec = priceForMintingIn6dec + feeRoundedDownIn6dec;
 
-  function burnForSelf (uint256 amountOfBNJIs) public {
-    specifiedAmountBurn(amountOfBNJIs, msg.sender);
-  }
+        uint256 polygonUSDCbalanceIn6dec = polygonUSDC.balanceOf(msg.sender);
 
-  function burnForBeneficiary (uint256 amountOfBNJIs, address receiverOfUSDC) public {
-    specifiedAmountBurn(amountOfBNJIs, receiverOfUSDC);
-  }
+        uint256 USDCAllowancein6dec = polygonUSDC.allowance(
+            msg.sender,
+            addressOfThisContract
+        );
 
-  function specifiedAmountBurn(uint256 amount, address receiverOfUSDC) internal whenNotPaused nonReentrant returns (uint256) { 
+        require(
+            endPriceIn6dec <= polygonUSDCbalanceIn6dec,
+            "BNJ, specifiedAmountMint: Not enough USDC"
+        );
+        require(
+            endPriceIn6dec <= USDCAllowancein6dec,
+            "BNJ, specifiedAmountMint: Not enough allowance in USDC for payment"
+        );
+        require(
+            priceForMintingIn6dec >= 5000000,
+            "BNJ, specifiedAmountMint: Minimum minting value of $5 USDC"
+        );
 
-    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.');
+        polygonUSDC.transferFrom(msg.sender, feeReceiver, feeRoundedDownIn6dec);
 
-    require (checkWithdrawAllowed(msg.sender), "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn");
+        polygonUSDC.transferFrom(
+            msg.sender,
+            addressOfThisContract,
+            priceForMintingIn6dec
+        );
 
-    uint256 tokenBalance = balanceOf(msg.sender);    
-     
-    require(amount > 0, "BNJ, Amount to burn must be more than zero.");  
-    require(tokenBalance >= amount, "BNJ, Users tokenBalance must be equal to or more than amount to burn.");             
-    
-    uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
-    
-    require (returnForBurningIn6dec >= 5000000, "BNJ, specifiedAmountBurn: Minimum burning value is $5 USDC" );
+        approveLendingPool(priceForMintingIn6dec);
 
-    uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender));
+        uint256 LendingPoolAllowancein6dec = polygonUSDC.allowance(
+            addressOfThisContract,
+            address(polygonLendingPool)
+        );
+        console.log(
+            LendingPoolAllowancein6dec,
+            "BNJ, LendingPoolAllowancein6dec "
+        ); // take out later XXXXX
 
-    uint256 feeIn6dec = ((returnForBurningIn6dec * usersFeeModifier * baseFee) /100) / 100;   
-    
-    uint256 roundThisDown = feeIn6dec % (10000);
-    
-    uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
-   
-    uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDownIn6dec;            
+        depositIntoLendingPool(priceForMintingIn6dec);
 
-    _burn(msg.sender, amount);      
-    emit SpecifiedBurnEvent(msg.sender, receiverOfUSDC, amount, returnForBurningIn6dec, feeRoundedDownIn6dec);     
+        lastDepositBlockHeight[receiverOfTokens] = block.number;
 
-    withdrawFromLendingPool(returnForBurningIn6dec); 
+        // minting to receiverOfTokens
+        _mint(receiverOfTokens, amount);
 
-    polygonUSDC.transfer(feeReceiver, feeRoundedDownIn6dec);
-    polygonUSDC.transfer(receiverOfUSDC, endReturnIn6dec);  
+        emit SpecifiedMintEvent(
+            msg.sender,
+            receiverOfTokens,
+            amount,
+            priceForMintingIn6dec,
+            feeRoundedDownIn6dec
+        );
 
-    return returnForBurningIn6dec;   
-  }
+        return priceForMintingIn6dec;
+    }
 
-  function calcSpecBurnReturn(uint256 amount) public view returns (uint256 burnReturn) { 
-    require (amount % 1 == 0, 'BNJ: amount must be divisible by 1, BNJIs have 0 decimals.'); 
-    return calcReturnForTokenBurn(totalSupply(), amount); 
-  }         
+    function calcSpecMintReturn(uint256 amount)
+        public
+        view
+        returns (uint256 mintPrice)
+    {
+        require(
+            amount % 1 == 0,
+            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
+        );
+        return calcPriceForTokenMint(totalSupply(), amount);
+    }
 
-  function amountBlocksHoldingNeeded(address userToCheck) public view returns (uint256) {   // XXXXXX <===== public only for testing
-    return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay);                // XXXXXX <===== drastically reduced only for testing
-  }
+    function burnForSelf(uint256 amountOfBNJIs) public {
+        specifiedAmountBurn(amountOfBNJIs, msg.sender);
+    }
 
-  function getBlockAmountStillToWait(address userToCheck) public view returns (uint256 blocksHoldingSoFar, uint256 blocksNecessaryTotal) {   // XXXXXX <===== public only for testing
-    uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);    
-    uint256 blocksNecessary = amountBlocksHoldingNeeded(userToCheck);    
-    return (holdTime, blocksNecessary);               
-  }  
+    function burnForBeneficiary(uint256 amountOfBNJIs, address receiverOfUSDC)
+        public
+    {
+        specifiedAmountBurn(amountOfBNJIs, receiverOfUSDC);
+    }
 
-  function showBaseFee() public view returns (uint256) {  
-    return baseFee;
-  }
+    function specifiedAmountBurn(uint256 amount, address receiverOfUSDC)
+        internal
+        whenNotPaused
+        nonReentrant
+        returns (uint256)
+    {
+        require(
+            amount % 1 == 0,
+            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
+        );
 
-  function showBlocksPerDay() public view returns (uint256) {  
-    return blocksPerDay;
-  }
+        require(
+            checkWithdrawAllowed(msg.sender),
+            "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn"
+        );
 
-  function checkWithdrawAllowed (address userToCheck) internal view returns (bool) {
-    uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
+        uint256 tokenBalance = balanceOf(msg.sender);
 
-    //console.log("checkWithdrawAllowed, antiFlashLoan:", antiFlashLoan);
-    //console.log("checkWithdrawAllowed, holdTime:", holdTime);
-    //console.log("checkWithdrawAllowed, msg.sender:", msg.sender);
-    //console.log("checkWithdrawAllowed, amountBlocksHoldingNeeded(userToCheck):", amountBlocksHoldingNeeded(userToCheck));    
+        require(amount > 0, "BNJ, Amount to burn must be more than zero.");
+        require(
+            tokenBalance >= amount,
+            "BNJ, Users tokenBalance must be equal to or more than amount to burn."
+        );
 
-    return ( (holdTime > antiFlashLoan) && (holdTime > amountBlocksHoldingNeeded(userToCheck)) );
-  }
+        uint256 returnForBurningIn6dec = calcSpecBurnReturn(amount);
 
-  function transfer(address receiver, uint256 amountOfBNJIs ) public override returns (bool) {
-    require(checkWithdrawAllowed(msg.sender), "BNJ, transfer: sender is not yet allowed to withdraw/burn");        
-    lastDepositBlockHeight[receiver] = block.number;
-    _transfer(_msgSender(), receiver, amountOfBNJIs);      
-    return true;
-    
-  }
+        require(
+            returnForBurningIn6dec >= 5000000,
+            "BNJ, specifiedAmountBurn: Minimum burning value is $5 USDC"
+        );
 
-  function transferFrom(address payingAddress, address receiver, uint256 amountOfBNJIs) public override returns (bool) {
-    require(checkWithdrawAllowed(payingAddress), "BNJ, transferFrom: payingAddress is not yet allowed to withdraw/burn");      
-    _transfer(payingAddress, receiver, amountOfBNJIs);
-    address spender = _msgSender();
-    uint256 currentAllowance =  allowance(payingAddress, spender);
-    require(currentAllowance >= amountOfBNJIs, "ERC20: transfer amount exceeds allowance");
-    _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
-    return true;    
-  }
+        uint256 usersFeeModifier = 100 - (calcDiscount(msg.sender));
 
-  function approveLendingPool (uint256 amountToApprove) private {   
-    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);               
-  }
+        uint256 feeIn6dec = ((returnForBurningIn6dec *
+            usersFeeModifier *
+            baseFee) / 100) / 100;
 
-  function depositIntoLendingPool(uint256 amount) private {    
-		polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
-    emit LendingPoolDeposit(amount);
-	}
+        uint256 roundThisDown = feeIn6dec % (10000);
 
-	function withdrawFromLendingPool(uint256 amount) private whenNotPaused {
-		polygonLendingPool.withdraw(address(polygonUSDC), amount, addressOfThisContract);
-    emit LendingPoolWithdrawal(amount);
-	}
-   
-  function withdrawAccumulated(uint256 amount) public onlyOwner {
-    polygonAMUSDC.transfer(accumulatedReceiver, amount);
-  } 
+        uint256 feeRoundedDownIn6dec = feeIn6dec - roundThisDown;
 
-  function depositUSDCBuffer (uint256 amount) public onlyOwner {
-    polygonLendingPool.deposit(address(polygonUSDC), amount, addressOfThisContract, 0);    
-    emit LendingPoolDeposit(amount);
-  } 
+        uint256 endReturnIn6dec = returnForBurningIn6dec - feeRoundedDownIn6dec;
 
-  function calcAllTokensValue() public view onlyOwner returns (uint256 allTokensReturn) {
-    return calcReturnForTokenBurn(totalSupply(), totalSupply()); 
-  }
- 
-  function updateFeeReceiver(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "BNJ, updateFeeReceiver: newAddress cannot be the zero address");
-    feeReceiver = newAddress;
-  }
+        _burn(msg.sender, amount);
+        emit SpecifiedBurnEvent(
+            msg.sender,
+            receiverOfUSDC,
+            amount,
+            returnForBurningIn6dec,
+            feeRoundedDownIn6dec
+        );
 
-  function updateAccumulatedReceiver(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "BNJ, updateAccumulatedReceiver: newAddress cannot be the zero address");
-    accumulatedReceiver = newAddress;
-  }  
+        withdrawFromLendingPool(returnForBurningIn6dec);
 
-  function updatePolygonUSDC(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "BNJ, updatePolygonUSDC: newAddress cannot be the zero address");
-    polygonUSDC = IERC20(newAddress);
-  }
+        polygonUSDC.transfer(feeReceiver, feeRoundedDownIn6dec);
+        polygonUSDC.transfer(receiverOfUSDC, endReturnIn6dec);
 
-  function updatePolygonAMUSDC(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "BNJ, updatePolygonAMUSDC: newAddress cannot be the zero address");
-    polygonAMUSDC = IERC20(newAddress);
-  }
+        return returnForBurningIn6dec;
+    }
 
-  function updatePolygonLendingPool(address newAddress) public onlyOwner {
-    require(newAddress != address(0), "update PolygonLendingPool: newAddress cannot be the zero address");
-    polygonLendingPool = ILendingPool(newAddress);
-  }
+    function calcSpecBurnReturn(uint256 amount)
+        public
+        view
+        returns (uint256 burnReturn)
+    {
+        require(
+            amount % 1 == 0,
+            "BNJ: amount must be divisible by 1, BNJIs have 0 decimals."
+        );
+        return calcReturnForTokenBurn(totalSupply(), amount);
+    }
 
-  function updateApproveLendingPool (uint256 amountToApprove) public onlyOwner {   
-    polygonUSDC.approve(address(polygonLendingPool), amountToApprove);       
-  }
+    function amountBlocksHoldingNeeded(address userToCheck)
+        public
+        view
+        returns (uint256)
+    {
+        // XXXXXX <===== public only for testing
+        return (levelHolds[calcCurrentLevel(userToCheck)] * blocksPerDay); // XXXXXX <===== drastically reduced only for testing
+    }
 
-  function updateLevelAntes (uint256[] memory newLevelAntes) public onlyOwner {
-    levelAntes = newLevelAntes;
-  }
+    function getBlockAmountStillToWait(address userToCheck)
+        public
+        view
+        returns (uint256 blocksHoldingSoFar, uint256 blocksNecessaryTotal)
+    {
+        // XXXXXX <===== public only for testing
+        uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
+        uint256 blocksNecessary = amountBlocksHoldingNeeded(userToCheck);
+        return (holdTime, blocksNecessary);
+    }
 
-  function updateLevelHolds (uint256[] memory newLevelHolds) public onlyOwner {
-    levelHolds = newLevelHolds;
-  }
+    function showBaseFee() public view returns (uint256) {
+        return baseFee;
+    }
 
-  function updateLevelDiscounts (uint256[] memory newLevelDiscounts) public onlyOwner {
-    levelDiscounts = newLevelDiscounts;
-  }  
+    function showBlocksPerDay() public view returns (uint256) {
+        return blocksPerDay;
+    }
 
-  function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
-    blocksPerDay = newAmountOfBlocksPerDay;
-  }    
+    function checkWithdrawAllowed(address userToCheck)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 holdTime = (block.number - lastDepositBlockHeight[userToCheck]);
 
-  function updateWhitelisted (address userToModifyWL, bool newStatus) public onlyOwner {      // <======= only for testing XXXXX
-    whitelisted[userToModifyWL] = newStatus;          // <======= only for testing XXXXX
-  }
+        //console.log("checkWithdrawAllowed, antiFlashLoan:", antiFlashLoan);
+        //console.log("checkWithdrawAllowed, holdTime:", holdTime);
+        //console.log("checkWithdrawAllowed, msg.sender:", msg.sender);
+        //console.log("checkWithdrawAllowed, amountBlocksHoldingNeeded(userToCheck):", amountBlocksHoldingNeeded(userToCheck));
 
-  
+        return ((holdTime > antiFlashLoan) &&
+            (holdTime > amountBlocksHoldingNeeded(userToCheck)));
+    }
+
+    function transfer(address receiver, uint256 amountOfBNJIs)
+        public
+        override
+        returns (bool)
+    {
+        require(
+            checkWithdrawAllowed(msg.sender),
+            "BNJ, transfer: sender is not yet allowed to withdraw/burn"
+        );
+        lastDepositBlockHeight[receiver] = block.number;
+        _transfer(_msgSender(), receiver, amountOfBNJIs);
+        return true;
+    }
+
+    function transferFrom(
+        address payingAddress,
+        address receiver,
+        uint256 amountOfBNJIs
+    ) public override returns (bool) {
+        require(
+            checkWithdrawAllowed(payingAddress),
+            "BNJ, transferFrom: payingAddress is not yet allowed to withdraw/burn"
+        );
+        _transfer(payingAddress, receiver, amountOfBNJIs);
+        address spender = _msgSender();
+        uint256 currentAllowance = allowance(payingAddress, spender);
+        require(
+            currentAllowance >= amountOfBNJIs,
+            "ERC20: transfer amount exceeds allowance"
+        );
+        _approve(payingAddress, spender, (currentAllowance - amountOfBNJIs));
+        return true;
+    }
+
+    function approveLendingPool(uint256 amountToApprove) private {
+        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
+    }
+
+    function depositIntoLendingPool(uint256 amount) private {
+        polygonLendingPool.deposit(
+            address(polygonUSDC),
+            amount,
+            addressOfThisContract,
+            0
+        );
+        emit LendingPoolDeposit(amount);
+    }
+
+    function withdrawFromLendingPool(uint256 amount) private whenNotPaused {
+        polygonLendingPool.withdraw(
+            address(polygonUSDC),
+            amount,
+            addressOfThisContract
+        );
+        emit LendingPoolWithdrawal(amount);
+    }
+
+    function withdrawAccumulated(uint256 amount) public onlyOwner {
+        polygonAMUSDC.transfer(accumulatedReceiver, amount);
+    }
+
+    function depositUSDCBuffer(uint256 amount) public onlyOwner {
+        polygonLendingPool.deposit(
+            address(polygonUSDC),
+            amount,
+            addressOfThisContract,
+            0
+        );
+        emit LendingPoolDeposit(amount);
+    }
+
+    function calcAllTokensValue()
+        public
+        view
+        onlyOwner
+        returns (uint256 allTokensReturn)
+    {
+        return calcReturnForTokenBurn(totalSupply(), totalSupply());
+    }
+
+    function updateFeeReceiver(address newAddress) public onlyOwner {
+        require(
+            newAddress != address(0),
+            "BNJ, updateFeeReceiver: newAddress cannot be the zero address"
+        );
+        feeReceiver = newAddress;
+    }
+
+    function updateAccumulatedReceiver(address newAddress) public onlyOwner {
+        require(
+            newAddress != address(0),
+            "BNJ, updateAccumulatedReceiver: newAddress cannot be the zero address"
+        );
+        accumulatedReceiver = newAddress;
+    }
+
+    function updatePolygonUSDC(address newAddress) public onlyOwner {
+        require(
+            newAddress != address(0),
+            "BNJ, updatePolygonUSDC: newAddress cannot be the zero address"
+        );
+        polygonUSDC = IERC20(newAddress);
+    }
+
+    function updatePolygonAMUSDC(address newAddress) public onlyOwner {
+        require(
+            newAddress != address(0),
+            "BNJ, updatePolygonAMUSDC: newAddress cannot be the zero address"
+        );
+        polygonAMUSDC = IERC20(newAddress);
+    }
+
+    function updatePolygonLendingPool(address newAddress) public onlyOwner {
+        require(
+            newAddress != address(0),
+            "update PolygonLendingPool: newAddress cannot be the zero address"
+        );
+        polygonLendingPool = ILendingPool(newAddress);
+    }
+
+    function updateApproveLendingPool(uint256 amountToApprove)
+        public
+        onlyOwner
+    {
+        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
+    }
+
+    function updateLevelAntes(uint256[] memory newLevelAntes) public onlyOwner {
+        levelAntes = newLevelAntes;
+    }
+
+    function updateLevelHolds(uint256[] memory newLevelHolds) public onlyOwner {
+        levelHolds = newLevelHolds;
+    }
+
+    function updateLevelDiscounts(uint256[] memory newLevelDiscounts)
+        public
+        onlyOwner
+    {
+        levelDiscounts = newLevelDiscounts;
+    }
+
+    function updateBlocksPerDay(uint256 newAmountOfBlocksPerDay)
+        public
+        onlyOwner
+    {
+        blocksPerDay = newAmountOfBlocksPerDay;
+    }
+
+    function updateWhitelisted(address userToModifyWL, bool newStatus)
+        public
+        onlyOwner
+    {
+        // <======= only for testing XXXXX
+        whitelisted[userToModifyWL] = newStatus; // <======= only for testing XXXXX
+    }
 }
