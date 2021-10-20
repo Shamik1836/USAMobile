@@ -83,25 +83,15 @@ export const DoItButton = (props) => {
       setDialog(
         "Submitting swap transaction.  Please review and sign in MetaMask."
       );
-      await fetch(
-        oneInchSwap +
-          "fromTokenAddress=" +
-          fromToken.address +
-          "&toTokenAddress=" +
-          toToken.address +
-          "&amount=" +
-          txAmount +
-          "&fromAddress=" +
-          user?.attributes["ethAddress"] +
-          "&slippage=3"
-      )
-        .then((response) => response.json())
-        .then((response) => {
-          setDialog("Recieved.  Check console log.");
-          console.groupCollapsed("DoItButton::handlePress");
-          console.log("response:", response);
-          console.groupEnd();
-        });
+      const receipt = await Moralis.Plugins.oneInch.swap({
+        chain: 'eth', // The blockchain you want to use (eth/bsc/polygon)
+        fromTokenAddress:fromToken.address, // The token you want to swap
+        toTokenAddress: toToken.address, // The token you want to receive
+        amount: txAmount,
+        fromAddress: user?.attributes["ethAddress"], // Your wallet address
+        slippage: 3,
+      });
+      setDialog("Recieved.  Check console log.");
     }
     setQuoteValid(0);
   };

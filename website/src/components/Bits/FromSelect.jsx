@@ -1,10 +1,12 @@
 import { Box, FormControl, FormErrorMessage, Select } from "@chakra-ui/react";
+import { useMoralis } from "react-moralis";
 import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
 export const FromSelect = () => {
   const { positions, waiting } = usePositions();
+  const { Moralis } = useMoralis();
   const { setFromAddress, setFromSymbol, setToSymbol, setTxAmount } =
     useActions();
   const { setDialog } = useExperts();
@@ -16,19 +18,27 @@ export const FromSelect = () => {
       setFromAddress(positions[selectedIndex].tokenAddress);
       setDialog(
         "Use the 'Select amount' to set how much " +
-          positions[selectedIndex].symbol +
-          " to use in this action. "
+        positions[selectedIndex].symbol +
+        " to use in this action. "
       );
+      getSupportedTokens(positions[selectedIndex].symbol.toLowerCase())
     } else {
       setTxAmount(0);
       setFromSymbol("");
       setToSymbol("");
       setDialog(
         "Use the 'Select a token to act with' menu " +
-          "to start creating an action plan."
+        "to start creating an action plan."
       );
     }
   };
+
+  const getSupportedTokens = async (chain) => {
+    const tokens = await Moralis.Plugins.oneInch.getSupportedTokens({
+      chain: chain,
+    });
+    return tokens
+  }
 
   return (
     <Box width="100%">
