@@ -29,7 +29,7 @@ export const SendPanel = () => {
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
       <FromSelect />
-      {fromSymbol !== "" && (
+      {!!fromSymbol && (
         <VStack>
           <HStack>
             <AmountSelect />

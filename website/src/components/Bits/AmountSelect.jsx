@@ -22,12 +22,10 @@ export const AmountSelect = () => {
   const { setDialog } = useExperts();
 
   const format = (val) =>
-    fromSymbol === undefined ? "" : val + " " + fromSymbol?.toUpperCase();
+    fromSymbol ? val + " " + fromSymbol?.toUpperCase() : "";
 
   const parse = (val) =>
-    fromSymbol === undefined
-      ? ""
-      : val.replace(" " + fromSymbol?.toUpperCase(), "");
+    fromSymbol ? val.replace(" " + fromSymbol?.toUpperCase(), "") : "";
 
   useEffect(() => {
     let position = {};

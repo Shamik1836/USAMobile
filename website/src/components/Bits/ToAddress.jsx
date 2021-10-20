@@ -7,7 +7,7 @@ import "./ToAddress.css";
 
 export const ToAddress = () => {
   const { web3, enableWeb3, isWeb3Enabled } = useMoralis();
-  const { setToSymbol, setToAddress, setToENSType } = useActions();
+  const { setToToken } = useActions();
 
   useEffect(() => {
     if (!isWeb3Enabled) {
@@ -17,10 +17,9 @@ export const ToAddress = () => {
 
   useEffect(() => {
     return () => {
-      setToSymbol("");
-      setToAddress("");
+      setToToken();
     };
-  }, [setToAddress, setToSymbol]);
+  }, [setToToken]);
 
   return (
     <Flex width="100%">
@@ -33,9 +32,10 @@ export const ToAddress = () => {
               address !== undefined &&
               address !== "0x0000000000000000000000000000000000000000"
             ) {
-              setToSymbol(name);
-              setToAddress(address);
-              setToENSType(type);
+              setToToken({
+                symbol: name,
+                address,
+              });
               console.groupCollapsed("ToAddress");
               console.log("ENS Resolved To:", {
                 name: name,
