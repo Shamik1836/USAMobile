@@ -1,7 +1,5 @@
 import {
   Box,
-  FormControl,
-  FormErrorMessage,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -9,87 +7,76 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
 export const AmountSelect = () => {
-  const [maxSpend, setMaxSpend] = useState(0);
-  const [decimals, setDecimals] = useState(18);
+  const [isFocused, setIsFocused] = useState(false);
   const [value, setValue] = useState(0);
-  const { positions, waiting } = usePositions();
-  const { fromSymbol, setTxAmount } = useActions();
+  const { fromToken, setTxAmount } = useActions();
   const { setDialog } = useExperts();
 
-  const format = (val) =>
-    fromSymbol ? val + " " + fromSymbol?.toUpperCase() : "";
-
-  const parse = (val) =>
-    fromSymbol ? val.replace(" " + fromSymbol?.toUpperCase(), "") : "";
-
   useEffect(() => {
-    let position = {};
-    if (!waiting) {
-      if (fromSymbol) {
-        position = positions.find(
-          (position) =>
-            position.symbol.toUpperCase() === fromSymbol?.toUpperCase()
-        );
-        setMaxSpend(position ? position.tokens : 0);
-        setDecimals(position ? position.decimals : 0);
-      } else {
-        console.log("AmountSelect::useEffect::!waiting::noFromSymbol.");
-      }
+    return () => {
+      setTxAmount(0);
+    };
+  }, [setTxAmount]);
+
+  const maxSpend = fromToken?.tokens || 0;
+  const decimals = fromToken?.decimals || 18;
+  const format = (val) =>
+    fromToken
+      ? isFocused
+        ? val
+        : `${val} ${fromToken.symbol.toUpperCase()}`
+      : "";
+
+  const onChange = (v) => {
+    setValue(v);
+    setTxAmount(v * 10 ** decimals);
+    if (v > 0) {
+      setDialog(
+        "Now using " +
+          ((100 * v) / maxSpend).toFixed(0) +
+          "% of your " +
+          fromToken.symbol +
+          " in this action.  " +
+          "Press one of the action buttons " +
+          "when you are ready " +
+          "to choose what to do with these tokens."
+      );
     } else {
-      console.log("AmountSelect::useEffect::waiting.");
+      setDialog(
+        "Use the up and down arrows " +
+          "to select how much " +
+          fromToken.symbol +
+          " to use in this action.  " +
+          "Arrows step in 10% increments of your balance."
+      );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positions, fromSymbol, waiting]);
+  };
 
   return (
     <Box w="150px">
-      <FormControl id="swapamount" isRequired>
-        <NumberInput
-          enable={fromSymbol ? 1 : 0}
-          step={maxSpend / 10}
-          max={maxSpend}
-          min={0}
-          precision={3}
-          boxShadow="dark-lg"
-          onChange={(valueString) => {
-            setValue(parse(valueString));
-            setTxAmount(valueString * 10 ** decimals);
-            if (valueString > 0) {
-              setDialog(
-                "Now using " +
-                  ((100 * valueString) / maxSpend).toFixed(0) +
-                  "% of your " +
-                  fromSymbol +
-                  " in this action.  " +
-                  "Press one of the action buttons " +
-                  "when you are ready " +
-                  "to choose what to do with these tokens."
-              );
-            } else {
-              setDialog(
-                "Use the up and down arrows " +
-                  "to select how much " +
-                  fromSymbol +
-                  " to use in this action.  " +
-                  "Arrows step in 10% increments of your balance."
-              );
-            }
-          }}
-          value={format(value)}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-        <FormErrorMessage>Please select an available amount.</FormErrorMessage>
-      </FormControl>
+      <NumberInput
+        isDisabled={!fromToken}
+        step={maxSpend / 10}
+        max={maxSpend}
+        min={0}
+        precision={3}
+        boxShadow="dark-lg"
+        focusInputOnChange={false}
+        onChange={onChange}
+        value={format(value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      >
+        <NumberInputField />
+        <NumberInputStepper>
+          <NumberIncrementStepper />
+          <NumberDecrementStepper />
+        </NumberInputStepper>
+      </NumberInput>
     </Box>
   );
 };

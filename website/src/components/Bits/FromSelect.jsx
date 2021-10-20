@@ -5,7 +5,7 @@ import { useExperts } from "../../contexts/expertsContext";
 
 export const FromSelect = () => {
   const { positions, waiting } = usePositions();
-  const { setFromToken, setToToken, setTxAmount } = useActions();
+  const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
 
   const handleChange = (e) => {
@@ -20,7 +20,6 @@ export const FromSelect = () => {
       );
     } else {
       setFromToken();
-      setTxAmount(0);
       setToToken();
       setDialog(
         "Use the 'Select a token to act with' menu " +
