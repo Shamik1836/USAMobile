@@ -44,7 +44,6 @@ export const SendReceive = () => {
       </VStack>
       <br />
       {localMode === "send" && <SendPanel />}
-      <br />
       {localMode === "receive" && <AddressPanel />}
     </Box>
   );

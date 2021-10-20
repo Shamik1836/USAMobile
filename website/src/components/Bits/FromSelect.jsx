@@ -5,24 +5,22 @@ import { useExperts } from "../../contexts/expertsContext";
 
 export const FromSelect = () => {
   const { positions, waiting } = usePositions();
-  const { setFromAddress, setFromSymbol, setToSymbol, setTxAmount } =
-    useActions();
+  const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
 
   const handleChange = (e) => {
     let selectedIndex = e.target.options.selectedIndex - 1;
     if (selectedIndex >= 0) {
-      setFromSymbol(positions[selectedIndex].symbol);
-      setFromAddress(positions[selectedIndex].tokenAddress);
+      const position = positions[selectedIndex];
+      setFromToken(position);
       setDialog(
         "Use the 'Select amount' to set how much " +
-          positions[selectedIndex].symbol +
+          position.symbol +
           " to use in this action. "
       );
     } else {
-      setTxAmount(0);
-      setFromSymbol("");
-      setToSymbol("");
+      setFromToken();
+      setToToken();
       setDialog(
         "Use the 'Select a token to act with' menu " +
           "to start creating an action plan."
