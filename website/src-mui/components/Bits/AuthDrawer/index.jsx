@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMoralis } from "react-moralis";
 import { Alert, Button, Stack, TextField, Tooltip } from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useGradient } from "../../contexts/gradientsContext";
+import { useGradient } from "../../../contexts/gradientsContext";
 
 import "./styles.css";
 
