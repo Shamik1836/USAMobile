@@ -83,6 +83,7 @@ export const DoItButton = (props) => {
       setDialog(
         "Submitting swap transaction.  Please review and sign in MetaMask."
       );
+      await Moralis.initPlugins();
       const receipt = await Moralis.Plugins.oneInch.swap({
         chain: 'eth', // The blockchain you want to use (eth/bsc/polygon)
         fromTokenAddress:fromToken.address, // The token you want to swap

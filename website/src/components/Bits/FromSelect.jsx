@@ -34,9 +34,11 @@ export const FromSelect = () => {
   };
 
   const getSupportedTokens = async (chain) => {
+    await Moralis.initPlugins();
     const tokens = await Moralis.Plugins.oneInch.getSupportedTokens({
       chain: chain,
     });
+    console.log(tokens)
     return tokens
   }
 

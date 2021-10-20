@@ -43,7 +43,7 @@ export const RequestQuote = () => {
     setDialog(
       "Estimating costs to swap " + fromSymbol + " to " + toSymbol + " ... "
     );
-
+    await Moralis.initPlugins();
     const oneInchQuote = await Moralis.Plugins.oneInch.quote({
       chain: 'eth',
       fromTokenAddress: fromAddress, // The token you want to swap
