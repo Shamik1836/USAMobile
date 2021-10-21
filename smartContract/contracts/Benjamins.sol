@@ -53,10 +53,10 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =    [ 0, 20, 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =    [ 0, 2,   7,  30,  90,  360]; // days
-        levelDiscounts = [ 0, 5,  10,  20,  40,   75]; // in percent*100
-        pause();
+        levelAntes =     [ 0, 20, 60, 100, 500, 2000]; // in Benjamins
+        levelHolds =     [ 0,  2,  7,  30,  90,  360]; // days
+        levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent*100
+        pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
 
     event newDepositAccount(address account);
