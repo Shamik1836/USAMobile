@@ -83,30 +83,6 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         _;
     }
     
-    // Updating the lending pool and transfering all the depositted funds from it to the new one
-    function updatePolygonLendingPool(address newAddress) public onlyOwner whenAvailable { 
-        // withdrawing all USDC from old lending pool address to BNJI contract
-        polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));       
-        //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
-
-        // setting new lending pool address and emitting event
-        polygonLendingPool = ILendingPool(newAddress);
-        emit newDepositAccount(newAddress);
-
-        // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
-        uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
-        polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
-        polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
-        // emitting related event
-        emit LendingPoolDeposit(bnjiContractUSDCBal);          
-    }
-    
-    // Update the feeReceiver address.
-    function setFeeReceiver(address beneficiary) public whenAvailable {
-        feeReceiver = beneficiary;
-        emit newFeeReceiver(beneficiary);
-    }
-    
     // pausing funcionality from OpenZeppelin's Pausable
     function pause() public onlyOwner {
         _pause();
@@ -147,7 +123,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         return currentLevel;
     }
 
-        // Are we past the withdraw timeout?
+    // Are we past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
         uint256 holdTime = (block.number - lastUpgradeBlockHeight[msg.sender]); 
         require(holdTime > antiFlashLoan, 
@@ -156,6 +132,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
             'Discount level withdraw timeout in effect.');
         _;
     }
+
     // Redundant reserveInUSDC protection vs. user withdraws.
     modifier wontBreakTheBank(uint256 want2Burn) {
         require(reserveInUSDC >= uint256(quoteUSDC(int256(want2Burn))));   // should implicitly do an abs().
@@ -271,16 +248,17 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         override 
         nonReentrant
         withdrawAllowed(sender) 
-        returns (bool) {
-            uint8 originalUserDiscountLevel = discountLevel(recipiant);
-            /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
-            uint8 newUserDiscountLevel = discountLevel(recipiant);
-            if ( newUserDiscountLevel > originalUserDiscountLevel){
-                adjustUpgradeTimeouts(recipiant);
-            }
-            return true;
+    returns (bool) {
+        uint8 originalUserDiscountLevel = discountLevel(recipiant);
+        /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
+        uint8 newUserDiscountLevel = discountLevel(recipiant);
+        if ( newUserDiscountLevel > originalUserDiscountLevel){
+            adjustUpgradeTimeouts(recipiant);
         }
+        return true;
+    }
     
+
     // modify ERC20 transfer()
     function transfer(address recipiant, uint256 amount) 
         public 
@@ -318,4 +296,56 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     receive() external payable {
         // blind accumulate all other payment types and tokens.
     }
+
+    // Updating the lending pool and transfering all the depositted funds from it to the new one
+    function updatePolygonLendingPool(address newAddress) public onlyOwner { 
+        // withdrawing all USDC from old lending pool address to BNJI contract
+        polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));       
+        //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
+
+        // setting new lending pool address and emitting event
+        polygonLendingPool = ILendingPool(newAddress);
+        emit newDepositAccount(newAddress);
+
+        // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
+        uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
+        polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
+        polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
+        // emitting related event
+        emit LendingPoolDeposit(bnjiContractUSDCBal);          
+    }   
+    
+    // Update the feeReceiver address.
+    function setFeeReceiver(address beneficiary) public onlyOwner {
+        feeReceiver = beneficiary;
+        emit newFeeReceiver(beneficiary);
+    }
+
+    function updatePolygonUSDC(address newAddress) public onlyOwner {    
+    polygonUSDC = IERC20(newAddress);
+    }
+
+    function updatePolygonAMUSDC(address newAddress) public onlyOwner {   
+        polygonAMUSDC = IERC20(newAddress); 
+    } 
+
+    function updateApproveLendingPool (uint256 amountToApprove) public onlyOwner {   
+        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);       
+    }
+
+    function updateLevelAntes (uint256[] memory newLevelAntes) public onlyOwner {
+        levelAntes = newLevelAntes;
+    }
+
+    function updateLevelHolds (int32[] memory newLevelHolds) public onlyOwner {
+        levelHolds = newLevelHolds;
+    }
+
+    function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
+        levelDiscounts = newLevelDiscounts;
+    }  
+
+    function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
+        blocksPerDay = newAmountOfBlocksPerDay;
+    }    
 }
