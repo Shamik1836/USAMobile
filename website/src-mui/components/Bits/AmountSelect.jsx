@@ -1,84 +1,84 @@
 import { useEffect, useState } from "react";
-import { Box,FormControl,TextField, InputAdornment} from '@mui/material';
+import { Box, FormControl, TextField, InputAdornment } from '@mui/material';
 
-import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
 export const AmountSelect = () => {
-  const [maxSpend, setMaxSpend] = useState(0);
-  const [decimals, setDecimals] = useState(18);
-  const [value, setValue] = useState(0);
-  const { positions, waiting } = usePositions();
-  const { fromSymbol, setTxAmount } = useActions();
+  
+  // const [isFocused, setIsFocused] = useState(false);
+  const [value, setValue] = useState("0.00");
+  const { fromToken, setTxAmount } = useActions();
   const { setDialog } = useExperts();
 
-  //  We are not going to use this any more.
-  // const format = (val) =>
-  //   fromSymbol === undefined ? "" : val + " " + fromSymbol?.toUpperCase();
-
-  // const parse = (val) =>
-  //   fromSymbol === undefined? "" : val.replace(" " + fromSymbol?.toUpperCase(), "");
+  console.log('fromToken:',fromToken);
 
   useEffect(() => {
-    let position = {};
-    if (!waiting) {
-      if (fromSymbol) {
-        position = positions.find(
-          (position) =>
-            position.symbol.toUpperCase() === fromSymbol?.toUpperCase()
-        );
-        setMaxSpend(position ? position.tokens : 0);
-        setDecimals(position ? position.decimals : 0);
-      } else {
-        console.log("AmountSelect::useEffect::!waiting::noFromSymbol.");
-      }
-    } else {
-      console.log("AmountSelect::useEffect::waiting.");
+    return () => {
+      setTxAmount(0);
+    };
+  }, [setTxAmount]);
+
+  const maxSpend = fromToken?.tokens || 0;
+  const decimals = fromToken?.decimals || 18;
+  const stepChange = maxSpend/10;
+
+  // We are not using this
+  // const format = (val) =>
+  //   fromToken
+  //     ? isFocused
+  //       ? val
+  //       : `${val} ${fromToken.symbol.toUpperCase()}`
+  //     : "";
+
+   const onChange = (event) => {
+
+    let v = event.target.value;
+    console.log('AmountValue:', v);
+    if(v < 0 || v > maxSpend);{
+      setValue(parseFloat(0).toFixed(2));
+      return;
     }
-    // setActionMode("recieve");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positions, fromSymbol, waiting]);
+    setValue(parseFloat(v).toFixed(2));
+    setTxAmount(v * 10 ** decimals);
+    if (v > 0) {
+      setDialog(
+        "Now using " +
+          ((100 * v) / maxSpend).toFixed(0) +
+          "% of your " +
+          fromToken?.symbol +
+          " in this action.  " +
+          "Press one of the action buttons " +
+          "when you are ready " +
+          "to choose what to do with these tokens."
+      );
+    } else {
+      setDialog(
+        "Use the up and down arrows " +
+          "to select how much " +
+          fromToken?.symbol +
+          " to use in this action.  " +
+          "Arrows step in 10% increments of your balance."
+      );
+    }
+  };
 
   return (
     <Box>
       <FormControl id="swapamount" fullWidth>
         <TextField
+          disabled={!fromToken}
           label="Amount"
           type="number"
           sx={{ width: 150}}
           InputProps={{ 
-            min: 0,
-            max: maxSpend, 
-            endAdornment: <InputAdornment position="end">{fromSymbol}</InputAdornment>,
+            inputProps: { min: 0, max: maxSpend, step: stepChange},            
+            endAdornment: <InputAdornment position="end">{fromToken?.symbol}</InputAdornment>,
           }}
-          onChange={(event) => {
-            console.log(event.target.value);
-            let valueString = event.target.value;
-            setValue(valueString);
-            setTxAmount(valueString * 10 ** decimals);
-            if (valueString > 0) {
-              setDialog(
-                "Now using " +
-                ((100 * valueString) / maxSpend).toFixed(0) +
-                "% of your " +
-                fromSymbol +
-                " in this action.  " +
-                "Press one of the action buttons " +
-                "when you are ready " +
-                "to choose what to do with these tokens."
-              );
-            } else {
-              setDialog(
-                "Use the up and down arrows " +
-                "to select how much " +
-                fromSymbol +
-                " to use in this action.  " +
-                "Arrows step in 10% increments of your balance."
-              );
-            }
-          }}
-         value={value}
+          onChange={onChange}
+          // onFocus={() => setIsFocused(true)}
+          // onBlur={() => setIsFocused(false)}
+          value={value}
         />       
       </FormControl>
     </Box>

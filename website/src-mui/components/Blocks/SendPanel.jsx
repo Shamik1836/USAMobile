@@ -1,8 +1,6 @@
-import { useEffect } from "react";
 import { Box, Stack } from '@mui/material';
-
 import { useActions } from "../../contexts/actionsContext";
-import { useExperts } from "../../contexts/expertsContext";
+
 import { useColorMode } from '../../contexts/colorModeContext';
 import { useGradient } from "../../contexts/gradientsContext";
 
@@ -32,13 +30,13 @@ export const SendPanel = () => {
     >
     <Stack sx={{alignItems: 'center', justifyContent: 'center', px: 5, py: 2.5}} spacing={3}>
       <FromSelect />
-      {fromSymbol !== "" && (
+      {!!fromSymbol && (
         <Stack>
           <Stack direction='row' spacing={1}>
             <AmountSelect />
-            {txAmount && (
-              <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
-            )}
+            {txAmount && 
+              <ToAddress/>
+            }
           </Stack>
           {toAddress && <StartSend />}
         </Stack>

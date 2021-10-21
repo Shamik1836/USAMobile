@@ -1,5 +1,5 @@
 import React , { useState }  from 'react';
-import { Avatar, Box, Collapse, IconButton, Typography, Modal, Paper, Stack } from '@mui/material';
+import { Avatar, Box, Collapse, IconButton, Typography, Modal, Paper } from '@mui/material';
 
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -86,7 +86,7 @@ export const TokenTable = () => {
             <IconButton
               aria-label="expand row"
               size="small"
-              onClick={() => setOpen(!open)}
+              onClick={(e) => {e.stopPropagation(); setOpen(!open)}}
             >
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>

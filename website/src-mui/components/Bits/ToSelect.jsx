@@ -4,44 +4,31 @@ import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
-import { useGradient } from "../../contexts/gradientsContext";
+// import { useGradient } from "../../contexts/gradientsContext";
 
 
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
   const [ value, setValue ] =  useState('');
-  const { darkBoxShadow } = useGradient();
+  // const { darkBoxShadow } = useGradient();
 
 
-  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } = useActions();
+  const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
   const handleChange = async (e) => {
-    console.groupCollapsed("ToSelect::handleChange():");
-    console.log("TokenList:", TokenList);
+
     let selectedToken = e.target.value;
+
     setValue(selectedToken)
-    console.log("selectedToken:", selectedToken);
     if (selectedToken) {
       let selectedSymbol =selectedToken.symbol;
-      console.log("selectedOption:", selectedSymbol);
-      setToSymbol(selectedSymbol.toUpperCase());
-      let selectedRecord = TokenList.find(
+      let token = TokenList.find(
         (token) => token.symbol === selectedSymbol
       );
-      console.log("selectedRecord:", selectedRecord);
-      let selectedAddress = selectedRecord.address;
-      console.log("selectedAddress:", selectedAddress);
-      setToAddress(selectedAddress);
-      console.log("...quote request parameters:");
-      console.log("fromSymbol:", fromSymbol);
-      console.log("fromTokenAddress: **", fromAddress);
-      console.log("toSymbol:", selectedSymbol);
-      console.log("toAddress: **", selectedAddress);
-      console.log("amount: **", txAmount);
-      console.groupEnd();
+      setToToken(token);
       setDialog(
         "Press the 'Get Swap Quote' " +
           "to get a quote to swap " +
@@ -51,10 +38,7 @@ export const ToSelect = () => {
           "."
       );
     } else {
-      console.log("null selection made.");
-      console.groupEnd();
-      setToSymbol("");
-      setToAddress("");
+      setToToken();
       setDialog("Select a token to receive from the pull-down menu.");
     }
     setQuoteValid("false");
@@ -63,10 +47,10 @@ export const ToSelect = () => {
   return (
     <Box>
       <FormControl id="swapto" fullWidth>
-        <InputLabel id="form-select-label">Select a token to receive.</InputLabel>
+        <InputLabel id="to-select-label">Select a token to receive.</InputLabel>
         <Select
           id="toToken"
-          placeholder="Select a token to receive."
+          label="Select a token to receive."
           sx={{ 
             // boxShadow: darkBoxShadow, 
             width:320

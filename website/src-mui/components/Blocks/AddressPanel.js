@@ -3,7 +3,7 @@ import { useMoralis } from "react-moralis";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import QRCode from "react-qr-code";
 
-import { Box, IconButton, Typography, Stack, Tooltip } from '@mui/material';
+import { Box, Typography, Stack } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import { useExperts } from "../../contexts/expertsContext";

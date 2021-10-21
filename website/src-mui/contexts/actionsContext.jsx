@@ -5,34 +5,23 @@ const ActionsContext = React.createContext();
 export const useActions = () => useContext(ActionsContext);
 
 export const ActionsProvider = (props) => {
-  const [fromSymbol, setFromSymbol] = useState("");
-  const [fromAddress, setFromAddress] = useState("");
-  const [fromENSType, setFromENSType] = useState("");
-  const [toSymbol, setToSymbol] = useState("");
-  const [toAddress, setToAddress] = useState("");
-  const [toToken, setToToken] = useState({});
-  const [toENSType, setToENSType] = useState("");
+  const [fromToken, setFromToken] = useState();
+  const [toToken, setToToken] = useState();
   const [txAmount, setTxAmount] = useState("");
 
   return (
     <ActionsContext.Provider
       value={{
-        fromSymbol,
-        setFromSymbol,
-        fromAddress,
-        setFromAddress,
-        fromENSType,
-        setFromENSType,
-        toSymbol,
-        setToSymbol,
-        toAddress,
-        setToAddress,
-        toToken,
+        setFromToken,
+        fromToken,
+        fromAddress: fromToken?.tokenAddress,
+        fromSymbol: fromToken?.symbol,
         setToToken,
-        toENSType,
-        setToENSType,
-        txAmount,
+        toToken,
+        toAddress: toToken?.address,
+        toSymbol: toToken?.symbol,
         setTxAmount,
+        txAmount,
       }}
     >
       {props.children}

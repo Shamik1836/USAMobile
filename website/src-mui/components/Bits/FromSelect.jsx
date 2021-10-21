@@ -4,39 +4,38 @@ import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
+// import { useGradient } from "../../contexts/gradientsContext";
 
 export const FromSelect = () => {
 
   const [ value, setValue ] =  useState('');
   const { positions, waiting } = usePositions();
-  const { setFromAddress, setFromSymbol, setToSymbol, setTxAmount } =useActions();
+  const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
-  const { darkBoxShadow } = useGradient();
+  
+  // const { darkBoxShadow } = useGradient();
 
 
   const handleChange = (e) => {
-    setValue(e.target.value);
-    let v = e.target.value;
-   
-    if (v) {
-      setFromSymbol(v.symbol);
-      setFromAddress(v.tokenAddress);
+    const position = e.target.value;
+    setValue(position);
+    if (position) {
+      setFromToken(position);
       setDialog(
         "Use the 'Select amount' to set how much " +
-          v.symbol +
+          position.symbol +
           " to use in this action. "
       );
     } else {
-      setTxAmount(0);
-      setFromSymbol("");
-      setToSymbol("");
+      setFromToken();
+      setToToken();
       setDialog(
         "Use the 'Select a token to act with' menu " +
-          "to start creating an action plan."
+        "to start creating an action plan."
       );
     }
+
   };
 
   return (

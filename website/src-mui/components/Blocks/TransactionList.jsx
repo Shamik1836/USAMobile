@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { Typography, Skeleton } from '@mui/material';
+import { Skeleton } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { useTransactions } from "../../hooks/useTransactions";
 
 export const TransactionList = (props) => {
-  const [open, setOpen] = React.useState(false);
   const { Txs, isLoading } = useTransactions({ chain: "eth" });
   return (
         <Table size="small" aria-label="purchases">

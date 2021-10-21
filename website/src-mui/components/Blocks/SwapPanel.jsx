@@ -1,16 +1,17 @@
 import { Box, Stack } from '@mui/material';
 
 import { useActions } from "../../contexts/actionsContext";
-import { useColorMode } from '../../contexts/colorModeContext';
-import { useGradient } from "../../contexts/gradientsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
+import { useColorMode } from '../../contexts/colorModeContext';
+import { useGradient } from "../../contexts/gradientsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
+
+// Swap mode.
 import { ToSelect } from "../Bits/ToSelect";
 import { RequestQuote } from "../Bits/RequestQuote";
-
 import { QuotePanel } from "../Scrapbox/QuotePanel";
 
 
@@ -33,7 +34,7 @@ export const SwapPanel = () => {
           <>
             <Stack direction='row' spacing={1} sx={{my: 3}}>
               <AmountSelect />
-              <ToSelect visible={fromSymbol === "" ? "hidden" : "visible"} />
+              <ToSelect/>
             </Stack>
             <RequestQuote />
           </>

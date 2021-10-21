@@ -1,4 +1,3 @@
-import { getDataByCoinID } from '../hooks/action';
 import { COINGECKO } from './types';
 export function useApi() {
     async function GET(url) {

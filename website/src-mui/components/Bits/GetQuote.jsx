@@ -1,3 +1,4 @@
+import { useMoralis } from "react-moralis";
 import { Box,Button,FormControl,Tooltip} from '@mui/material';
 
 import { useActions } from "../../contexts/actionsContext";
@@ -6,6 +7,7 @@ import { useQuote } from "../../contexts/quoteContext";
 const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
 
 export const GetQuote = () => {
+  const { Moralis } = useMoralis();
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
   const {
@@ -30,31 +32,24 @@ export const GetQuote = () => {
       "..."
     );
     console.groupEnd();
+    await Moralis.initPlugins();
+    const oneInchQuote = await Moralis.Plugins.oneInch.quote({
+      chain: 'eth',
+      fromTokenAddress: fromAddress, // The token you want to swap
+      toTokenAddress: toAddress, // The token you want to receive
+      amount: txAmount,
+    });
 
-    await fetch(
-      oneInchHead +
-        "fromTokenAddress=" +
-        fromAddress +
-        "&toTokenAddress=" +
-        toAddress +
-        "&amount=" +
-        txAmount +
-        "&referrerAddress=0x9A8A1C76e46940462810465F83F44dA706953F69" +
-        "&fee=0.25"
-    )
-      .then((response) => response.json())
-      .then((oneInchQuote) => {
-        console.log("Recieved Quote:", oneInchQuote);
-        setFromToken(oneInchQuote.fromToken);
-        setFromTokenAmount(oneInchQuote.fromTokenAmount);
-        setProtocols(oneInchQuote.protocols[0]);
-        setToToken(oneInchQuote.toToken);
-        setToTokenAmount(oneInchQuote.toTokenAmount);
-        setEstimatedGas(oneInchQuote.estimatedGas);
-        setQuoteValid("true");
-      });
+    if (oneInchQuote.fromToken) {
+      setFromToken(oneInchQuote.fromToken);
+      setFromTokenAmount(oneInchQuote.fromTokenAmount);
+      setProtocols(oneInchQuote.protocols[0]);
+      setToToken(oneInchQuote.toToken);
+      setToTokenAmount(oneInchQuote.toTokenAmount);
+      setEstimatedGas(oneInchQuote.estimatedGas);
+      setQuoteValid("true");
+    }
   };
-
   return (
     <Box>
       <FormControl id="swapstart">

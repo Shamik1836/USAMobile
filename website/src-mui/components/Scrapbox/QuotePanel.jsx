@@ -1,6 +1,6 @@
 import { Avatar, Button, Stack, Typography } from "@mui/material";
-import { useQuote } from "../../contexts/quoteConTypography";
-import { useExperts } from "../../contexts/expertsConTypography";
+import { useQuote } from "../../contexts/quoteContext";
+import { useExperts } from "../../contexts/expertsContext";
 import { DoItButton } from "./DoItButton";
 
 import { useGradient } from "../../contexts/gradientsContext";
