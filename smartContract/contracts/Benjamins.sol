@@ -90,9 +90,21 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit newDepositAccount(lendingPool);
     }
     */
-    function updatePolygonLendingPool(address newAddress) public onlyOwner whenAvailable {        
+    function updatePolygonLendingPool(address newAddress) public onlyOwner whenAvailable { 
+        // withdrawing all USDC from old lending pool address to BNJI contract
+        polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));       
+        //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
+
+        // setting new lending pool address and emitting event
         polygonLendingPool = ILendingPool(newAddress);
         emit newDepositAccount(newAddress);
+
+        // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
+        uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
+        polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
+        polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
+        // emitting related event
+        emit LendingPoolDeposit(bnjiContractUSDCBal);          
     }
     
     // Update the feeReceiver address.
