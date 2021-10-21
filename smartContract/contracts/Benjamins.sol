@@ -31,17 +31,17 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
     uint256 reserveInUSDC; // end user USDC on deposit
     address feeReceiver; // beneficiary address for amUSDC interest
-    uint256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
+    int256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
     uint8 private _decimals;
 
     // Manage Discounts
     mapping (address => uint256) lastUpgradeBlockHeight;
     uint[] levelAntes; // how many BNJI needed for each level;
-    uint[] levelHolds; // how many blocks to hold b4 withdraw @ each level;
+    int32[] levelHolds; // how many blocks to hold b4 withdraw @ each level;
     uint8[] levelDiscounts; // percentage discount given by each level;
     uint8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
     uint blocksPerDay = 2; // TODO: change to 43200
-    uint32 curveFactor = 800000; // Inverselope of the bonding curve.
+    int256 curveFactor = 800000; // Inverselope of the bonding curve.
     uint8 baseFee = 2; // in percent as an integer
 
     constructor() ERC20("Benjamins", "BNJI") {
@@ -128,7 +128,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         // Basic integral
         uint256 supply = totalSupply();
         uint256 supply2 = supply*supply;  // Supply squared
-        uint256 supplyAfterTx = supply + _amount; // post-mint supply squared
+        uint256 supplyAfterTx = uint256(int256(supply) + _amount); // post-mint supply        
         uint256 supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
         int256 squareDiff = int256(supplyAfterTx2) - int256(supply2);
         int256 scaledSquareDiff = squareDiff * USDCscaleFactor;
@@ -158,7 +158,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
     // Redundant reserveInUSDC protection vs. user withdraws.
     modifier wontBreakTheBank(uint256 want2Burn) {
-        require(reserveInUSDC >= quoteUSDC(int256(want2Burn)));
+        require(reserveInUSDC >= uint256(quoteUSDC(int256(want2Burn))));   // should implicitly do an abs().
         _;
     }
 
@@ -183,15 +183,15 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
             // pull USDC from user (_payer), push to lending pool (_payee)            
             // BC TODO: AAVE/USDC function goes here.
             // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit)  
-            polygonUSDC.approve(address(polygonLendingPool), _amount); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
+            polygonUSDC.approve(address(polygonLendingPool), uint256(_amount)); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
             // lending pool is queried to pull in the approved USDC (in 6 decimals unit)  
-            polygonLendingPool.deposit(address(polygonUSDC), _amount, address(this), 0); // TODO: also needs 6 decimals format
-            emit LendingPoolDeposit(_amount);
+            polygonLendingPool.deposit(address(polygonUSDC), uint256(_amount), address(this), 0); // TODO: also needs 6 decimals format
+            emit LendingPoolDeposit(uint256(_amount));
         } else {
             // pull USDC from lending pool (_payer), push to user (_payee)
             // BC TODO: AAVE/USDC function goes here.
-           polygonLendingPool.withdraw(address(polygonUSDC), _amount, address(this)); // TODO: also needs 6 decimals format
-           emit LendingPoolWithdrawal(_amount);
+           polygonLendingPool.withdraw(address(polygonUSDC), uint256(_amount), address(this)); // TODO: also needs 6 decimals format
+           emit LendingPoolWithdrawal(uint256(_amount));
         }
     }
 
@@ -204,29 +204,29 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     function changeSupply(address _forWhom, int256 _amount) internal nonReentrant {
         // Calculate change
         int256 principleInUSDCcents = quoteUSDC(_amount); // negative on burn
-        int256 fee = abs(principleInUSDCcents * quoteFeePercentage(msg.sender))/10000; // always positive
+        int256 fee = abs(int256(principleInUSDCcents) * quoteFeePercentage(msg.sender))/10000; // always positive
         int256 endAmountInUSDCcents = principleInUSDCcents + fee; // User will be charged this in USDC cents
 
         // Execute exchange
         if (_amount > 0) {
             // minting
             moveUSDC(msg.sender, depositAccount, endAmountInUSDCcents);
-            _mint(_forWhom, _amount);
+            _mint(_forWhom, uint256(_amount));
         } else {
             // burning
             moveUSDC(depositAccount, _forWhom, endAmountInUSDCcents);
-            _burn(msg.sender, -_amount);
+            _burn(msg.sender, uint256(_amount));
         }
 
         // Record change.
-        reserveInUSDC += principleInUSDCcents;
-        emit exchanged(msg.sender, _forWhom, _amount, -endAmountInUSDCcents, fee);
+        reserveInUSDC += uint256(principleInUSDCcents);
+        emit exchanged(msg.sender, _forWhom, _amount, -endAmountInUSDCcents, uint256(fee));
     }
 
     // Only reset last upgrade block height if its a new hold.
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
-        uint256 timeSinceLastHoldStart = block.number - lastUpgradeBlockHeight[_toWhom];
-        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
+        int32 timeSinceLastHoldStart = block.number - lastUpgradeBlockHeight[_toWhom];
+        int32 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = block.number; 
         }
@@ -255,7 +255,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         wontBreakTheBank(_amount)
         withdrawAllowed(msg.sender)
     {
-        changeSupply(_toWhom, int256(-_amount));
+        changeSupply(_toWhom, -int256(_amount));
     }
 
     // Sell BNJI for USDC.
