@@ -1,5 +1,5 @@
 import { Image } from "@chakra-ui/react";
-import BadgeIcon from "../../media/characters/Sameagle.svg";
+import BadgeIcon from "../../media/characters/SamEagle.svg";
 export const SamEagle = (props) => {
   return (
     <Image
