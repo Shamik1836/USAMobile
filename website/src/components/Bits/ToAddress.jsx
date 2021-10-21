@@ -1,13 +1,13 @@
 import { useEffect } from "react";
-import { Flex } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { useMoralis } from "react-moralis";
 import ENSAddress from "@ensdomains/react-ens-address";
 import { useActions } from "../../contexts/actionsContext";
-import "./ToAddress.css";
+import "./ToAddress.scss";
 
 export const ToAddress = () => {
   const { web3, enableWeb3, isWeb3Enabled } = useMoralis();
-  const { setToSymbol, setToAddress, setToENSType } = useActions();
+  const { setToToken } = useActions();
 
   useEffect(() => {
     if (!isWeb3Enabled) {
@@ -15,8 +15,14 @@ export const ToAddress = () => {
     }
   }, [isWeb3Enabled, enableWeb3]);
 
+  useEffect(() => {
+    return () => {
+      setToToken();
+    };
+  }, [setToToken]);
+
   return (
-    <Flex width="100%">
+    <Box w="430px" className="to-address">
       {isWeb3Enabled && (
         <ENSAddress
           provider={web3.givenProvider || web3.currentProvider}
@@ -26,9 +32,10 @@ export const ToAddress = () => {
               address !== undefined &&
               address !== "0x0000000000000000000000000000000000000000"
             ) {
-              setToSymbol(name);
-              setToAddress(address);
-              setToENSType(type);
+              setToToken({
+                symbol: name,
+                address,
+              });
               console.groupCollapsed("ToAddress");
               console.log("ENS Resolved To:", {
                 name: name,
@@ -40,6 +47,6 @@ export const ToAddress = () => {
           }}
         />
       )}
-    </Flex>
+    </Box>
   );
 };

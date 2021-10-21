@@ -29,13 +29,11 @@ export const SendPanel = () => {
       bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
     >
       <FromSelect />
-      {fromSymbol !== "" && (
+      {!!fromSymbol && (
         <VStack>
-          <HStack>
+          <HStack alignItems="flex-start">
             <AmountSelect />
-            {txAmount && (
-              <ToAddress visible={fromSymbol === "" ? "hidden" : "visible"} />
-            )}
+            {txAmount && <ToAddress />}
           </HStack>
           <br />
           {toAddress && <StartSend />}

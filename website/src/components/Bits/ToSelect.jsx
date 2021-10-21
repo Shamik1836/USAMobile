@@ -6,48 +6,26 @@ import { useQuote } from "../../contexts/quoteContext";
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
-  const { fromSymbol, fromAddress, setToSymbol, setToAddress, txAmount } =
-    useActions();
+  const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
   const handleChange = async (e) => {
-    console.groupCollapsed("ToSelect::handleChange():");
-    console.log("TokenList:", TokenList);
-    console.log("event:", e);
-    let selectedIndex = e.target.options.selectedIndex;
-    console.log("selectedIndex:", selectedIndex);
+    const { selectedIndex } = e.target.options;
     if (selectedIndex > 0) {
-      let selectedSymbol = e.target.value;
-      console.log("selectedOption:", selectedSymbol);
-      setToSymbol(selectedSymbol.toUpperCase());
-      let selectedRecord = TokenList.find(
-        (token) => token.symbol === selectedSymbol
-      );
-      console.log("selectedRecord:", selectedRecord);
-      let selectedAddress = selectedRecord.address;
-      console.log("selectedAddress:", selectedAddress);
-      setToAddress(selectedAddress);
-      console.log("...quote request parameters:");
-      console.log("fromSymbol:", fromSymbol);
-      console.log("fromTokenAddress: **", fromAddress);
-      console.log("toSymbol:", selectedSymbol);
-      console.log("toAddress: **", selectedAddress);
-      console.log("amount: **", txAmount);
-      console.groupEnd();
+      const symbol = e.target.value;
+      const token = TokenList.find((token) => token.symbol === symbol);
+      setToToken(token);
       setDialog(
         "Press the 'Get Swap Quote' " +
           "to get a quote to swap " +
-          fromSymbol +
+          fromSymbol?.toUpperCase() +
           " to " +
-          selectedSymbol.toUpperCase() +
+          symbol.toUpperCase() +
           "."
       );
     } else {
-      console.log("null selection made.");
-      console.groupEnd();
-      setToSymbol("");
-      setToAddress("");
+      setToToken();
       setDialog("Select a token to receive from the pull-down menu.");
     }
     setQuoteValid("false");
@@ -64,7 +42,7 @@ export const ToSelect = () => {
           value={value}
         >
           {TokenList.filter(
-            (token) => token.symbol.toUpperCase() !== fromSymbol.toUpperCase()
+            (token) => token.symbol.toUpperCase() !== fromSymbol?.toUpperCase()
           ).map((token) => {
             return (
               <option key={token.networkId + token.name} value={token.symbol}>
