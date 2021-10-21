@@ -1,15 +1,17 @@
-// import React from 'react';
-// import { Container, Image } from '@chakra-ui/react';
-// import LoadIcon from "../../media/load.gif";
-// import './research.css'
-// const Loader = () => (
-//     <Container centerContent className='load-content'>
-//         <Image
-//             height="100px"
-//             width="100px"
-//             src={LoadIcon}
-//         />
-//     </Container>
-// )
+import React from 'react';
+import { Container,  Box} from '@mui/material';
 
-// export default Loader
+import LoadIcon from "../../media/load.gif";
+import './research.css'
+const Loader = () => (
+    <Container sx={{display: 'flex', alignItems: 'center', justifyContent:'center' }} className='load-content'>
+    	<Box
+	      component="img"
+	      sx={{ height: 100, width: 100}}
+	      src={LoadIcon}
+	      alt="Load Icon"
+	    />
+    </Container>
+)
+
+export default Loader

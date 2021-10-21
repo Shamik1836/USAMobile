@@ -11,7 +11,7 @@ import { AmountSelect } from "../Bits/AmountSelect";
 import { ToSelect } from "../Bits/ToSelect";
 import { RequestQuote } from "../Bits/RequestQuote";
 
-// import { QuotePanel } from "../Scrapbox/QuotePanel";
+import { QuotePanel } from "../Scrapbox/QuotePanel";
 
 
 
@@ -38,7 +38,7 @@ export const SwapPanel = () => {
             <RequestQuote />
           </>
         )}
-        {/*{quoteValid === "true" && <QuotePanel />}*/}
+        {quoteValid === "true" && <QuotePanel />}
       </Stack>
     </Box>
   );

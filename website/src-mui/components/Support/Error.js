@@ -1,19 +1,10 @@
-import {
-  Alert,
-  AlertIcon,
-  Box,
-  AlertTitle,
-  AlertDescription,
-} from "@chakra-ui/react";
+import {Alert, AlertTitle} from '@mui/material';
 
 export const ErrorBox = ({ title, message, updateParent }) => {
   return (
-    <Alert status="error">
-      <AlertIcon />
-      <Box flex="1">
-        <AlertTitle>{title}</AlertTitle>
-        <AlertDescription display="block">{message}</AlertDescription>
-      </Box>
+    <Alert severity="error">
+      <AlertTitle>{title}</AlertTitle>
+      {{ message }}
     </Alert>
   );
 };
