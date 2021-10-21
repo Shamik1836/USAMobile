@@ -82,14 +82,8 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         require(balanceOf(msg.sender) >= want2Spend, "Insufficient Benjamins.");
         _;
     }
-    /*
-    // Update lending pool deposit account address
-    function setDepositAccount(address lendingPool) public whenAvailable {
-        // BC TODO: transfer all funds from old to new account...
-        depositAccount = lendingPool;
-        emit newDepositAccount(lendingPool);
-    }
-    */
+    
+    // Updating the lending pool and transfering all the depositted funds from it to the new one
     function updatePolygonLendingPool(address newAddress) public onlyOwner whenAvailable { 
         // withdrawing all USDC from old lending pool address to BNJI contract
         polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));       
@@ -310,7 +304,8 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
     }
 
-    /* TODO: needs testing, is not supposed to call the imported ERC20 transfer function, but instead the original Ethereum function to transfer network native funds, MATIC
+    /* TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
+    // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
     // function for owner to withdraw all errant MATIC to feeReceiver
     function scavengeTips() public onlyOwner {
         address payable receiver = payable(msg.sender);

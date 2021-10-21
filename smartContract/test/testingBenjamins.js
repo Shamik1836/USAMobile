@@ -58,6 +58,42 @@ let whaleSignerAddress;
 let testUser_1_Signer;
 let testUser_2_Signer;
 
+let user1LevelDataArray = [];
+let user1DiscountDataArray = [];
+let user2LevelDataArray = [];
+let user2DiscountDataArray = [];
+
+async function addUserAccDataPoints(userToCheck){
+  const userLevelNow = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(userToCheck));
+  const userDiscountNow = bigNumberToNumber (await benjaminsContract.calcDiscount(userToCheck)); 
+  
+  if (userToCheck == testUser_1){
+    user1LevelDataArray.push(userLevelNow);
+    user1DiscountDataArray.push(userDiscountNow);
+  } else if (userToCheck == testUser_2) {
+    user2LevelDataArray.push(userLevelNow);
+    user2DiscountDataArray.push(userDiscountNow);
+
+  } else {
+    console.log("addUserAccDataPoints: user account not set up for data points!")
+  }
+}
+
+function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
+  if  (userToCheck == testUser_1){
+    for (let index = 0; index < user1LevelDataArray.length; index++) {
+      expect(expectedUserLevelsArray[index]).to.equal(user1LevelDataArray[index]); 
+      expect(expectedUserDiscountArray[index]).to.equal(user1DiscountDataArray[index]);
+    }
+  } else if (userToCheck == testUser_2) {
+
+    for (let index = 0; index < user2LevelDataArray.length; index++) {
+      expect(expectedUserLevelsArray[index]).to.equal(user2LevelDataArray[index]); 
+      expect(expectedUserDiscountArray[index]).to.equal(user2DiscountDataArray[index]);
+    }
+  }
+}
+
 // simulate the passing of blocks
 async function mintBlocks (amountOfBlocksToMint) {
   for (let i = 0; i < amountOfBlocksToMint; i++) {
@@ -131,6 +167,10 @@ function decipherBlockFeedback(blockResponseObject) {
   console.log("User is holding his BNJI this many blocks so far:", bigNumberToNumber( blockResponseObject.blocksHoldingSoFar));
   console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
 }
+
+
+
+
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
@@ -381,9 +421,7 @@ const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
 describe("Benjamins Test", function () {
 
   // setting instances of contracts
-  beforeEach(async function() {
-
-   
+  beforeEach(async function() {   
 
     ({ deployer, feeReceiver, accumulatedReceiver, testUser_1, testUser_2, testUser_3, testUser_4, testUser_5 } = await getNamedAccounts());
 
@@ -749,6 +787,7 @@ describe("Benjamins Test", function () {
 
   });  
   */
+
   /*
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
 
