@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 // importing openzeppelin interface for ERC20 tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -19,7 +20,7 @@ import "hardhat/console.sol";
 // Fee discounts are calculated based on balance.
 // There is a 10 block lockup vs. flash loan attacks.
 // Discounts and level holds are staged vs. a lookup table.
-contract OurToken is Ownable, ERC20, Pausable {
+contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     using SafeMath for uint256;
 
     // Manage Benjamins
@@ -194,7 +195,7 @@ contract OurToken is Ownable, ERC20, Pausable {
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, int256 _amount) internal {
+    function changeSupply(address _forWhom, int256 _amount) internal nonReentrant {
         // Calculate change
         int256 principleInUSDCcents = quoteUSDC(_amount); // negative on burn
         int256 fee = abs(principleInUSDCcents * quoteFeePercentage(msg.sender))/10000; // always positive
@@ -262,6 +263,7 @@ contract OurToken is Ownable, ERC20, Pausable {
     function transferFrom(address sender, address recipiant, uint256 amount) 
         public 
         override 
+        nonReentrant
         withdrawAllowed(sender) 
         returns (bool) {
             uint8 originalUserDiscountLevel = discountLevel(recipiant);
