@@ -1,9 +1,15 @@
+import React from "react";
 import { Avatar, Button, HStack, Text, VStack } from "@chakra-ui/react";
+import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { DoItButton } from "./DoItButton";
 
 export const QuotePanel = () => {
+  const [visible, setVisible] = React.useState(false);
+  const {
+    fromToken: { price },
+  } = useActions();
   const {
     setQuoteValid,
     fromToken,
@@ -19,6 +25,12 @@ export const QuotePanel = () => {
     setQuoteValid("false");
     setDialog("Change your swap settings to recieve a new quote.");
   };
+
+  const ethGas = estimatedGas / 10 ** 9;
+  const usdGas = (ethGas * price).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return (
     <VStack
@@ -46,13 +58,22 @@ export const QuotePanel = () => {
         <Text>{toToken.symbol}</Text>
       </HStack>
       <Text>
-        Spending {estimatedGas / 10 ** 9} ETH transaction fee across:{" "}
+        Spending {ethGas} ETH (${usdGas}) transaction fee across:{" "}
+        <span
+          style={{ cursor: "pointer" }}
+          onClick={() => setVisible(!visible)}
+        >
+          (?)
+        </span>
       </Text>
-      <HStack>
-        {protocols.map((dex) => (
-          <Text key={dex[0].name}> {dex[0].name}</Text>
-        ))}
-      </HStack>
+
+      {visible && (
+        <HStack>
+          {protocols.map((dex) => (
+            <Text key={dex[0].name}> {dex[0].name}</Text>
+          ))}
+        </HStack>
+      )}
 
       <HStack>
         <DoItButton />

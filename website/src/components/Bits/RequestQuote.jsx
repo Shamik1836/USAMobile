@@ -12,8 +12,6 @@ import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
-const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
-
 export const RequestQuote = () => {
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
@@ -45,7 +43,7 @@ export const RequestQuote = () => {
     );
     await Moralis.initPlugins();
     const oneInchQuote = await Moralis.Plugins.oneInch.quote({
-      chain: 'eth',
+      chain: "eth",
       fromTokenAddress: fromAddress, // The token you want to swap
       toTokenAddress: toAddress, // The token you want to receive
       amount: txAmount,
