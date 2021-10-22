@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useMoralis } from "react-moralis";
-import { Box,Button,FormControl,Tooltip} from '@mui/material';
+import { Box,FormControl,Tooltip} from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
@@ -8,13 +10,9 @@ import { useQuote } from "../../contexts/quoteContext";
 import { useColorMode } from "../../contexts/colorModeContext";
 import { useGradient } from "../../contexts/gradientsContext";
 
-// const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";  // Not using this 
-
-
 export const RequestQuote = () => {
- const { darkBoxShadow } = useGradient();
- const { colorMode } = useColorMode();
 
+ const [loading, setLoading] = useState(false);
  const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } = useActions();
 
    const {
@@ -28,9 +26,10 @@ export const RequestQuote = () => {
   } = useQuote();
   const { setDialog } = useExperts();
   const { Moralis } = useMoralis();
-  
-  // const toast = useToast();
 
+  // const toast = useToast();
+  const { colorMode } = useColorMode();
+  const { darkBoxShadow } = useGradient();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -44,6 +43,7 @@ export const RequestQuote = () => {
     setDialog(
       "Estimating costs to swap " + fromSymbol + " to " + toSymbol + " ... "
     );
+    setLoading(true)
     await Moralis.initPlugins();
     const oneInchQuote = await Moralis.Plugins.oneInch.quote({
       chain: 'eth',
@@ -51,6 +51,7 @@ export const RequestQuote = () => {
       toTokenAddress: toAddress, // The token you want to receive
       amount: txAmount,
     });
+    setLoading(false)
 
     if (oneInchQuote.protocols !== undefined) {
       setFromToken(oneInchQuote.fromToken);
@@ -86,14 +87,15 @@ export const RequestQuote = () => {
       <FormControl id="sendstart" fullWidth>
         <Tooltip title="Preview token transmission.">
           <span>
-          <Button
+          <LoadingButton
             disabled={!txAmount || !toSymbol}
             variant={colorMode === "light" ? "outlined" : "contained"}
             sx={{ boxShadow:darkBoxShadow }}
+            loading={loading}
             onClick={handlePress}
           >
             Get Swap Quote
-          </Button>
+          </LoadingButton>
           </span>
         </Tooltip>
       </FormControl>

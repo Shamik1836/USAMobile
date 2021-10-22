@@ -4,7 +4,6 @@ import { useActions } from "../../contexts/actionsContext";
 import { useColorMode } from '../../contexts/colorModeContext';
 import { useGradient } from "../../contexts/gradientsContext";
 
-
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
 import { StartSend } from "../Bits/StartSend";
@@ -18,7 +17,6 @@ export const SendPanel = () => {
   const { colorMode } = useColorMode();
   const { lightModeBG, darkModeBG } = useGradient(); //darkBoxShadow
 
- 
   return (
     <Box
       sx={{ 
@@ -33,7 +31,7 @@ export const SendPanel = () => {
       {!!fromSymbol && (
         <Stack>
           <Stack direction='row' spacing={1}>
-            <AmountSelect />
+            <AmountSelect type='send' />
             {txAmount && 
               <ToAddress/>
             }

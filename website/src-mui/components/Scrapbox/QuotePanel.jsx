@@ -1,12 +1,21 @@
+import React from "react";
 import { Avatar, Button, Stack, Typography } from "@mui/material";
-import { useQuote } from "../../contexts/quoteContext";
-import { useExperts } from "../../contexts/expertsContext";
+
 import { DoItButton } from "./DoItButton";
 
+import { useActions } from "../../contexts/actionsContext";
+import { useQuote } from "../../contexts/quoteContext";
+import { useExperts } from "../../contexts/expertsContext";
 import { useGradient } from "../../contexts/gradientsContext";
 
 
 export const QuotePanel = () => {
+
+  const [visible, setVisible] = React.useState(false);
+  const {
+    fromToken: { price },
+  } = useActions();
+
   const {
     setQuoteValid,
     fromToken,
@@ -16,16 +25,26 @@ export const QuotePanel = () => {
     toTokenAmount,
     estimatedGas,
   } = useQuote();
-  const { darkBoxShadow } = useGradient();
+
   const { setDialog } = useExperts();
+
+  const { darkBoxShadow } = useGradient();
 
   const handleCancel = (e) => {
     setQuoteValid("false");
     setDialog("Change your swap settings to recieve a new quote.");
   };
 
+  const ethGas = estimatedGas / 10 ** 9;
+
+  const usdGas = (ethGas * price).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+
   return (
-    <Stack sx={{ alignItems:'center', justifyContent:'center', borderWidth:2, borderRadius:'3px', px:10, py:5}} spacing={6}>
+    <Stack sx={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: '3px', px: 10, py: 5 }} spacing={6}>
       <Typography>Swap Estimate:</Typography>
       <Stack direction='row'>
         <Typography>
@@ -40,17 +59,24 @@ export const QuotePanel = () => {
         <Typography>{toToken.symbol}</Typography>
       </Stack>
       <Typography>
-        Spending {estimatedGas / 10 ** 9} ETH transaction fee across:{" "}
+        Spending {ethGas} ETH (${usdGas}) transaction fee across:{" "}
+        <span
+          style={{ cursor: "pointer" }}
+          onClick={() => setVisible(!visible)}
+        >
+          (?)
+        </span>
       </Typography>
-      <Stack direction='row'>
-        {protocols.map((dex) => (
-          <Typography key={dex[0].name}> {dex[0].name}</Typography>
-        ))}
-      </Stack>
-
+      {visible && (
+        <Stack direction='row'>
+          {protocols.map((dex) => (
+            <Typography key={dex[0].name}> {dex[0].name}</Typography>
+          ))}
+        </Stack>
+      )}
       <Stack direction='row'>
         <DoItButton />
-        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow:darkBoxShadow}}>
+        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow: darkBoxShadow }}>
           Cancel
         </Button>
       </Stack>

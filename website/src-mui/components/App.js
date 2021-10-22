@@ -38,7 +38,11 @@ function App() {
             <Stack direction="row" sx={{justifyContent:'center', mb:2}} spacing={1}>
               <Link to="/PortfolioPrices" className="NavBar">
                 <Button
-                  sx={{ boxShadow: darkBoxShadow }}
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                    color:(colorMode === "light" ? "#1a202c" : "#ffffffeb"),
+                    background:(colorMode === "light" ? 'transparent' : "#ffffff14")
+                   }}
                   variant={colorMode === "light" ? "outlined" : "contained"}
                   startIcon={<VisibilityIcon />}
                 >
@@ -47,7 +51,11 @@ function App() {
               </Link>
               <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
                 <Button
-                  sx={{ boxShadow: darkBoxShadow }}
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                    color:(colorMode === "light" ? "#1a202c" : "#ffffffeb"),
+                    background:(colorMode === "light" ? 'transparent' : "#ffffff14")
+                   }}
                   variant={colorMode === "light" ? "outlined" : "contained"}
                   startIcon={<LoopIcon />}
                 >
@@ -56,7 +64,11 @@ function App() {
               </Link>
              <Link to="/BuySell" className="NavBar" style={paddingLeft}>
                 <Button
-                  sx={{ boxShadow: darkBoxShadow }}
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                    color:(colorMode === "light" ? "#1a202c" : "#ffffffeb"),
+                    background:(colorMode === "light" ? 'transparent' : "#ffffff14")
+                   }}
                   variant={colorMode === "light" ? "outlined" : "contained"}
                   startIcon={<LinkIcon />}
                 >
@@ -66,7 +78,11 @@ function App() {
 
               <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
                 <Button
-                  sx={{ boxShadow: darkBoxShadow }}
+                 sx={{ 
+                    boxShadow: darkBoxShadow,
+                    color:(colorMode === "light" ? "#1a202c" : "#ffffffeb"),
+                    background:(colorMode === "light" ? 'transparent' : "#ffffff14")
+                   }}
                   variant={colorMode === "light" ? "outlined" : "contained"}
                   startIcon={<MailIcon />}
                 >

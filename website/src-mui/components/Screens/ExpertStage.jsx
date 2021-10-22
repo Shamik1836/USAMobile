@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 
 import { LibertyFox } from "../Guides/LibertyFox";
 import { SamEagle } from "../Guides/SamEagle";
@@ -6,6 +6,8 @@ import { Benicorn } from "../Guides/Benicorn";
 import { useExperts } from "../../contexts/expertsContext";
 import { useColorMode } from "../../contexts/colorModeContext";
 import { useGradient } from "../../contexts/gradientsContext";
+
+import { Text } from '../UW/Text';
 
 
 const Icons = {
@@ -48,9 +50,9 @@ export const ExpertStage = () => {
           }}
         >
           <Box sx={{ display: 'flex', flex:1, alignSelf:'center', p: 1.5 }}>
-            <Typography>
+            <Text>
               {dialog}
-            </Typography>
+            </Text>
           </Box>
           <Box sx={{ display: 'flex', flex: 1, alignSelf:'center', px:2 }}>
            {Icon && <Icon />}

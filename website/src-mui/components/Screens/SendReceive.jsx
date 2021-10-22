@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Typography, Stack } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 
 import { SendPanel } from "../Blocks/SendPanel";
 import { AddressPanel } from "../Blocks/AddressPanel";
+import { Heading } from '../UW/Heading';
+
 
 import { useExperts } from "../../contexts/expertsContext";
 import { useGradient } from "../../contexts/gradientsContext";
@@ -36,7 +38,7 @@ export const SendReceive = () => {
 
   return (
     <Box sx={{textAlign:'center', mt:1}}>
-      <Typography variant="h4">Transfer Cryptocurrency</Typography>
+      <Heading variant="h4">Transfer Cryptocurrency</Heading>
       <br />
       <Stack sx={{alignItems: 'center'}}>
         <Stack direction="row">

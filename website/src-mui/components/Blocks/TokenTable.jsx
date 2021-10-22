@@ -52,6 +52,7 @@ export const TokenTable = () => {
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} onClick={()=>handleClickRow(position)}>
           <TableCell component="th" scope="row">
             <Avatar
+              sx={{background:'#790d01'}}
               name={position.symbol}
               src={position.image}
               size="sm"
@@ -114,7 +115,7 @@ export const TokenTable = () => {
 
   return (
    <Box sx={{ display: 'inline-flex', minWidth: 560, maxWidth:600, m:'auto'}}>
-      <TableContainer component={Paper} sx={{ borderRadius: '1.5rem',borderWidth: 4}}>
+      <TableContainer component={Paper} sx={{ borderRadius: '1.5rem',borderWidth: 4}} className={(colorMode === 'light' ? 'light-border' : 'dark-border')}>
         <Table aria-label="collapsible table" sx={{backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)}}>
           <TableHead>
             <TableRow>

@@ -27,3 +27,18 @@ body{
   background-image: url("../media/wallpapers/dark1.svg");
   background-position: -50vw;
 }
+
+
+.light-border{
+  border-color: #E2E8F0 !important;
+  border:  solid;
+}
+
+.dark-border{
+  /*border-color: #ffffff29 !important;*/
+  /*border:  solid;*/
+}
+
+.NavBar{
+  text-decoration: none;
+}

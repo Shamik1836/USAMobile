@@ -3,12 +3,14 @@ import { useMoralis } from "react-moralis";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import QRCode from "react-qr-code";
 
-import { Box, Typography, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import { useExperts } from "../../contexts/expertsContext";
 import { useColorMode } from '../../contexts/colorModeContext';
 import { useGradient } from "../../contexts/gradientsContext";
+import { Heading } from '../UW/Heading';
+import { Text } from '../UW/Text';
 
 export const AddressPanel = () => {
 
@@ -59,10 +61,10 @@ export const AddressPanel = () => {
         }}
         spacing={6}
       >
-        <Typography variant='h4'>Your Address:</Typography>
+        <Heading variant='h4'>Your Address:</Heading>
         <QRCode value={ethAddress} />
         <Stack direction="row" spacing={1}>
-          <Typography sx={{ lineHeight: 2.5 }}>{ethAddress}</Typography>
+          <Text sx={{ lineHeight: 2.5 }}>{ethAddress}</Text>
           <CopyToClipboard text={data} onCopy={(text, result) => setCopied(result)}>
             <ContentCopyIcon sx={{
               width: 'auto',
@@ -71,6 +73,7 @@ export const AddressPanel = () => {
               borderRadius: '.3rem',
               alignSelf: 'center',
               boxShadow: darkBoxShadow,
+              color: (colorMode === 'light' ? '#000000de' : '#ffffffeb'),
               p:1
             }} />
           </CopyToClipboard>
