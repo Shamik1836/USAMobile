@@ -6,7 +6,8 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 import { AuthDrawer } from '../AuthDrawer';
 import { DrawerHeader } from '../DrawerHeader';
-import { useColorMode } from '../../../contexts/colorModeContext';
+import { useGradient } from "../../../contexts/gradientsContext";
+
 
 import "./styles.css";
 
@@ -14,7 +15,8 @@ import "./styles.css";
 export const AuthButton = () => {
 	const { isAuthenticated, logout } = useMoralis();
 	const [ isOpen, setIsOpen ] = useState(false);
-	const { colorMode } = useColorMode();
+
+	const { darkBoxShadow } = useGradient();
 
 	const toggleDrawer = (open) => {
 		setIsOpen(open);
@@ -30,15 +32,8 @@ export const AuthButton = () => {
 					<IconButton
 						aria-label="Log Out"
 						className="LogoutButton"
-						sx={{
-							width: 'auto',
-							height: '2.5rem',
-							alignSelf: 'center',
-							borderColor: '#e2e8f0 !important',
-							border: 1,
-							borderRadius: '.3rem'
-						}}
-						variant={colorMode === "light" ? "outlined" : "contained"}
+						sx={{boxShadow: darkBoxShadow }} 
+						variant="uw"
 						onClick={() => logout()}
 					>
 						<LockOpenIcon />
@@ -50,15 +45,8 @@ export const AuthButton = () => {
 						<IconButton
 							aria-label="Log In"
 							className="LoginButton"
-							sx={{
-								width: 'auto',
-								height: '2.5rem',
-								alignSelf: 'center',
-								borderColor: '#e2e8f0 !important',
-								border: 1,
-								borderRadius: '.3rem'
-							}}
-							variant={colorMode === "light" ? "outlined" : "contained"}
+							sx={{boxShadow: darkBoxShadow }} 
+							variant="uw"
 							onClick={() => toggleDrawer(true)}
 						>
 							<LockIcon />

@@ -3,25 +3,21 @@ import Brightness3Icon from '@mui/icons-material/Brightness3';
 import Brightness5Icon from '@mui/icons-material/Brightness5';
 
 import { useColorMode } from '../../../contexts/colorModeContext';
+import { useGradient } from "../../../contexts/gradientsContext";
+
 import "./styles.css";
 
 export const LightSwitch = () => {
-  const { colorMode, toggleColorMode } = useColorMode()
+  const { colorMode, toggleColorMode } = useColorMode();
+  const { darkBoxShadow } = useGradient();
 
   return (
     <Tooltip title={colorMode === "light" ? "Dark Mode" : "Light Mode"}>
       <IconButton
         aria-label="Toggle Darkmode"
         className="LightSwitchButton"
-        sx={{ 
-        	width:'auto', 
-        	height:'2.5rem',
-        	alignSelf: 'center',
-        	borderColor: '#e2e8f0 !important', 
-        	border:1, 
-        	borderRadius:'.3rem'
-        }} 
-        variant={colorMode === "light" ? "outlined" : "contained"}
+        sx={{boxShadow: darkBoxShadow }} 
+        variant="uw"
         onClick={toggleColorMode}>
         {colorMode === "light" ? <Brightness3Icon /> : <Brightness5Icon />}
       </IconButton>
@@ -29,13 +25,3 @@ export const LightSwitch = () => {
 
   );
 };
-
-
- // return(
- //    <UWIconButton 
- //      toolTipTitle={colorMode === "light" ? "Dark Mode" : "Light Mode"}
- //      label="Toggle Darkmode"
- //      onClick={toggleColorMode}>
- //      {colorMode === "light" ? <Brightness3Icon /> : <Brightness5Icon />}
- //    </UWIconButton>
- //  );

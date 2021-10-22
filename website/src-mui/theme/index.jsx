@@ -1,27 +1,64 @@
-// const getDesignTokens = (mode) => ({
-//   palette: {
-//     mode,
-//     ...(mode === 'light'
-//       ? {
-//           // palette values for light mode
-          
-//           text: {
-//             primary: grey[900],
-//             secondary: grey[800],
-//           },
-//         }
-//       : {
-//           // palette values for dark mode
-//           primary: deepOrange,
-//           divider: deepOrange[700],
-//           background: {
-//             default: deepOrange[900],
-//             paper: deepOrange[900],
-//           },
-//           text: {
-//             primary: '#fff',
-//             secondary: grey[500],
-//           },
-//         }),
-//   },
-// });
+const uwDarkText = '#1A202C';
+const uwLightText = '#ffffffeb';
+
+export const getCustomTheme = (colorMode='light') => ({
+  palette: {
+    mode:colorMode,
+    uwprimary: {
+      contrastText: "#FFFFFF",
+      main: uwDarkText,
+      dark: "#000000",
+      light: "#414755"
+    },
+    text: {
+      ...(colorMode === 'light'
+        ? { primary: uwDarkText }
+        : { primary: uwLightText})
+    }
+  },
+  components: {
+    MuiButton: {
+      variants: [
+        {
+          props: { variant: 'uw' },
+
+          style: {
+            background: 'transparent',
+            lineHeight: 2,
+            ...(colorMode === 'light'
+            ?{
+              border: '1px solid #E2E8F0',
+              color:uwDarkText
+            }
+            :{
+              borderWidth: 0,
+              color:uwLightText
+            })
+          },
+        }
+      ]
+    },
+    MuiIconButton:{
+      variants: [
+        {
+          props: { variant: 'uw' },
+          style: {
+            background: 'transparent',
+            width:'auto', 
+            height:'2.5rem',
+            alignSelf: 'center',
+            border: '1px solid #E2E8F0',
+            borderRadius:'.3rem',
+            ...(colorMode === 'light'
+            ?{
+              color:uwDarkText
+            }
+            :{
+              color:uwLightText
+            })
+          },
+        }
+      ]
+    }
+  }
+});

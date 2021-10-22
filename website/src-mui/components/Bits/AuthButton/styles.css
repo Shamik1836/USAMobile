@@ -1,7 +1,5 @@
 .LoginButton, .LogoutButton{
   min-width: 2.5rem;
-  align-self: center;
-  box-shadow:   #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px, #00000066 0px 15px 40px 0px;
 }
 .AuthDrawer {
   background-repeat: no-repeat;

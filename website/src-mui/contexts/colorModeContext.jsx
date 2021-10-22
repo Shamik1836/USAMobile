@@ -1,6 +1,7 @@
 import React, { useState, useContext, useMemo } from "react";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { GradientProvider } from "./gradientsContext";
+import { getCustomTheme } from '../theme';
 
 
 const ColorModeContext = React.createContext();
@@ -20,15 +21,9 @@ export const ColorModeProvider = (props) => {
 		localStorage.setItem('usa-is-theme-dark', (colorMode === 'light' ? 'dark' : 'light'));
 		setColorMode((prevColorMode) => (prevColorMode === 'light' ? 'dark' : 'light'));
 	};
-	const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode:colorMode
-        }
-      }),
-    [colorMode]
-  );
+	const theme = useMemo(() =>createTheme(getCustomTheme(colorMode)),[colorMode]);
+
+  console.log('Theme:', theme);
 
 
 	return (
