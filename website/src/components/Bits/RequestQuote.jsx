@@ -7,14 +7,14 @@ import {
   useColorMode,
   useToast,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import { useMoralis } from "react-moralis";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
-const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
-
 export const RequestQuote = () => {
+  const [loading, setLoading] = useState(false);
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
   const {
@@ -43,13 +43,15 @@ export const RequestQuote = () => {
     setDialog(
       "Estimating costs to swap " + fromSymbol + " to " + toSymbol + " ... "
     );
+    setLoading(true)
     await Moralis.initPlugins();
     const oneInchQuote = await Moralis.Plugins.oneInch.quote({
-      chain: 'eth',
+      chain: "eth",
       fromTokenAddress: fromAddress, // The token you want to swap
       toTokenAddress: toAddress, // The token you want to receive
       amount: txAmount,
     });
+    setLoading(false)
 
     if (oneInchQuote.protocols !== undefined) {
       setFromToken(oneInchQuote.fromToken);
@@ -65,9 +67,9 @@ export const RequestQuote = () => {
     } else {
       setDialog(
         "Something went wrong: " +
-          oneInchQuote.error +
-          " re: " +
-          oneInchQuote.message
+        oneInchQuote.error +
+        " re: " +
+        oneInchQuote.message
       );
       setQuoteValid("false");
       toast({
@@ -88,6 +90,7 @@ export const RequestQuote = () => {
             isDisabled={!txAmount || !toSymbol}
             variant={colorMode === "light" ? "outline" : "solid"}
             boxShadow="dark-lg"
+            isLoading={loading}
             onClick={handlePress}
           >
             Get Swap Quote

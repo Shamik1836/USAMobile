@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
-export const AmountSelect = () => {
+export const AmountSelect = ({ type }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [value, setValue] = useState(0);
   const { fromToken, setTxAmount } = useActions();
@@ -33,25 +33,28 @@ export const AmountSelect = () => {
 
   const onChange = (v) => {
     setValue(v);
-    setTxAmount(v * 10 ** decimals);
+    if (type === 'send') {
+      setTxAmount(String(v))
+    } else
+      setTxAmount(v * 10 ** decimals);
     if (v > 0) {
       setDialog(
         "Now using " +
-          ((100 * v) / maxSpend).toFixed(0) +
-          "% of your " +
-          fromToken.symbol +
-          " in this action.  " +
-          "Press one of the action buttons " +
-          "when you are ready " +
-          "to choose what to do with these tokens."
+        ((100 * v) / maxSpend).toFixed(0) +
+        "% of your " +
+        fromToken.symbol +
+        " in this action.  " +
+        "Press one of the action buttons " +
+        "when you are ready " +
+        "to choose what to do with these tokens."
       );
     } else {
       setDialog(
         "Use the up and down arrows " +
-          "to select how much " +
-          fromToken.symbol +
-          " to use in this action.  " +
-          "Arrows step in 10% increments of your balance."
+        "to select how much " +
+        fromToken.symbol +
+        " to use in this action.  " +
+        "Arrows step in 10% increments of your balance."
       );
     }
   };
