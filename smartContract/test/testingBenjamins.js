@@ -58,6 +58,7 @@ let user1DiscountDataArray = [];
 let user2LevelDataArray = [];
 let user2DiscountDataArray = [];
 
+// querrying and saving account level and account discount info for userToCheck, and saving them to an array for later confirmation
 async function addUserAccDataPoints(userToCheck){
   const userLevelNow = bigNumberToNumber (await benjaminsContract.calcCurrentLevel(userToCheck));
   const userDiscountNow = bigNumberToNumber (await benjaminsContract.calcDiscount(userToCheck)); 
@@ -74,6 +75,7 @@ async function addUserAccDataPoints(userToCheck){
   }
 }
 
+// confirms account level and account discount as recorded via add addUserAccDataPoints function
 function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
   if  (userToCheck == testUser_1){
     for (let index = 0; index < user1LevelDataArray.length; index++) {
@@ -157,10 +159,6 @@ function decipherBlockFeedback(blockResponseObject) {
   console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
 }
 
-
-
-
-
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
   console.log('calling address in testMinting is now:', callingAccAddress);
@@ -187,6 +185,8 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
+ 
+
   // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
   await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
 
@@ -330,9 +330,13 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const amountOfTokensBeforeMint = bigNumberToNumber(await benjaminsContract.totalSupply());
   const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);
 
+  console.log("Got here with no errors 2 ===== = = = = = = = = = = = = ");
+
   const usersTokenAtStart = await balBNJI(accountMinting);
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
   
+  console.log("Got here with no errors 3 ===== = = = = = = = = = = = = ");
+
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
@@ -340,7 +344,18 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
 
   // getting accounts' feeModifier and starting with calculated fee, then rounding down to cents
   // descr.: quoteFeePercentage(address forWhom, int256 amount)  
+
+  console.log("Got here with no errors 4 ===== = = = = = = = = = = = = ");
+
+  const response1 = await benjaminsContract.discountLevel(accountMinting);
+  console.log("response1: ", response1); 
+
+  const response2 = await benjaminsContract.quoteFeePercentage(accountMinting);
+  console.log("response2: ", response2); 
+
   const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountMinting));  
+
+  console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
   const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100) / 100;   // TODO: needs to change, reply will come in different format
   const mintFeeInCentsRoundedDown = mintFeeStarterInCents - (mintFeeStarterInCents % 1);
 
@@ -414,10 +429,12 @@ describe("Benjamins Test", function () {
     testingUserAddressesArray.push(testUser_3);
     testingUserAddressesArray.push(testUser_4);
     testingUserAddressesArray.push(testUser_5);
+
     
     // Deploy contract
     await fixture(["Benjamins"]);
     benjaminsContract = await ethers.getContract("Benjamins");    
+    
 
     polygonUSDC = new ethers.Contract(
       polygonUSDCaddress,
@@ -1089,7 +1106,7 @@ describe("Benjamins Test", function () {
     await addUserAccDataPoints(testUser_1);    
     await addUserAccDataPoints(testUser_2);  
 
-    await testMinting("Test 22.1, minting 506 BNJI to caller", 506, testUser_1, testUser_1);  
+    await testMinting("Test 23.1, minting 506 BNJI to caller", 506, testUser_1, testUser_1);  
 
     expect(await balBNJI(testUser_1)).to.equal(506);
     expect(await balBNJI(testUser_2)).to.equal(0);

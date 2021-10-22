@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 // Fee discounts are calculated based on balance.
 // There is a 10 block lockup vs. flash loan attacks.
 // Discounts and level holds are staged vs. a lookup table.
-contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
+contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     using SafeMath for uint256;
 
     // Manage Benjamins
@@ -28,7 +28,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     IERC20 public polygonUSDC;
     IERC20 public polygonAMUSDC;
 
-    address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
+    //address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
     uint256 reserveInUSDC; // end user USDC on deposit
     address feeReceiver; // beneficiary address for amUSDC interest
     int256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
@@ -45,7 +45,8 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     int8 baseFee = 2; // in percent as an integer
 
     constructor() ERC20("Benjamins", "BNJI") {
-        // Manage Benjamins        
+        // Manage Benjamins
+        _decimals = 0;        
         reserveInUSDC = 0;
         feeReceiver = owner();
         polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
@@ -56,6 +57,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
         levelHolds =     [ int16(0), 2, 7, 30, 90, 360]; // Forced type.  Disallow assumption.
         levelDiscounts = [ int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
+                
         pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
 
@@ -69,8 +71,8 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 fee
     );
     event profitTaken(uint256 available, uint256 _amountUSDCin6dec);
-    event LendingPoolDeposit (uint256 amount);  
-    event LendingPoolWithdrawal (uint256 amount);
+    event LendingPoolDeposit (uint256 _amountUSDCin6dec);  
+    event LendingPoolWithdrawal (uint256 _amountUSDCin6dec);
 
     // owner overrides paused.
     modifier whenAvailable() {
@@ -80,6 +82,23 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Account has sufficient funds
     modifier hasTheBenjamins(uint256 want2Spend) {
         require(balanceOf(msg.sender) >= want2Spend, "Insufficient Benjamins.");
+        _;
+    }
+
+    // Are we past the withdraw timeout?
+    modifier withdrawAllowed(address userToCheck) {
+        int256 blockNum = int256(block.number);
+        int256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
+        require(holdTime > int256(antiFlashLoan), 
+            'Anti-flashloan withdraw timeout in effect.');
+        require(holdTime >  int256(blocksPerDay)*int256(levelHolds[discountLevel(msg.sender)]), 
+            'Discount level withdraw timeout in effect.');
+        _;
+    }
+ 
+    // Redundant reserveInUSDC protection vs. user withdraws.
+    modifier wontBreakTheBank(uint256 want2Burn) {
+        require(reserveInUSDC >= uint256(quoteUSDC(int256(want2Burn))));   // should implicitly do an abs().
         _;
     }
     
@@ -123,23 +142,6 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         return currentLevel;
     }
 
-    // Are we past the withdraw timeout?
-    modifier withdrawAllowed(address userToCheck) {
-        int256 blockNum = int256(block.number);
-        int256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
-        require(holdTime > int256(antiFlashLoan), 
-            'Anti-flashloan withdraw timeout in effect.');
-        require(holdTime >  int256(blocksPerDay)*int256(levelHolds[discountLevel(msg.sender)]), 
-            'Discount level withdraw timeout in effect.');
-        _;
-    }
- 
-    // Redundant reserveInUSDC protection vs. user withdraws.
-    modifier wontBreakTheBank(uint256 want2Burn) {
-        require(reserveInUSDC >= uint256(quoteUSDC(int256(want2Burn))));   // should implicitly do an abs().
-        _;
-    }
-
     // Quote % fee the given user will be charged based on their
     // current balance, Tx amount, and contents of the discount lookup table.
     // Returns a percentage * 10,000.
@@ -147,29 +149,34 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         public
         view
         returns (int16)
-    {
-        return int16(100*baseFee)*int16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+    {   
+        //console.log("discountLevel(forWhom):", discountLevel(forWhom));        
+        //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  );
+        return int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
     }
 
-    // Move USDC for a supply chainge.  Note: sign of amount is the mint/burn direction.
+    // Move USDC for a supply change.  Note: sign of amount is the mint/burn direction.
     function moveUSDC(
-        address _payer,
-        address _payee,
-        int256 _amount
+        address _payer, 
+        address _payee, 
+        int256 _amountUSDCcents // negative when burning, does not include fee. positive when minting, includes fee.
     ) internal {
-        if (_amount > 0) {
-            // pull USDC from user (_payer), push to lending pool (_payee)            
-            // BC TODO: AAVE/USDC function goes here.
-            // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit)  
-            polygonUSDC.approve(address(polygonLendingPool), uint256(_amount)); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
+        if (_amountUSDCcents > 0) {
+            uint256 _amountUSDCin6dec = _amountUSDCcents*10000;
+            // pull USDC from user (_payer), push to this contract           
+            polygonUSDC.transferFrom(_payer, address(this), _amountUSDCin6dec);             
+            // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit) from this contract 
+            polygonUSDC.approve(address(polygonLendingPool), uint256(_amountUSDCin6dec)); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
             // lending pool is queried to pull in the approved USDC (in 6 decimals unit)  
-            polygonLendingPool.deposit(address(polygonUSDC), uint256(_amount), address(this), 0); // TODO: also needs 6 decimals format
-            emit LendingPoolDeposit(uint256(_amount));
+            polygonLendingPool.deposit(address(polygonUSDC), uint256(_amountUSDCin6dec), address(this), 0); // TODO: also needs 6 decimals format
+            emit LendingPoolDeposit(uint256(_amountUSDCin6dec));
         } else {
-            // pull USDC from lending pool (_payer), push to user (_payee)
-            // BC TODO: AAVE/USDC function goes here.
-           polygonLendingPool.withdraw(address(polygonUSDC), uint256(_amount), address(this)); // TODO: also needs 6 decimals format
-           emit LendingPoolWithdrawal(uint256(_amount));
+            uint256 _amountUSDCin6dec = _amountUSDCcents*(-10000);            
+            // lending pool is queried to push USDC (in 6 decimals unit) without fee back to this contract
+            polygonLendingPool.withdraw(address(polygonUSDC), uint256(_amountUSDCin6dec), address(this)); // TODO: also needs 6 decimals format
+            emit LendingPoolWithdrawal(uint256(_amountUSDCin6dec));
+            // take USDC from this contract, push to user (_payee)
+            polygonUSDC.transfer(_payee, _amountUSDCin6dec);            
         }
     }
 
@@ -179,26 +186,26 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, int256 _amount) internal nonReentrant {
+    function changeSupply(address _forWhom, int256 _amountBNJI) internal nonReentrant {
         // Calculate change
-        int256 principleInUSDCcents = quoteUSDC(_amount); // negative on burn
+        int256 principleInUSDCcents = quoteUSDC(_amountBNJI); // negative on burn
         int256 fee = abs(int256(principleInUSDCcents) * int256(quoteFeePercentage(msg.sender)))/10000; // always positive
-        int256 endAmountInUSDCcents = principleInUSDCcents + fee; // User will be charged this in USDC cents
+        int256 endAmountInUSDCcents = principleInUSDCcents + fee; // negative on burn
 
         // Execute exchange
-        if (_amount > 0) {
+        if (_amountBNJI > 0) {
             // minting
-            moveUSDC(msg.sender, depositAccount, endAmountInUSDCcents);
-            _mint(_forWhom, uint256(_amount));
+            moveUSDC(msg.sender, _forWhom, endAmountInUSDCcents);
+            _mint(_forWhom, uint256(_amountBNJI));
         } else {
             // burning
-            moveUSDC(depositAccount, _forWhom, endAmountInUSDCcents);
-            _burn(msg.sender, uint256(_amount));
+            _burn(msg.sender, uint256(_amountBNJI));
+            moveUSDC(msg.sender, _forWhom, principleInUSDCcents);            
         }
 
         // Record change.
         reserveInUSDC += uint256(principleInUSDCcents);
-        emit exchanged(msg.sender, _forWhom, _amount, -endAmountInUSDCcents, uint256(fee));
+        emit exchanged(msg.sender, _forWhom, _amountBNJI, -endAmountInUSDCcents, uint256(fee));
     }
 
     // Only reset last upgrade block height if its a new hold.
