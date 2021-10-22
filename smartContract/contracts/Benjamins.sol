@@ -35,14 +35,14 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8 private _decimals;
 
     // Manage Discounts
-    mapping (address => uint256) lastUpgradeBlockHeight;
-    uint[] levelAntes; // how many BNJI needed for each level;
-    int32[] levelHolds; // how many blocks to hold b4 withdraw @ each level;
-    uint8[] levelDiscounts; // percentage discount given by each level;
-    uint8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
+    mapping (address => int256) lastUpgradeBlockHeight;
+    uint32[] levelAntes; // how many BNJI needed for each level;
+    int16[] levelHolds;   // how many blocks to hold b4 withdraw @ each level;    
+    int8[] levelDiscounts; // percentage discount given by each level;
+    int8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
     uint blocksPerDay = 2; // TODO: change to 43200
     int256 curveFactor = 800000; // Inverselope of the bonding curve.
-    uint8 baseFee = 2; // in percent as an integer
+    int8 baseFee = 2; // in percent as an integer
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins        
@@ -53,9 +53,9 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [ 0, 20, 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =     [ 0,  2,  7,  30,  90,  360]; // days
-        levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent*100
+        levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
+        levelHolds =     [ int16(0), 2, 7, 30, 90, 360]; // Forced type.  Disallow assumption.
+        levelDiscounts = [ int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
         pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
 
@@ -125,14 +125,15 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Are we past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
-        uint256 holdTime = (block.number - lastUpgradeBlockHeight[msg.sender]); 
-        require(holdTime > antiFlashLoan, 
+        int256 blockNum = int256(block.number);
+        int256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
+        require(holdTime > int256(antiFlashLoan), 
             'Anti-flashloan withdraw timeout in effect.');
-        require(holdTime > blocksPerDay*levelHolds[discountLevel(msg.sender)], 
+        require(holdTime >  int256(blocksPerDay)*int256(levelHolds[discountLevel(msg.sender)]), 
             'Discount level withdraw timeout in effect.');
         _;
     }
-
+ 
     // Redundant reserveInUSDC protection vs. user withdraws.
     modifier wontBreakTheBank(uint256 want2Burn) {
         require(reserveInUSDC >= uint256(quoteUSDC(int256(want2Burn))));   // should implicitly do an abs().
@@ -145,9 +146,9 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     function quoteFeePercentage(address forWhom)
         public
         view
-        returns (uint16)
+        returns (int16)
     {
-        return uint16(100*baseFee)*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+        return int16(100*baseFee)*int16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
     }
 
     // Move USDC for a supply chainge.  Note: sign of amount is the mint/burn direction.
@@ -181,7 +182,7 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
     function changeSupply(address _forWhom, int256 _amount) internal nonReentrant {
         // Calculate change
         int256 principleInUSDCcents = quoteUSDC(_amount); // negative on burn
-        int256 fee = abs(int256(principleInUSDCcents) * quoteFeePercentage(msg.sender))/10000; // always positive
+        int256 fee = abs(int256(principleInUSDCcents) * int256(quoteFeePercentage(msg.sender)))/10000; // always positive
         int256 endAmountInUSDCcents = principleInUSDCcents + fee; // User will be charged this in USDC cents
 
         // Execute exchange
@@ -202,10 +203,11 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Only reset last upgrade block height if its a new hold.
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
-        int32 timeSinceLastHoldStart = block.number - lastUpgradeBlockHeight[_toWhom];
-        int32 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
+        int256 blockNum = int256(block.number);
+        int256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
+        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
         if (timeSinceLastHoldEnd > 0) {
-            lastUpgradeBlockHeight[_toWhom] = block.number; 
+            lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
     }
 
@@ -333,15 +335,15 @@ contract OurToken is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonUSDC.approve(address(polygonLendingPool), amountToApprove);       
     }
 
-    function updateLevelAntes (uint256[] memory newLevelAntes) public onlyOwner {
+    function updateLevelAntes (uint32[] memory newLevelAntes) public onlyOwner {
         levelAntes = newLevelAntes;
     }
 
-    function updateLevelHolds (int32[] memory newLevelHolds) public onlyOwner {
+    function updateLevelHolds (int16[] memory newLevelHolds) public onlyOwner {
         levelHolds = newLevelHolds;
     }
 
-    function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
+    function updateLevelDiscounts (int8[] memory newLevelDiscounts) public onlyOwner {
         levelDiscounts = newLevelDiscounts;
     }  
 

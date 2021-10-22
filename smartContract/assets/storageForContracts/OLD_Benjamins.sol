@@ -149,7 +149,7 @@ contract Benjamins is ERC20, BNJICurve, ReentrancyGuard {
 
     // minting to receiverOfTokens
     _mint(receiverOfTokens, amount);    
-
+ 
     emit SpecifiedMintEvent(msg.sender, receiverOfTokens, amount, priceForMintingIn6dec, feeRoundedDownIn6dec);    
 
     return priceForMintingIn6dec;   
