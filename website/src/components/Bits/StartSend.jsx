@@ -8,15 +8,20 @@ export const StartSend = () => {
   const [loading, setLoading] = useState(false)
   const { Moralis } = useMoralis();
   const sendStart = async () => {
-    const options = {
-      type: "erc20",
-      amount: Moralis.Units.Token(txAmount, "18"),
-      receiver: toAddress,
-      contractAddress: fromAddress
+    try {
+      const options = {
+        type: "erc20",
+        amount: Moralis.Units.Token(txAmount, "18"),
+        receiver: toAddress,
+        contractAddress: fromAddress
+      }
+      setLoading(true)
+      await Moralis.transfer(options);
+      setLoading(false)
+    } catch {
+      setLoading(false)
     }
-    setLoading(true)
-    let result = await Moralis.transfer(options);
-    setLoading(false)
+
   }
 
   return (
