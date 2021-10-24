@@ -16,10 +16,10 @@ const theme = extendTheme({
   },
 });
 
-// const appId = "UeAbfYO3C29W5EHdz5c5BuCItODRdOw8RcHDpAud";
-// const serverUrl = "https://qvgfrpeymufw.bigmoralis.com:2053/server";
-const appId = "bGqMnb18qnDTb5UCEkXKQcrzjZSKMQV8zbyNxiMC";
-const serverUrl = "https://c9amlzqi9ar9.usemoralis.com:2053/server";
+const dotenv = require("dotenv").config();
+
+const appId = process.env.REACT_APP_MORALIS_APPLICATION_ID;
+const serverUrl = process.env.REACT_APP_MORALIS_SERVER_URL;
 
 ReactDOM.render(
   <React.StrictMode>
