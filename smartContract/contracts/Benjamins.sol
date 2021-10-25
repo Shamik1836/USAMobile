@@ -29,7 +29,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     IERC20 public polygonAMUSDC;
 
     //address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
-    uint256 reserveInUSDCIn6dec; // end user USDC on deposit
+    uint256 reserveInUSDCin6dec; // end user USDC on deposit
     address feeReceiver; // beneficiary address for amUSDC interest
     int256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
     uint8 private _decimals;
@@ -47,7 +47,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
         _decimals = 0;        
-        reserveInUSDCIn6dec = 0;
+        reserveInUSDCin6dec = 0;
         feeReceiver = owner();
         polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
         polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
@@ -70,9 +70,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         int256 inUSDC,
         uint256 fee
     );
-    event profitTaken(uint256 available, uint256 _amountUSDCin6dec);
-    event LendingPoolDeposit (uint256 _amountUSDCin6dec);  
-    event LendingPoolWithdrawal (uint256 _amountUSDCin6dec);
+    event profitTaken(uint256 availableIn6dec, uint256 amountUSDCin6dec);
+    event LendingPoolDeposit (uint256 amountUSDCin6dec, address payer);  
+    event LendingPoolWithdrawal (uint256 amountUSDCin6dec, address payee);
 
     // owner overrides paused.
     modifier whenAvailable() {
@@ -98,7 +98,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
  
     // Redundant reserveInUSDC protection vs. user withdraws.
     modifier wontBreakTheBank(uint256 want2BurnIn6dec) {
-        require(reserveInUSDCIn6dec >= uint256(quoteUSDC(int256(want2BurnIn6dec))));   // should implicitly do an abs().
+        require(reserveInUSDCin6dec >= uint256(quoteUSDC(int256(want2BurnIn6dec))));   // should implicitly do an abs().
         _;
     }
     
@@ -200,10 +200,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Return address discount level as an uint8 as a function of balance.
     function discountLevel(address _whom) public view returns(uint8) {
-        uint256 userBalance = balanceOf(_whom); // lookup once.
+        uint256 userBalance = balanceOf(_whom); // lookup once.       
         uint8 currentLevel;
         for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
-            if (currentLevel == levelAntes.length) {break;}
+            if (currentLevel == levelAntes.length-1) {
+                console.log('currentLevel', currentLevel);
+                //break; // TODO: check if okay now
+                return currentLevel;
+            }
         }   
         return currentLevel;
     }
@@ -216,8 +220,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         view
         returns (int16)
     {   
-        //console.log("discountLevel(forWhom):", discountLevel(forWhom));        
-        //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  );
+        console.log("discountLevel(forWhom):", discountLevel(forWhom));        
+        //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  ); // TODO: fix, throws
         return int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
     }
 
@@ -240,7 +244,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         }
 
         // Record change.
-        reserveInUSDCIn6dec += uint256(principleInUSDCin6dec); // TODO: check if uint256 is correct here for principle, should not be negative on burn?
+        reserveInUSDCin6dec += uint256(principleInUSDCin6dec); // TODO: check if uint256 is correct here for principle, should not be negative on burn?
         emit exchanged(msg.sender, _forWhom, _amountBNJI, -endAmountInUSDCin6dec, uint256(fee));
     }
 
@@ -252,18 +256,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     ) internal {
         if (_amountUSDCin6dec > 0) {            
             // pull USDC from user (_payer), push to this contract           
-            polygonUSDC.transferFrom(_payer, address(this), _amountUSDCin6dec);             
+            polygonUSDC.transferFrom(_payer, address(this), uint256(_amountUSDCin6dec));             
             // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit) from this contract 
             polygonUSDC.approve(address(polygonLendingPool), uint256(_amountUSDCin6dec)); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
             // lending pool is queried to pull in the approved USDC (in 6 decimals unit)  
             polygonLendingPool.deposit(address(polygonUSDC), uint256(_amountUSDCin6dec), address(this), 0); // TODO: also needs 6 decimals format
-            emit LendingPoolDeposit(uint256(_amountUSDCin6dec));
+            emit LendingPoolDeposit(uint256(_amountUSDCin6dec), _payer);
         } else {                     
             // lending pool is queried to push USDC (in 6 decimals unit) without fee back to this contract
             polygonLendingPool.withdraw(address(polygonUSDC), uint256(_amountUSDCin6dec), address(this)); // TODO: also needs 6 decimals format
-            emit LendingPoolWithdrawal(uint256(_amountUSDCin6dec));
+            emit LendingPoolWithdrawal(uint256(_amountUSDCin6dec), _payee);
             // take USDC from this contract, push to user (_payee)
-            polygonUSDC.transfer(_payee, _amountUSDCin6dec);            
+            polygonUSDC.transfer(_payee, uint256(_amountUSDCin6dec));            
         }
     }   
 
@@ -284,10 +288,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {       
-        uint256 available = polygonAMUSDC.balanceOf(address(this)) - reserveInUSDCIn6dec;
-        require(available > _amountIn6dec, "Insufficient funds.");        
+        uint256 availableIn6dec = polygonAMUSDC.balanceOf(address(this)) - reserveInUSDCin6dec;
+        require(availableIn6dec > _amountIn6dec, "Insufficient funds.");        
         polygonAMUSDC.transfer(feeReceiver, _amountIn6dec);
-        emit profitTaken(available, _amountIn6dec);
+        emit profitTaken(availableIn6dec, _amountIn6dec);
     }
 
     // function for owner to withdraw errant ERC20 tokens
@@ -317,7 +321,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // withdrawing all USDC from old lending pool address to BNJI contract
         polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));       
         //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
-
+               
         // setting new lending pool address and emitting event
         polygonLendingPool = ILendingPool(newAddress);
         emit newDepositAccount(newAddress);
@@ -327,7 +331,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
         polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
         // emitting related event
-        emit LendingPoolDeposit(bnjiContractUSDCBal);          
+        emit LendingPoolDeposit(bnjiContractUSDCBal, address(this));          
     }   
     
     // Update the feeReceiver address.

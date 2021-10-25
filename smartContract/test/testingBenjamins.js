@@ -328,15 +328,11 @@ function confirmBurn(){
 async function calcMintApprovalAndPrep(amountToMint, accountMinting) {  
   
   const amountOfTokensBeforeMint = bigNumberToNumber(await benjaminsContract.totalSupply());
-  const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);
-
-  console.log("Got here with no errors 2 ===== = = = = = = = = = = = = ");
+  const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);  
 
   const usersTokenAtStart = await balBNJI(accountMinting);
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
   
-  console.log("Got here with no errors 3 ===== = = = = = = = = = = = = ");
-
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
