@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Box, FormControl, FormErrorMessage, Select } from "@chakra-ui/react";
+
 import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
@@ -7,6 +9,12 @@ export const FromSelect = () => {
   const { positions, waiting } = usePositions();
   const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
+
+  useEffect(() => {
+    return () => {
+      setFromToken();
+    };
+  }, [setFromToken]);
 
   const handleChange = (e) => {
     let selectedIndex = e.target.options.selectedIndex - 1;
@@ -23,7 +31,7 @@ export const FromSelect = () => {
       setToToken();
       setDialog(
         "Use the 'Select a token to act with' menu " +
-        "to start creating an action plan."
+          "to start creating an action plan."
       );
     }
   };
