@@ -33,7 +33,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     address feeReceiver; // beneficiary address for amUSDC interest
     int256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
     uint8 private _decimals;
-
+    
     // Manage Discounts
     mapping (address => int256) lastUpgradeBlockHeight;
     uint32[] levelAntes; // how many BNJI needed for each level;
@@ -55,8 +55,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
         // Manage discounts TODO: finalize real numbers
         levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =     [ int16(0), 2, 7, 30, 90, 360]; // Forced type.  Disallow assumption.
-        levelDiscounts = [ int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
+        levelHolds =     [  int16(0),  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
+        levelDiscounts = [   int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
         pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
@@ -256,12 +256,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         nonReentrant
         withdrawAllowed(sender) 
     returns (bool) {
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        _approve(sender, _msgSender(), currentAllowance - amount);
-        uint8 originalUserDiscountLevel = discountLevel(recipiant);
+        //checking recipiant's discount level before transfer
+        uint8 originalUserDiscountLevel = discountLevel(recipiant); 
+        // transferring funds
         /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
+        // checking if allowance was enough
+        uint256 currentAllowance = allowance(sender, _msgSender());        
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        // decreasing allowance by transferred amount
+        _approve(sender, _msgSender(), currentAllowance - amount);   
+        //checking recipiant's discount level after changes            
         uint8 newUserDiscountLevel = discountLevel(recipiant);
+        // if discount level is different now, adjusting the holding times 
         if ( newUserDiscountLevel > originalUserDiscountLevel){
             adjustUpgradeTimeouts(recipiant);
         }
@@ -275,7 +281,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         override 
         returns(bool) {
         return transferFrom(msg.sender, recipiant, amount);
-    }
+    }    
 
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {       
