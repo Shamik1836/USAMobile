@@ -39,7 +39,6 @@ export const ToSelect = () => {
           placeholder="Select a token to receive."
           boxShadow="dark-lg"
           onChange={handleChange}
-          value={value}
         >
           {TokenList.filter(
             (token) => token.symbol.toUpperCase() !== fromSymbol?.toUpperCase()
