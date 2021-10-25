@@ -48,13 +48,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // Manage Benjamins
         _decimals = 0;        
         reserveInUSDCin6dec = 0;
-        feeReceiver = owner();
+        feeReceiver = 0xE51c8401fe1E70f78BBD3AC660692597D33dbaFF;
         polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
         polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
+        levelAntes =     [ uint32(20), 60, 100, 500, 2000]; // in Benjamins
         levelHolds =     [  int16(0),  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
         levelDiscounts = [   int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
@@ -200,13 +200,15 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Return address discount level as an uint8 as a function of balance.
     function discountLevel(address _whom) public view returns(uint8) {
-        uint256 userBalance = balanceOf(_whom); // lookup once.       
+        uint256 userBalance = balanceOf(_whom); // lookup once.  
+        console.log('userBalance:', userBalance);     
         uint8 currentLevel;
-        for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
+        for (currentLevel = 0; levelAntes[currentLevel] <= userBalance; currentLevel ++){ // TODO: fix, last level is wrong
+            console.log('currentLevel inside loop:', currentLevel);
             if (currentLevel == levelAntes.length-1) {
-                console.log('currentLevel', currentLevel);
-                break; // TODO: check if okay now
-                //return currentLevel;
+                //console.log('currentLevel reached 4');
+                //break; // TODO: check if okay now
+                return currentLevel+1;
             }
         }   
         return currentLevel;
