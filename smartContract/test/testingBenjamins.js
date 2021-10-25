@@ -181,7 +181,7 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
 
   const givenAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
-  //console.log(bigNumberToNumber(givenAllowanceToBNJIcontract), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
+  console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
@@ -339,21 +339,22 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const mintingCostInCentsRoundedDown = mintingCostInCents - (mintingCostInCents % 1);
 
   // getting accounts' feeModifier and starting with calculated fee, then rounding down to cents
-  // descr.: quoteFeePercentage(address forWhom, int256 amount)  
+  // descr.: quoteFeePercentage(address forWhom, int256 amount)    
 
-  console.log("Got here with no errors 4 ===== = = = = = = = = = = = = ");
+  const discountLevel = await benjaminsContract.discountLevel(accountMinting);
+  console.log("discountLevel: ", discountLevel); 
 
-  const response1 = await benjaminsContract.discountLevel(accountMinting);
-  console.log("response1: ", response1); 
+  const quoteFeePercentage = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;
+  console.log("quoteFeePercentage: ", quoteFeePercentage); 
 
-  const response2 = await benjaminsContract.quoteFeePercentage(accountMinting);
-  console.log("response2: ", response2); 
-
-  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountMinting));  
+  const feeModifier = bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountMinting))/10000;  
+  console.log("feeModifier: ", feeModifier); 
 
   console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
-  const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100) / 100;   // TODO: needs to change, reply will come in different format
+  const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100);   // TODO: needs to change, reply will come in different format
+  console.log("mintFeeStarterInCents: ", mintFeeStarterInCents); 
   const mintFeeInCentsRoundedDown = mintFeeStarterInCents - (mintFeeStarterInCents % 1);
+  console.log("mintFeeInCentsRoundedDown: ", mintFeeInCentsRoundedDown); 
 
   // results, toPayTotalInUSDC can be displayed to user
   const toPayTotalInCents = mintingCostInCentsRoundedDown + mintFeeInCentsRoundedDown;
@@ -366,7 +367,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
 
   console.log(usersTokenAtStart, "this was the users token balance at start, calcMintApprovalAndPrep");  
   console.log(userLevel, "this was the users applied account level, calcMintApprovalAndPrep");
-  console.log(feeModifier/100, "this was the fee modifier in percent, calcMintApprovalAndPrep");
+  console.log(feeModifier, "this was the fee modifier in percent, calcMintApprovalAndPrep");
 
   return toPayTotalIn6dec;
 }

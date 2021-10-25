@@ -205,8 +205,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         for (currentLevel = 0; levelAntes[currentLevel+1] <= userBalance; currentLevel ++){
             if (currentLevel == levelAntes.length-1) {
                 console.log('currentLevel', currentLevel);
-                //break; // TODO: check if okay now
-                return currentLevel;
+                break; // TODO: check if okay now
+                //return currentLevel;
             }
         }   
         return currentLevel;
@@ -222,15 +222,19 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     {   
         console.log("discountLevel(forWhom):", discountLevel(forWhom));        
         //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  ); // TODO: fix, throws
-        return int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+        return 10000;//int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // TODO: fix, dummy response atm
     }
 
     // Execute mint (positive amount) or burn (negative amount).
     function changeSupply(address _forWhom, int256 _amountBNJI) internal nonReentrant {
         // Calculate change
         int256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
-        int256 fee = abs(int256(principleInUSDCin6dec) * int256(quoteFeePercentage(msg.sender)))/10000; // always positive
-        int256 endAmountInUSDCin6dec = principleInUSDCin6dec + fee; // negative on burn
+        console.log('principleInUSDCin6dec:', uint256(principleInUSDCin6dec));
+        int256 fee = abs(int256(principleInUSDCin6dec) * int256(quoteFeePercentage(msg.sender)))/1000000; // always positive
+        int256 feeRoundedDownIn6dec = fee - (fee % 10000);
+        console.log('feeRoundedDownIn6dec:', uint256(feeRoundedDownIn6dec));
+        int256 endAmountInUSDCin6dec = principleInUSDCin6dec + feeRoundedDownIn6dec; // negative on burn
+        console.log('endAmountInUSDCin6dec:', uint256(endAmountInUSDCin6dec));
 
         // Execute exchange
         if (_amountBNJI > 0) {
@@ -254,7 +258,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         address _payee, 
         int256 _amountUSDCin6dec // negative when burning, does not include fee. positive when minting, includes fee.
     ) internal {
-        if (_amountUSDCin6dec > 0) {            
+        if (_amountUSDCin6dec > 0) {         
+            console.log('_payer:', _payer);
+            console.log('_amountUSDCin6dec:', uint256(_amountUSDCin6dec));
+            console.log('polygonUSDC.allowance(_payer, address(this)):', polygonUSDC.allowance(_payer, address(this)));   
             // pull USDC from user (_payer), push to this contract           
             polygonUSDC.transferFrom(_payer, address(this), uint256(_amountUSDCin6dec));             
             // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit) from this contract 
