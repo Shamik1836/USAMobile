@@ -1,23 +1,21 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormErrorMessage,
-  Tooltip,
-  useColorMode,
-  useToast,
-} from "@chakra-ui/react";
 import { useState } from "react";
 import { useMoralis } from "react-moralis";
+import { Box,FormControl,Tooltip} from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
+import { useColorMode } from "../../contexts/colorModeContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
 export const RequestQuote = () => {
-  const [loading, setLoading] = useState(false);
-  const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
-    useActions();
-  const {
+
+ const [loading, setLoading] = useState(false);
+ const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } = useActions();
+
+   const {
     setQuoteValid,
     setFromToken,
     setFromTokenAmount,
@@ -27,9 +25,11 @@ export const RequestQuote = () => {
     setEstimatedGas,
   } = useQuote();
   const { setDialog } = useExperts();
-  const { colorMode } = useColorMode();
   const { Moralis } = useMoralis();
-  const toast = useToast();
+
+  // const toast = useToast();
+  const { colorMode } = useColorMode();
+  const { darkBoxShadow } = useGradient();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -46,7 +46,7 @@ export const RequestQuote = () => {
     setLoading(true)
     await Moralis.initPlugins();
     const oneInchQuote = await Moralis.Plugins.oneInch.quote({
-      chain: "eth",
+      chain: 'eth',
       fromTokenAddress: fromAddress, // The token you want to swap
       toTokenAddress: toAddress, // The token you want to receive
       amount: txAmount,
@@ -67,16 +67,16 @@ export const RequestQuote = () => {
     } else {
       setDialog(
         "Something went wrong: " +
-        oneInchQuote.error +
-        " re: " +
-        oneInchQuote.message
+          oneInchQuote.error +
+          " re: " +
+          oneInchQuote.message
       );
       setQuoteValid("false");
-      toast({
-        description: oneInchQuote.message,
-        status: "error",
-        isClosable: true,
-      });
+      // toast({
+      //   description: oneInchQuote.message,
+      //   status: "error",
+      //   isClosable: true,
+      // });
       return;
     }
     console.groupEnd();
@@ -84,19 +84,20 @@ export const RequestQuote = () => {
 
   return (
     <Box>
-      <FormControl id="sendstart">
-        <Tooltip label="Preview token transmission.">
-          <Button
-            isDisabled={!txAmount || !toSymbol}
-            variant={colorMode === "light" ? "outline" : "solid"}
-            boxShadow="dark-lg"
-            isLoading={loading}
+      <FormControl id="sendstart" fullWidth>
+        <Tooltip title="Preview token transmission.">
+          <span>
+          <LoadingButton
+            disabled={!txAmount || !toSymbol}
+            variant={colorMode === "light" ? "outlined" : "contained"}
+            sx={{ boxShadow:darkBoxShadow }}
+            loading={loading}
             onClick={handlePress}
           >
             Get Swap Quote
-          </Button>
+          </LoadingButton>
+          </span>
         </Tooltip>
-        <FormErrorMessage>Well shoot.</FormErrorMessage>
       </FormControl>
     </Box>
   );

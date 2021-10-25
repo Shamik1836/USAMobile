@@ -1,117 +1,151 @@
-import React, { useState } from "react";
-import {
-  Avatar,
-  Box,
-  Flex,
-  Text,
-  useColorMode,
-  VStack,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { useGradient } from "../../contexts/gradientsContext";
+import React , { useState }  from 'react';
+import { Avatar, Box, Collapse, IconButton, Typography, Modal, Paper } from '@mui/material';
+
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+
+
 import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
+
+import { useColorMode } from '../../contexts/colorModeContext';
+import { useGradient } from "../../contexts/gradientsContext";
+
 import { getDataByCoinID } from "../../hooks/action";
-import Card from "../Research/card";
-import Loader from "../Research/load";
+import Card from "../Research/Card";
+import Loader from "../Research/Load";
+
 
 export const TokenTable = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedCoin, setSelectedCoin] = useState(null);
   const { colorMode } = useColorMode();
   const { lightModeBG, darkModeBG } = useGradient();
+
   const { positions, isLoading, totalValue } = usePositions();
+
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [selectedCoin, setSelectedCoin] = useState(null);
+
+
   const getDataApi = getDataByCoinID();
   const handleClickRow = async (p) => {
-    onOpen();
+    console.log('Position:', p);
+    setModalOpen(true);
     const data = await getDataApi(p.id);
     if (data.id) {
       setSelectedCoin(data);
     } else {
-      onClose();
+      onModalClose();
     }
   };
-  return (
-    <VStack
-      borderWidth={4}
-      borderRadius="3xl"
-      width="100%"
-      padding={5}
-      boxShadow="dark-lg"
-      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
-    >
-      {!isLoading && (
-        <Text>Total Value: ${parseFloat(totalValue).toFixed(2)}</Text>
-      )}
-      <Accordion allowToggle width="100%">
-        {!isLoading &&
-          positions.map((position) => (
-            <AccordionItem
-              key={position.name}
-              width="100%"
-              onClick={() => handleClickRow(position)}
+
+  const onModalClose = () =>{
+    console.log('onModalClose: called.');
+    setModalOpen(false);
+  }
+
+  function Position(props) {
+    const { position } = props;
+    const [open, setOpen] = React.useState(false);
+    return (
+      <React.Fragment>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} onClick={()=>handleClickRow(position)}>
+          <TableCell component="th" scope="row">
+            <Avatar
+              sx={{background:'#790d01'}}
+              name={position.symbol}
+              src={position.image}
+              size="sm"
+            />
+          </TableCell>
+          <TableCell align="right">
+            <Typography ml={2}>
+              {position.name}
+            </Typography>
+          </TableCell>
+          <TableCell align="right">
+            <Typography ml={2}>
+              {position.tokens.toPrecision(3)}
+            </Typography>
+
+          </TableCell>
+          <TableCell align="right">
+            <Typography ml={2}>
+              @ ${position.price && position.price.toFixed(2)}/
+              {position.symbol && position.symbol.toUpperCase()}
+            </Typography>
+
+          </TableCell>
+          <TableCell align="right">
+            <Typography ml={2}>
+              {" "}
+              = ${position.value.toFixed(2)}
+            </Typography>
+
+          </TableCell>
+          <TableCell>
+            <IconButton
+              aria-label="expand row"
+              size="small"
+              onClick={(e) => {e.stopPropagation(); setOpen(!open)}}
             >
-              <AccordionButton>
-                <Flex gap={6}>
-                  <Box width="50px">
-                    <Avatar
-                      name={position.symbol}
-                      src={position.image}
-                      size="sm"
-                    />
-                  </Box>
-                  <Box width="80px">
-                    <Text ml={2} textAlign="left">
-                      {position.name}
-                    </Text>
-                  </Box>
-                  <Box width="70px">
-                    <Text ml={2} textAlign="left">
-                      {position.tokens.toPrecision(3)}
-                    </Text>
-                  </Box>
-                  <Box width="170px">
-                    <Text ml={2} textAlign="left">
-                      @ ${position.price && position.price.toFixed(2)}/
-                      {position.symbol && position.symbol.toUpperCase()}
-                    </Text>
-                  </Box>
-                  <Box width="80px">
-                    <Text ml={2} textAlign="left">
-                      {" "}
-                      = ${position.value.toFixed(2)}
-                    </Text>
-                  </Box>
-                  <AccordionIcon />
-                </Flex>
-              </AccordionButton>
-              <AccordionPanel pb={4}>
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Box sx={{ margin: 1 }}>
+                <Typography variant="h6" gutterBottom component="div">
+                  History
+                </Typography>
                 {position.name === "Ether" && (
                   <TransactionList chain="eth" decimals={position.decimals} />
                 )}
-              </AccordionPanel>
-            </AccordionItem>
-          ))}
-      </Accordion>
-      <Modal isOpen={isOpen} onClose={onClose} size={"4xl"} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedCoin ? <Card data={selectedCoin} /> : <Loader />}
-          </ModalBody>
-        </ModalContent>
+              </Box>
+            </Collapse>
+          </TableCell>
+
+        </TableRow>
+      </React.Fragment>
+    );
+  }
+
+
+  return (
+   <Box sx={{ display: 'inline-flex', minWidth: 560, maxWidth:600, m:'auto'}}>
+      <TableContainer component={Paper} sx={{ borderRadius: '1.5rem',borderWidth: 4}} className={(colorMode === 'light' ? 'light-border' : 'dark-border')}>
+        <Table aria-label="collapsible table" sx={{backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)}}>
+          <TableHead>
+            <TableRow>
+             <TableCell align="center" colSpan={6}>
+              {!isLoading && (
+                <Typography>Total Value: ${parseFloat(totalValue).toFixed(2)}</Typography>
+              )}  
+              </TableCell>
+            </TableRow>
+            
+          </TableHead>
+          <TableBody>
+            {!isLoading &&
+              positions.map((position) => (
+                <Position key={position.name} position={position} />
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Modal
+        open={modalOpen}
+        aria-labelledby="Transaction Details Modal"
+        aria-describedby="We will display Row Details here."
+        sx={{maxWidth:'56rem', mx:'auto', my:'3.56rem', px:3, py:1}}
+      >
+        <Box sx={{background:'white'}}>
+          {selectedCoin ? <Card data={selectedCoin} onClose={()=>onModalClose()} /> : <Loader />}
+        </Box>
       </Modal>
-    </VStack>
-  );
-};
+    </Box>
+  )
+
+}

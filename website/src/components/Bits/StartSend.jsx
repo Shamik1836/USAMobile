@@ -1,12 +1,18 @@
-import { Box, Button, Tooltip } from "@chakra-ui/react";
 import { useState } from "react";
 import { useMoralis } from "react-moralis";
+import { Box,Tooltip } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+
 import { useActions } from "../../contexts/actionsContext";
+import { useGradient } from "../../contexts/gradientsContext";
 
 export const StartSend = () => {
-  const { fromAddress, toAddress, txAmount } = useActions();
+
   const [loading, setLoading] = useState(false)
+  const { fromAddress, toAddress, txAmount } = useActions();
   const { Moralis } = useMoralis();
+  const { darkBoxShadow } = useGradient();
+
   const sendStart = async () => {
     const options = {
       type: "erc20",
@@ -21,16 +27,20 @@ export const StartSend = () => {
 
   return (
     <Box>
-      <Tooltip label="Preview token transmission.">
-        <Button
-          isLoading={loading}
-          isDisabled={!txAmount || !toAddress}
-          boxShadow="dark-lg"
-          onClick={sendStart}
-        >
-          Preview Send Order
-        </Button>
-      </Tooltip>
+        <Tooltip title="Preview token transmission.">
+          <span>
+            <LoadingButton
+              variant="contained"
+              disabled={!txAmount || !toAddress}
+              loading={loading}
+              onClick={sendStart}
+              sx={{ boxShadow: darkBoxShadow }}
+            >
+              Preview Send Order
+            </LoadingButton>
+            
+          </span>
+        </Tooltip>
     </Box>
   );
 };

@@ -1,49 +1,43 @@
-import { Table, Thead, Tbody, Tr, Th, Td, Text } from "@chakra-ui/react";
-import { Skeleton } from "@chakra-ui/react";
+import * as React from 'react';
+import { Skeleton } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { useTransactions } from "../../hooks/useTransactions";
 
 export const TransactionList = (props) => {
   const { Txs, isLoading } = useTransactions({ chain: "eth" });
+  return (
+        <Table size="small" aria-label="purchases">
+          <TableHead>
+            <TableRow>
+              <TableCell>Date</TableCell>
+              <TableCell>Time</TableCell>
+              <TableCell align="right">Transacted With</TableCell>
+              <TableCell align="right">Amount</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isLoading ? (
+                <TableRow key="loadingTransactionHistory">
+                 <TableCell><Skeleton variant="text" /></TableCell>
+                 <TableCell><Skeleton variant="text" /></TableCell>
+                 <TableCell><Skeleton variant="text" /></TableCell>
+                 <TableCell><Skeleton variant="text" /></TableCell>
+                </TableRow>
+            ) : (
 
-  if (!isLoading) {
-    console.groupCollapsed("TransactionList");
-    console.log(Txs);
-    console.groupEnd();
-    return (
-      <Table variant="striped">
-        <Thead>
-          <Tr>
-            <Th>Date</Th>
-            <Th>Time</Th>
-            <Th>Transacted With</Th>
-            <Th>Amount</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {isLoading ? (
-            <Skeleton>
-              <Tr key="loadingTransactionHistory">
-                <Td>Blah</Td>
-                <Td>Bitty</Td>
-                <Td>Blah</Td>
-                <Td>Blah</Td>
-              </Tr>
-            </Skeleton>
-          ) : (
-            Txs?.map((Tx) => {
-              Tx.timestamp = new Date(Tx.block_timestamp);
-              return (
-                <Tr key={Tx.hash}>
-                  <Td>{Tx.timestamp.toLocaleDateString()}</Td>
-                  <Td>{Tx.timestamp.toLocaleTimeString()}</Td>
-                  <Td>{Tx.counterparty}</Td>
-                  <Td>{(Tx.amount / 10 ** props.decimals).toPrecision(3)}</Td>
-                </Tr>
-              );
-            })
-          )}
-        </Tbody>
-      </Table>
-    );
-  } else return <Text>Transactions Loading...</Text>;
-};
+              Txs?.map((Tx) => {
+                Tx.timestamp = new Date(Tx.block_timestamp);
+                return (
+                  <TableRow key={Tx.hash}>
+                    <TableCell>{Tx.timestamp.toLocaleDateString()}</TableCell>
+                    <TableCell>{Tx.timestamp.toLocaleTimeString()}</TableCell>
+                    <TableCell>{Tx.counterparty}</TableCell>
+                    <TableCell>{(Tx.amount / 10 ** props.decimals).toPrecision(3)}</TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+  );
+}

@@ -1,9 +1,14 @@
-import { Container, HStack, Text, useColorMode } from "@chakra-ui/react";
+import { Box, Stack } from "@mui/material";
+
 import { LibertyFox } from "../Guides/LibertyFox";
 import { SamEagle } from "../Guides/SamEagle";
 import { Benicorn } from "../Guides/Benicorn";
 import { useExperts } from "../../contexts/expertsContext";
+import { useColorMode } from "../../contexts/colorModeContext";
 import { useGradient } from "../../contexts/gradientsContext";
+
+import { Text } from '../UW/Text';
+
 
 const Icons = {
   "": Benicorn,
@@ -19,35 +24,46 @@ const Icons = {
   gallery: LibertyFox,
 };
 
+
 export const ExpertStage = () => {
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
   const { expertsOn, actionMode, dialog } = useExperts();
+  const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG, darkBoxShadow} = useGradient();
   const Icon = Icons[actionMode];
+
 
   if (expertsOn === true) {
     return (
-      <Container>
-        <HStack
-          bgColor="black"
-          borderColor="white"
-          borderWidth="2"
-          boxShadow="dark-lg"
-          borderRadius="20px"
-          m="20px"
-          p="20px"
-          width="400px"
-          bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+
+      <Box sx={{alignSelf:'center', px:2}}>
+        <Stack direction="row"
+          spacing={1}
+          sx={{
+            borderColor: "white",
+            borderWidth: 2,
+            borderRadius: 5,
+            m: 2.5,
+            p: 2.5,
+            width: 400,
+            boxShadow: darkBoxShadow,
+            backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG),
+          }}
         >
-          <Container padding={3} flex="1">
-            <Text>{dialog}</Text>
-          </Container>
-          <Container flex="1">{Icon && <Icon />}</Container>
-        </HStack>
+          <Box sx={{ display: 'flex', flex:1, alignSelf:'center', p: 1.5 }}>
+            <Text>
+              {dialog}
+            </Text>
+          </Box>
+          <Box sx={{ display: 'flex', flex: 1, alignSelf:'center', px:2 }}>
+           {Icon && <Icon />}
+          </Box>
+        </Stack>
         <br />
-      </Container>
+      </Box>
     );
   } else {
     return null;
   }
 };
+
+

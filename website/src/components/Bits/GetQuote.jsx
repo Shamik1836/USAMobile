@@ -1,13 +1,8 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormErrorMessage,
-  Tooltip,
-} from "@chakra-ui/react";
+import { useMoralis } from "react-moralis";
+import { Box,Button,FormControl,Tooltip} from '@mui/material';
+
 import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
-import { useMoralis } from "react-moralis";
 
 const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
 
@@ -55,21 +50,22 @@ export const GetQuote = () => {
       setQuoteValid("true");
     }
   };
-
   return (
     <Box>
       <FormControl id="swapstart">
-        <Tooltip label="Get quote for the current toke swap selections.">
+        <Tooltip title="Get quote for the current toke swap selections.">
+          <span>
           <Button
-            enabled={txAmount > 0 ? "true" : "false"}
+            variant="contained"
+            disabled={txAmount > 0 ? false : true}
             onClick={async () => {
               await goto1Inch();
             }}
           >
             Preview Swap Order
           </Button>
+          </span>
         </Tooltip>
-        <FormErrorMessage>Well shoot.</FormErrorMessage>
       </FormControl>
     </Box>
   );

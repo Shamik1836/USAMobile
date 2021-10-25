@@ -1,10 +1,10 @@
-import { Button, Tooltip } from "@chakra-ui/react";
+import { useMoralis } from "react-moralis";
+import { Button, Tooltip } from "@mui/material";
 
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useActions } from "../../contexts/actionsContext";
-
-import { useMoralis } from "react-moralis";
+import { useGradient } from "../../contexts/gradientsContext";
 
 import { useSendTransaction } from "../../hooks/useSendTransaction";
 
@@ -15,6 +15,8 @@ export const ApproveButton = (props) => {
   const { txAmount } = useActions();
   const { user } = useMoralis();
   const { setDialog } = useExperts();
+  const { darkBoxShadow } = useGradient();
+
 
   const preApprove = async () => {
     setDialog(
@@ -97,12 +99,11 @@ export const ApproveButton = (props) => {
   };
 
   return (
-    <Tooltip label="Submit swap order.">
+    <Tooltip title="Submit swap order.">
       <Button
-        mr={2}
-        mt={-2}
+        sx={{ boxShadow:darkBoxShadow, mr:2, mt:-2}}
+        variant="contained"
         className="ExpertButton"
-        boxShadow="dark-lg"
         onClick={handlePress}
       >
         Do it.

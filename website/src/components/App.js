@@ -1,88 +1,97 @@
-import "./App.css";
-import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
-import { Button, VStack, HStack, useColorMode } from "@chakra-ui/react";
-import { EmailIcon, LinkIcon, RepeatIcon, ViewIcon } from "@chakra-ui/icons";
-
 import { useMoralis } from "react-moralis";
+import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
 
-import { TopNavBar } from "./Screens/TopNavBar";
+import { Box, Button, Stack } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import LoopIcon from '@mui/icons-material/Loop';
+import LinkIcon from '@mui/icons-material/Link';
+import MailIcon from '@mui/icons-material/Mail';
+
+import { TopNavBar } from './Screens/TopNavBar';
 import { ExpertStage } from "./Screens/ExpertStage";
-import { BuySell } from "./Screens/BuySell";
 import { PortfolioPrices } from "./Screens/PortfolioPrices";
-import { SendReceive } from "./Screens/SendReceive";
 import { SwapTrade } from "./Screens/SwapTrade";
+import { BuySell } from "./Screens/BuySell";
+import { SendReceive } from "./Screens/SendReceive";
 import { BottomFooter } from "./Screens/BottomFooter";
 
+import { useColorMode } from '../contexts/colorModeContext';
 import { useGradient } from "../contexts/gradientsContext";
 
-function App() {
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
-  const { isAuthenticated } = useMoralis();
+import "./App.css";
 
+
+function App() {
+  const { isAuthenticated } = useMoralis();
+  const { colorMode } = useColorMode();
+  const { lightModeBG, darkModeBG, darkBoxShadow } = useGradient();
+  
   var paddingLeft = { paddingLeft: "10px" };
+
   return (
-    <VStack
-      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
-      style={{ minHeight: "100vh", backgroundAttachment: "fixed" }}
-    >
-      <br />
-      <TopNavBar />
-      <ExpertStage />
-      {isAuthenticated ? (
-        <BrowserRouter>
-          <HStack>
-            <Link to="/PortfolioPrices" className="NavBar">
-              <Button
-                leftIcon={<ViewIcon />}
-                boxShadow="dark-lg"
-                variant={colorMode === "light" ? "outline" : "solid"}
-              >
-                Portfolio
-              </Button>
-            </Link>
-            <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
-              <Button
-                leftIcon={<RepeatIcon />}
-                boxShadow="dark-lg"
-                variant={colorMode === "light" ? "outline" : "solid"}
-              >
-                Trade
-              </Button>
-            </Link>
-            <Link to="/BuySell" className="NavBar" style={paddingLeft}>
-              <Button
-                leftIcon={<LinkIcon />}
-                boxShadow="dark-lg"
-                variant={colorMode === "light" ? "outline" : "solid"}
-              >
-                Buy Crypto
-              </Button>
-            </Link>
-            <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
-              <Button
-                leftIcon={<EmailIcon />}
-                boxShadow="dark-lg"
-                variant={colorMode === "light" ? "outline" : "solid"}
-              >
-                Send/Recieve
-              </Button>
-            </Link>
-          </HStack>
-          <br />
-          <Switch>
-            <Route exact path="/" component={PortfolioPrices} />
-            <Route path="/PortfolioPrices" component={PortfolioPrices} />
-            <Route path="/SwapTrade" component={SwapTrade} />
-            <Route path="/BuySell" component={BuySell} />
-            <Route path="/SendRecieve" component={SendReceive} />
-          </Switch>
-        </BrowserRouter>
-      ) : (
-        <BottomFooter />
-      )}
-      <br />
-    </VStack>
+    <Box sx={{ backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG), minHeight: '100vh' }}>
+      <Stack>
+        <TopNavBar />
+        <ExpertStage />
+        {isAuthenticated ? (
+          <BrowserRouter>
+            <Stack direction="row" sx={{justifyContent:'center', mb:2}} spacing={1}>
+              <Link to="/PortfolioPrices" className="NavBar">
+                <Button variant="uw" 
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                   }}
+                  startIcon={<VisibilityIcon />}
+                >
+                  Portfolio
+                </Button>
+              </Link>
+              <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
+                <Button variant="uw"
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                
+                   }}
+                  startIcon={<LoopIcon />}
+                >
+                  Trade
+                </Button>
+              </Link>
+             <Link to="/BuySell" className="NavBar" style={paddingLeft}>
+                <Button variant="uw"
+                  sx={{ 
+                    boxShadow: darkBoxShadow,
+                   }}
+                  startIcon={<LinkIcon />}
+                >
+                  Buy Crypto
+                </Button>
+              </Link>
+
+              <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
+                <Button variant="uw"
+                 sx={{ 
+                    boxShadow: darkBoxShadow,
+                   }}
+                  startIcon={<MailIcon />}
+                >
+                  Send/Recieve
+                </Button>
+              </Link>
+            </Stack>
+            <Switch>
+              <Route exact path="/" component={PortfolioPrices} />
+              <Route path="/PortfolioPrices" component={PortfolioPrices} />
+              <Route path="/SwapTrade" component={SwapTrade} />
+              <Route path="/BuySell" component={BuySell} />
+              <Route path="/SendRecieve" component={SendReceive} />
+            </Switch>
+          </BrowserRouter>
+        ) : (
+          <BottomFooter />
+        )}
+      </Stack>
+    </Box>
   );
 }
 

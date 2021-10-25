@@ -1,14 +1,14 @@
-import { Image } from "@chakra-ui/react";
+import { Box } from "@mui/material";
 import BadgeIcon from "../../media/characters/Benicorn.svg";
+
 export const Benicorn = (props) => {
   return (
-    <Image
-      onClick={props.poke}
-      height="200px"
-      width="200px"
-      transform="scale(1.5,1.5) translate(0px,22px)"
+    <Box
+      component="img"
+      sx={{ height: 180, width: 180, transform:"scale(1.5,1.5) translate(0px,22px)"}}
       src={BadgeIcon}
       alt="Benicorn"
+      onClick={props.poke}
     />
   );
 };

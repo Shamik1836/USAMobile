@@ -1,18 +1,28 @@
-import { Button, HStack, Text, Tooltip } from "@chakra-ui/react";
-import { EmailIcon, RepeatIcon, RepeatClockIcon } from "@chakra-ui/icons";
+import { Button, Stack, Tooltip, Typography } from "@mui/material";
+import EmailIcon from '@mui/icons-material/Email';
+import LoopIcon from '@mui/icons-material/Loop';
+import RestoreIcon from '@mui/icons-material/Restore';
+
+
 import { useExperts } from "../../contexts/expertsContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
 import { CopyAddress } from "../Bits/CopyAddress";
+
 
 export const ModeSelect = () => {
   const { setActionMode, setDialog } = useExperts();
+  const { darkBoxShadow } = useGradient();
 
   return (
     <>
-      <Text>Select an Action:</Text>
-      <HStack>
-        <Tooltip hasArrow label="Swap some of one token for another token.">
+      <Typography>Select an Action:</Typography>
+      <Stack direction="row">
+        <Tooltip title="Swap some of one token for another token.">
           <Button
-            rightIcon={<RepeatIcon />}
+            endIcon={<LoopIcon />}
+            variant="contained"
+        	sx={{ boxShadow:darkBoxShadow}}
             boxShadow="dark-lg"
             onClick={() => {
               setActionMode("swap");
@@ -22,10 +32,11 @@ export const ModeSelect = () => {
             Swap
           </Button>
         </Tooltip>
-        <Tooltip hasArrow label="Send some of this token to an address.">
+        <Tooltip  title="Send some of this token to an address.">
           <Button
-            rightIcon={<EmailIcon />}
-            boxShadow="dark-lg"
+            endIcon={<EmailIcon />}
+            variant="contained"
+        	sx={{ boxShadow:darkBoxShadow}}
             onClick={() => {
               setActionMode("send");
               setDialog('"Enter the destination Ethereum address."');
@@ -34,10 +45,11 @@ export const ModeSelect = () => {
             Send
           </Button>
         </Tooltip>
-        <Tooltip hasArrow label="Ask about our Crypto Patriot program.">
+        <Tooltip  title="Ask about our Crypto Patriot program.">
           <Button
-            rightIcon={<RepeatClockIcon />}
-            boxShadow="dark-lg"
+            endIcon={<RestoreIcon />}
+            variant="contained"
+        	sx={{ boxShadow:darkBoxShadow}}
             onClick={() => {
               setActionMode("invest");
               setDialog("Ask about our CRYPTO PATRIOTS program, coming soon!");
@@ -46,8 +58,8 @@ export const ModeSelect = () => {
             Invest
           </Button>
         </Tooltip>
-        <CopyAddress mode="receive" boxShadow="dark-lg" />
-      </HStack>
+        <CopyAddress mode="receive" />
+      </Stack>
     </>
   );
 };

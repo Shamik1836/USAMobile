@@ -1,7 +1,11 @@
 import { useEffect } from "react";
-import { Box, Heading } from "@chakra-ui/react";
+import { Box } from '@mui/material';
+
 import { SwapPanel } from "../Blocks/SwapPanel";
+
 import { useExperts } from "../../contexts/expertsContext";
+import { Heading } from '../UW/Heading';
+
 
 export const SwapTrade = () => {
   const { setActionMode, setDialog } = useExperts();
@@ -12,10 +16,13 @@ export const SwapTrade = () => {
   }, [setActionMode, setDialog]);
 
   return (
-    <Box align="center">
-      <Heading>Swap/Trade</Heading>
+    <Box sx={{textAlign: 'center', mt:1}}>
+      <Heading variant="h4">
+        Swap/Trade
+      </Heading>
       <br />
       <SwapPanel />
     </Box>
+    
   );
 };

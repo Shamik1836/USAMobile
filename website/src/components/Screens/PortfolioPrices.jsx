@@ -1,7 +1,10 @@
 import { useEffect } from "react";
-import { Box, Heading } from "@chakra-ui/react";
+
+import { Box } from '@mui/material';
+
 import { TokenTable } from "../Blocks/TokenTable";
 import { useExperts } from "../../contexts/expertsContext";
+import { Heading } from '../UW/Heading';
 
 export const PortfolioPrices = () => {
   const { setActionMode, setDialog } = useExperts();
@@ -9,11 +12,13 @@ export const PortfolioPrices = () => {
   useEffect(() => {
     setActionMode("portfolio");
     setDialog("Select a currency to view transaction histories.");
-  }, [setActionMode, setDialog]);
+  });
 
   return (
-    <Box align="center">
-      <Heading>Portfolio and Prices</Heading>
+    <Box sx={{textAlign: 'center', mt:1}}>
+      <Heading variant='h4'>
+        Portfolio and Prices
+      </Heading>
       <br />
       <TokenTable />
     </Box>
