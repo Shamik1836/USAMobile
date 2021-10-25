@@ -1,4 +1,4 @@
-import { HStack, VStack, useColorMode } from "@chakra-ui/react";
+import { VStack, useColorMode } from "@chakra-ui/react";
 import { useGradient } from "../../contexts/gradientsContext";
 import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
@@ -33,10 +33,8 @@ export const SwapPanel = () => {
       <FromSelect />
       {!!fromSymbol && (
         <>
-          <HStack>
-            <AmountSelect />
-            <ToSelect />
-          </HStack>
+          <AmountSelect />
+          <ToSelect />
           <RequestQuote />
         </>
       )}
