@@ -116,6 +116,72 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function decimals() public view override returns (uint8) {
         return _decimals;
     }
+    
+    // modified ERC20 transfer()
+    function transfer(address recipiant, uint256 amount) 
+        public 
+        override 
+        returns(bool) {
+        return transferFrom(_msgSender(), recipiant, amount);
+    } 
+
+    // modified ERC20 transferFrom() // TODO: use msg.sender or _msgSender() ?
+    // Cannot send until holding time is passed for sender.
+    // Creates possible lockout time for receiver.
+    function transferFrom(address sender, address recipiant, uint256 amount) 
+        public 
+        override 
+        nonReentrant
+        withdrawAllowed(sender) 
+    returns (bool) {
+        //checking recipiant's discount level before transfer
+        uint8 originalUserDiscountLevel = discountLevel(recipiant); 
+        // transferring funds
+        /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
+        // checking if allowance was enough
+        uint256 currentAllowance = allowance(sender, _msgSender());        
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        // decreasing allowance by transferred amount
+        _approve(sender, _msgSender(), currentAllowance - amount);   
+        //checking recipiant's discount level after changes            
+        uint8 newUserDiscountLevel = discountLevel(recipiant);
+        // if discount level is different now, adjusting the holding times 
+        if ( newUserDiscountLevel > originalUserDiscountLevel){
+            adjustUpgradeTimeouts(recipiant);
+        }
+        return true;
+    }
+
+    // Buy BNJI with USDC.
+    function mint(uint256 _amount) public {
+        mintTo(_amount, msg.sender);
+    }
+
+    // Buy BNJI with USDC for another address
+    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
+        uint8 originalUserDiscountLevel = discountLevel(_toWhom);
+        changeSupply(_toWhom, int256(_amount));
+        uint8 newUserDiscountLevel = discountLevel(_toWhom);
+        if ( newUserDiscountLevel > originalUserDiscountLevel){
+            adjustUpgradeTimeouts(_toWhom);
+        }
+    }
+
+    // Sell BNJI for USDC.
+    function burn(uint256 _amount) public {
+        burnTo(_amount, msg.sender);
+    }
+
+    // Sell your BNJI and send USDC to another address.
+    function burnTo(uint256 _amount, address _toWhom)
+        public
+        whenAvailable
+        hasTheBenjamins(_amount)
+        wontBreakTheBank(_amount)
+        withdrawAllowed(msg.sender)
+    {
+        changeSupply(_toWhom, -int256(_amount));
+    }
 
     // Quote USDC for mint(positive) or burn(negative)
     // based on circulation and amount (and sign of amount)
@@ -155,6 +221,29 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
     }
 
+    // Execute mint (positive amount) or burn (negative amount).
+    function changeSupply(address _forWhom, int256 _amountBNJI) internal nonReentrant {
+        // Calculate change
+        int256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
+        int256 fee = abs(int256(principleInUSDCin6dec) * int256(quoteFeePercentage(msg.sender)))/10000; // always positive
+        int256 endAmountInUSDCin6dec = principleInUSDCin6dec + fee; // negative on burn
+
+        // Execute exchange
+        if (_amountBNJI > 0) {
+            // minting
+            moveUSDC(msg.sender, _forWhom, endAmountInUSDCin6dec);
+            _mint(_forWhom, uint256(_amountBNJI));
+        } else {
+            // burning
+            _burn(msg.sender, uint256(_amountBNJI));
+            moveUSDC(msg.sender, _forWhom, principleInUSDCin6dec);            
+        }
+
+        // Record change.
+        reserveInUSDCIn6dec += uint256(principleInUSDCin6dec); // TODO: check if uint256 is correct here for principle, should not be negative on burn?
+        emit exchanged(msg.sender, _forWhom, _amountBNJI, -endAmountInUSDCin6dec, uint256(fee));
+    }
+
     // Move USDC for a supply change.  Note: sign of amount is the mint/burn direction.
     function moveUSDC(
         address _payer, 
@@ -176,35 +265,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             // take USDC from this contract, push to user (_payee)
             polygonUSDC.transfer(_payee, _amountUSDCin6dec);            
         }
-    }
-
-    // Absolute value function needed to make fee work for burn
-    function abs(int x) private pure returns (int) {
-        return x >= 0 ? x : -x;
-    }
-
-    // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, int256 _amountBNJI) internal nonReentrant {
-        // Calculate change
-        int256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
-        int256 fee = abs(int256(principleInUSDCin6dec) * int256(quoteFeePercentage(msg.sender)))/10000; // always positive
-        int256 endAmountInUSDCin6dec = principleInUSDCin6dec + fee; // negative on burn
-
-        // Execute exchange
-        if (_amountBNJI > 0) {
-            // minting
-            moveUSDC(msg.sender, _forWhom, endAmountInUSDCin6dec);
-            _mint(_forWhom, uint256(_amountBNJI));
-        } else {
-            // burning
-            _burn(msg.sender, uint256(_amountBNJI));
-            moveUSDC(msg.sender, _forWhom, principleInUSDCin6dec);            
-        }
-
-        // Record change.
-        reserveInUSDCIn6dec += uint256(principleInUSDCin6dec);
-        emit exchanged(msg.sender, _forWhom, _amountBNJI, -endAmountInUSDCin6dec, uint256(fee));
-    }
+    }   
 
     // Only reset last upgrade block height if its a new hold.
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
@@ -214,73 +275,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
-    }
+    }      
 
-    // Buy BNJI with USDC for another address
-    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
-        uint8 originalUserDiscountLevel = discountLevel(_toWhom);
-        changeSupply(_toWhom, int256(_amount));
-        uint8 newUserDiscountLevel = discountLevel(_toWhom);
-        if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(_toWhom);
-        }
-    }
-
-    // Buy BNJI with USDC.
-    function mint(uint256 _amount) public {
-        mintTo(_amount, msg.sender);
-    }
-
-    // Sell your BNJI and send USDC to another address.
-    function burnTo(uint256 _amount, address _toWhom)
-        public
-        whenAvailable
-        hasTheBenjamins(_amount)
-        wontBreakTheBank(_amount)
-        withdrawAllowed(msg.sender)
-    {
-        changeSupply(_toWhom, -int256(_amount));
-    }
-
-    // Sell BNJI for USDC.
-    function burn(uint256 _amount) public {
-        burnTo(_amount, msg.sender);
-    }
-
-    // modify ERC20 transferFrom()
-    // Cannot send until holding time is passed for sender.
-    // Creates possible lockout time for receiver.
-    function transferFrom(address sender, address recipiant, uint256 amount) 
-        public 
-        override 
-        nonReentrant
-        withdrawAllowed(sender) 
-    returns (bool) {
-        //checking recipiant's discount level before transfer
-        uint8 originalUserDiscountLevel = discountLevel(recipiant); 
-        // transferring funds
-        /*return*/ _transfer (sender, recipiant, amount);   // TODO: clarify, what is meant / intended by return in this context? lines below will not be read?
-        // checking if allowance was enough
-        uint256 currentAllowance = allowance(sender, _msgSender());        
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        // decreasing allowance by transferred amount
-        _approve(sender, _msgSender(), currentAllowance - amount);   
-        //checking recipiant's discount level after changes            
-        uint8 newUserDiscountLevel = discountLevel(recipiant);
-        // if discount level is different now, adjusting the holding times 
-        if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(recipiant);
-        }
-        return true;
-    }
-    
-
-    // modify ERC20 transfer()
-    function transfer(address recipiant, uint256 amount) 
-        public 
-        override 
-        returns(bool) {
-        return transferFrom(msg.sender, recipiant, amount);
+    // Absolute value function needed to make fee work for burn
+    function abs(int x) private pure returns (int) {
+        return x >= 0 ? x : -x;
     }    
 
     // Withdraw available fees and interest gains from lending pool to receiver address.
