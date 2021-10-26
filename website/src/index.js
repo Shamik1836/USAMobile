@@ -11,10 +11,32 @@ import { QuoteProvider } from "./contexts/quoteContext";
 import { ColorModeProvider } from "./contexts/colorModeContext";
 
 
+// eslint-disable-next-line no-unused-vars
 const dotenv = require("dotenv").config();
 
-const appId = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-const serverUrl = process.env.REACT_APP_MORALIS_SERVER_URL;
+var appId = "";
+var serverUrl = "";
+console.groupCollapsed("index.js");
+switch (process.env.NODE_ENV) {
+  case "production":
+    console.log("Executing against production mode!");
+    appId = process.env.REACT_APP_MORALIS_PROD_APPLICATION_ID;
+    serverUrl = process.env.REACT_APP_MORALIS_PROD_SERVER_URL;
+    break;
+  case "test":
+    console.log("Executing against test mode.");
+    appId = process.env.REACT_APP_MORALIS_TEST_APPLICATION_ID;
+    serverUrl = process.env.REACT_APP_MORALIS_TEST_SERVER_URL;
+    break;
+  case "development":
+    console.log("Executing in development mode.");
+    appId = process.env.REACT_APP_MORALIS_DEV_APPLICATION_ID;
+    serverUrl = process.env.REACT_APP_MORALIS_DEV_SERVER_URL;
+    break;
+  default:
+    console.error("Unknown mode.");
+}
+console.groupEnd();
 
 
 ReactDOM.render(
