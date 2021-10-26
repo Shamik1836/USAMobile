@@ -1,3 +1,4 @@
+
 import { Box, Stack } from '@mui/material';
 
 import { useActions } from "../../contexts/actionsContext";
@@ -44,3 +45,17 @@ export const SwapPanel = () => {
     </Box>
   );
 };
+
+
+// MASTER CHANGES
+ // <FromSelect />
+ //      {!!fromSymbol && (
+ //        <>
+ //          <AmountSelect />
+ //          <ToSelect />
+ //          <RequestQuote />
+ //        </>
+ //      )}
+ // {quoteValid === "true" && <QuotePanel />}
+
+

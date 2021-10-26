@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Box } from '@mui/material';
 import { useMoralis } from "react-moralis";
 import ENSAddress from "@ensdomains/react-ens-address";
+
 import { useActions } from "../../../contexts/actionsContext";
 import "./styles.scss";
 

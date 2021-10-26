@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 import { usePositions } from "../../hooks/usePositions";
@@ -17,6 +17,12 @@ export const FromSelect = () => {
   // const { darkBoxShadow } = useGradient();
 
 
+  useEffect(() => {
+    return () => {
+      setFromToken();
+    };
+  }, [setFromToken]);
+
   const handleChange = (e) => {
     const position = e.target.value;
     setValue(position);
@@ -32,7 +38,7 @@ export const FromSelect = () => {
       setToToken();
       setDialog(
         "Use the 'Select a token to act with' menu " +
-        "to start creating an action plan."
+          "to start creating an action plan."
       );
     }
 

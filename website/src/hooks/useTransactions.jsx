@@ -12,8 +12,10 @@ export const useTransactions = (props) => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      const currentUser = Moralis.User.current();
+      const address = currentUser?.attributes.ethAddress;
       Moralis.Web3API.account
-        .getTransactions({ usePost: true })
+        .getTransactions({ address })
         .then((userTrans) => {
           console.log("userTrans:", userTrans);
           let newTxs = userTrans.result.map((Tx) => {

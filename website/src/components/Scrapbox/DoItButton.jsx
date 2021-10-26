@@ -31,10 +31,10 @@ export const DoItButton = (props) => {
     const web3 = await Moralis.Web3.enable();
     await fetch(
       oneInchApprove +
-        "?tokenAddress=" +
-        fromToken?.address +
-        "&amount=" +
-        txAmount
+      "?tokenAddress=" +
+      fromToken?.address +
+      "&amount=" +
+      txAmount
     )
       .then((response) => response.json())
       .then((response) => {
@@ -49,7 +49,7 @@ export const DoItButton = (props) => {
       .then((response) => {
         setDialog(
           "Transmitting pre-approval code to the send token.  " +
-            "Please sign this transaction in your wallet."
+          "Please sign this transaction in your wallet."
         );
         const Tx = {
           from: user?.attributes["ethAddress"],
@@ -86,16 +86,25 @@ export const DoItButton = (props) => {
       setDialog(
         "Submitting swap transaction.  Please review and sign in MetaMask."
       );
-      await Moralis.initPlugins();
-      const receipt = await Moralis.Plugins.oneInch.swap({
-        chain: 'eth', // The blockchain you want to use (eth/bsc/polygon)
-        fromTokenAddress:fromToken.address, // The token you want to swap
-        toTokenAddress: toToken.address, // The token you want to receive
-        amount: txAmount,
-        fromAddress: user?.attributes["ethAddress"], // Your wallet address
-        slippage: 3,
-      });
-      setDialog("Recieved.  Check console log.");
+      await fetch(
+        oneInchSwap +
+        "fromTokenAddress=" +
+        fromToken.address +
+        "&toTokenAddress=" +
+        toToken.address +
+        "&amount=" +
+        txAmount +
+        "&fromAddress=" +
+        user?.attributes["ethAddress"] +
+        "&slippage=3"
+      )
+        .then((response) => response.json())
+        .then((response) => {
+          setDialog("Recieved.  Check console log.");
+          console.groupCollapsed("DoItButton::handlePress");
+          console.log("response:", response);
+          console.groupEnd();
+        });
     }
     setQuoteValid(0);
   };
