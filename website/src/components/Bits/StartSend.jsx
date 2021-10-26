@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { useMoralis } from "react-moralis";
 import { Box,Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
@@ -10,7 +8,6 @@ import { useGradient } from "../../contexts/gradientsContext";
 
 export const StartSend = () => {
 
-  const [loading, setLoading] = useState(false)
   const { fromAddress, toAddress, txAmount } = useActions();
   const { darkBoxShadow } = useGradient();
 
