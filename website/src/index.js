@@ -38,7 +38,6 @@ switch (process.env.NODE_ENV) {
 }
 console.groupEnd();
 
-
 ReactDOM.render(
   <React.StrictMode>
     <ColorModeProvider>
