@@ -13,8 +13,8 @@ import { useColorMode } from '../../contexts/colorModeContext';
 import { useGradient } from "../../contexts/gradientsContext";
 
 import { getDataByCoinID } from "../../hooks/action";
-import Card from "../Research/Card";
-import Loader from "../Research/Load";
+import Card from "../Research/card";
+import Loader from "../Research/load";
 
 
 export const TokenTable = () => {

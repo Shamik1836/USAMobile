@@ -45,7 +45,7 @@ export const FromSelect = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{width:'100%'}}>
       <FormControl sx={{ 
         // boxShadow: darkBoxShadow
       }} id="swapfrom" fullWidth>

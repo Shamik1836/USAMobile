@@ -12,20 +12,14 @@ export const StartSend = () => {
 
   const [loading, setLoading] = useState(false)
   const { fromAddress, toAddress, txAmount } = useActions();
-  const { Moralis } = useMoralis();
   const { darkBoxShadow } = useGradient();
 
-  const sendStart = async () => {
-    const options = {
-      type: "erc20",
-      amount: Moralis.Units.Token(txAmount, "18"),
-      receiver: toAddress,
-      contractAddress: fromAddress
-    }
-    setLoading(true)
-    let result = await Moralis.transfer(options);
-    setLoading(false)
-  }
+  const { fetch, isFetching } = useWeb3Transfer({
+    amount: txAmount,
+    receiver: toAddress,
+    type: "erc20",
+    contractAddress: fromAddress,
+  });
 
   return (
     <Box>
@@ -34,8 +28,8 @@ export const StartSend = () => {
             <LoadingButton
               variant="contained"
               disabled={!txAmount || !toAddress}
-              loading={loading}
-              onClick={sendStart}
+              loading={isFetching}
+              onClick={fetch}
               sx={{ boxShadow: darkBoxShadow }}
             >
               Preview Send Order

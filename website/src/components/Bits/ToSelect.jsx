@@ -32,7 +32,7 @@ export const ToSelect = () => {
       setDialog(
         "Press the 'Get Swap Quote' " +
           "to get a quote to swap " +
-          fromSymbol +
+          fromSymbol?.toUpperCase() +
           " to " +
           selectedSymbol.toUpperCase() +
           "."
@@ -45,7 +45,7 @@ export const ToSelect = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{width:'100%'}}>
       <FormControl id="swapto" fullWidth>
         <InputLabel id="to-select-label">Select a token to receive.</InputLabel>
         <Select

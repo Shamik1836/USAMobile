@@ -45,17 +45,3 @@ export const SwapPanel = () => {
     </Box>
   );
 };
-
-
-// MASTER CHANGES
- // <FromSelect />
- //      {!!fromSymbol && (
- //        <>
- //          <AmountSelect />
- //          <ToSelect />
- //          <RequestQuote />
- //        </>
- //      )}
- // {quoteValid === "true" && <QuotePanel />}
-
-

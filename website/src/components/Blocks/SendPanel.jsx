@@ -26,31 +26,19 @@ export const SendPanel = () => {
         backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)
       }}
     >
-      <Stack sx={{ alignItems: 'center', justifyContent: 'center', px: 5, py: 2.5 }} spacing={3}>
+      <Stack sx={{ alignItems: 'flex-start', justifyContent: 'center', px: 5, py: 2.5 }} spacing={3}>
         <FromSelect />
         {!!fromSymbol && (
-          <Stack>
-            <Stack direction='row' spacing={1}>
-              <AmountSelect type='send' />
-              {txAmount &&
-                <ToAddress />
-              }
+          <>
+            <AmountSelect />
+            <ToAddress />
+            <Stack sx={{alignSelf: 'center'}} direction='row' spacing={1}>
+              <StartSend />
             </Stack>
-            {toAddress && <StartSend />}
-          </Stack>
+          </>
         )}
-        <br />
       </Stack>
     </Box>
 
   );
 };
-
-// MASTER CHANGES
-// <>
-//   <AmountSelect />
-//   <ToAddress />
-//   <HStack alignItems="center" justifyContent="center" width="100%">
-//     <StartSend />
-//   </HStack>
-// </>
