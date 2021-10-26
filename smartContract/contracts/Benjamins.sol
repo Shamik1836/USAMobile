@@ -31,18 +31,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     //address depositAccount; // lending pool address // TODO: take out / re-work, lending pool needs interface
     uint256 reserveInUSDCin6dec; // end user USDC on deposit
     address feeReceiver; // beneficiary address for amUSDC interest
-    int256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
+    uint256 USDCscaleFactor = 1000000; // sets bonding curve slope (permanent, hardcoded)
     uint8 private _decimals;
     
     // Manage Discounts
-    mapping (address => int256) lastUpgradeBlockHeight;
+    mapping (address => uint256) lastUpgradeBlockHeight;
     uint32[] levelAntes; // how many BNJI needed for each level;
-    int16[] levelHolds;   // how many blocks to hold b4 withdraw @ each level;    
-    int8[] levelDiscounts; // percentage discount given by each level;
-    int8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
+    uint16[] levelHolds;   // how many blocks to hold b4 withdraw @ each level;    
+    uint8[] levelDiscounts; // percentage discount given by each level;
+    uint8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
     uint blocksPerDay = 2; // TODO: change to 43200
-    int256 curveFactor = 800000; // Inverselope of the bonding curve.
-    int8 baseFee = 2; // in percent as an integer
+    uint256 curveFactor = 800000; // Inverselope of the bonding curve.
+    uint8 baseFee = 2; // in percent as an integer
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
@@ -54,9 +54,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [ uint32(20), 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =     [  int16(0),  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
-        levelDiscounts = [   int8(0),  5, 10,  20,  40,   75]; // in percent*100, forced type
+        levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
+        levelHolds =     [         0,  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
+        levelDiscounts = [         0,  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
         pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
@@ -66,8 +66,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     event exchanged(
         address fromAddress,
         address toAddress,
-        int256 inTokens,
-        int256 inUSDC,
+        uint256 inTokens,
+        uint256 inUSDC,
         uint256 fee
     );
     event profitTaken(uint256 availableIn6dec, uint256 amountUSDCin6dec);
@@ -87,18 +87,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Are we past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
-        int256 blockNum = int256(block.number);
-        int256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
-        require(holdTime > int256(antiFlashLoan), 
+        uint256 blockNum = block.number;
+        uint256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
+        require(holdTime > antiFlashLoan, 
             'Anti-flashloan withdraw timeout in effect.');
-        require(holdTime >  int256(blocksPerDay)*int256(levelHolds[discountLevel(msg.sender)]), 
+        require(holdTime >  blocksPerDay*levelHolds[discountLevel(msg.sender)], 
             'Discount level withdraw timeout in effect.');
         _;
     }
  
     // Redundant reserveInUSDC protection vs. user withdraws.
     modifier wontBreakTheBank(uint256 want2BurnIn6dec) {
-        require(reserveInUSDCin6dec >= uint256(quoteUSDC(int256(want2BurnIn6dec))));   // should implicitly do an abs().
+        require(reserveInUSDCin6dec >= uint256(quoteUSDC(uint256(want2BurnIn6dec))));   // should implicitly do an abs().
         _;
     }
     
@@ -160,7 +160,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Buy BNJI with USDC for another address
     function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
         uint8 originalUserDiscountLevel = discountLevel(_toWhom);
-        changeSupply(_toWhom, int256(_amount));
+        changeSupply(_toWhom, uint256(_amount));
         uint8 newUserDiscountLevel = discountLevel(_toWhom);
         if ( newUserDiscountLevel > originalUserDiscountLevel){
             adjustUpgradeTimeouts(_toWhom);
@@ -180,21 +180,21 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         wontBreakTheBank(_amount)
         withdrawAllowed(msg.sender)
     {
-        changeSupply(_toWhom, -int256(_amount));
+        changeSupply(_toWhom, uint256(_amount));
     }
 
     // Quote USDC for mint(positive) or burn(negative)
     // based on circulation and amount (and sign of amount)
-    function quoteUSDC(int256 _amount) public view returns (int256) {
+    function quoteUSDC(uint256 _amount) public view returns (uint256) {
         // Basic integral
         uint256 supply = totalSupply();
         uint256 supply2 = supply*supply;  // Supply squared
-        uint256 supplyAfterTx = uint256(int256(supply) + _amount); // post-mint supply        
+        uint256 supplyAfterTx = uint256(uint256(supply) + _amount); // post-mint supply        
         uint256 supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
-        int256 squareDiff = int256(supplyAfterTx2) - int256(supply2);
-        int256 scaledSquareDiff = squareDiff * USDCscaleFactor;
-        int256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
-        int256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents
+        uint256 squareDiff = uint256(supplyAfterTx2) - uint256(supply2);
+        uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;
+        uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
+        uint256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents
         return amountInUSDCin6dec - stubble;
     }
 
@@ -203,14 +203,16 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 userBalance = balanceOf(_whom); // lookup once.  
         console.log('userBalance:', userBalance);     
         uint8 currentLevel;
-        for (currentLevel = 0; levelAntes[currentLevel] <= userBalance; currentLevel ++){ // TODO: fix, last level is wrong
+        for (currentLevel = 0; userBalance >= levelAntes[currentLevel] && currentLevel<levelAntes.length ; currentLevel ++){ // TODO: fix, last level is wrong
             console.log('currentLevel inside loop:', currentLevel);
             if (currentLevel == levelAntes.length-1) {
                 //console.log('currentLevel reached 4');
                 //break; // TODO: check if okay now
+                console.log('currentLevel+1 returned:', currentLevel+1);
                 return currentLevel+1;
             }
         }   
+        console.log('currentLevel returned:', currentLevel);
         return currentLevel;
     }
 
@@ -220,22 +222,25 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function quoteFeePercentage(address forWhom)
         public
         view
-        returns (int16)
+        returns (uint16)
     {   
         console.log("discountLevel(forWhom):", discountLevel(forWhom));        
         //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  ); // TODO: fix, throws
-        return 10000;//int16(100*baseFee)*int16(int8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // TODO: fix, dummy response atm
+        uint8 _discountLevel = discountLevel(forWhom);
+        //uint8 _diff = uint8(100) - _discountLevel;
+        //uint16 _diff16 = uint16(_diff); 
+        return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // TODO: fix, dummy response atm //return 10000;//
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, int256 _amountBNJI) internal nonReentrant {
+    function changeSupply(address _forWhom, uint256 _amountBNJI) internal nonReentrant {
         // Calculate change
-        int256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
+        uint256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
         console.log('principleInUSDCin6dec:', uint256(principleInUSDCin6dec));
-        int256 fee = abs(int256(principleInUSDCin6dec) * int256(quoteFeePercentage(msg.sender)))/1000000; // always positive
-        int256 feeRoundedDownIn6dec = fee - (fee % 10000);
+        uint256 fee = uint256(principleInUSDCin6dec) * uint256(quoteFeePercentage(msg.sender))/ 1000000; // always positive
+        uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
         console.log('feeRoundedDownIn6dec:', uint256(feeRoundedDownIn6dec));
-        int256 endAmountInUSDCin6dec = principleInUSDCin6dec + feeRoundedDownIn6dec; // negative on burn
+        uint256 endAmountInUSDCin6dec = principleInUSDCin6dec + feeRoundedDownIn6dec; // negative on burn
         console.log('endAmountInUSDCin6dec:', uint256(endAmountInUSDCin6dec));
 
         // Execute exchange
@@ -251,14 +256,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
         // Record change.
         reserveInUSDCin6dec += uint256(principleInUSDCin6dec); // TODO: check if uint256 is correct here for principle, should not be negative on burn?
-        emit exchanged(msg.sender, _forWhom, _amountBNJI, -endAmountInUSDCin6dec, uint256(fee));
+        emit exchanged(msg.sender, _forWhom, _amountBNJI, endAmountInUSDCin6dec, uint256(fee));
     }
 
     // Move USDC for a supply change.  Note: sign of amount is the mint/burn direction.
     function moveUSDC(
         address _payer, 
         address _payee, 
-        int256 _amountUSDCin6dec // negative when burning, does not include fee. positive when minting, includes fee.
+        uint256 _amountUSDCin6dec // negative when burning, does not include fee. positive when minting, includes fee.
     ) internal {
         if (_amountUSDCin6dec > 0) {         
             console.log('_payer:', _payer);
@@ -282,9 +287,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Only reset last upgrade block height if its a new hold.
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
-        int256 blockNum = int256(block.number);
-        int256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
+        uint256 blockNum = uint256(block.number);
+        uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
+        uint256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
@@ -365,11 +370,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         levelAntes = newLevelAntes;
     }
 
-    function updateLevelHolds (int16[] memory newLevelHolds) public onlyOwner {
+    function updateLevelHolds (uint16[] memory newLevelHolds) public onlyOwner {
         levelHolds = newLevelHolds;
     }
 
-    function updateLevelDiscounts (int8[] memory newLevelDiscounts) public onlyOwner {
+    function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
         levelDiscounts = newLevelDiscounts;
     }  
 
