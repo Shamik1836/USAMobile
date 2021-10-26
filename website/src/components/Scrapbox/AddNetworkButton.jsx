@@ -1,10 +1,14 @@
-import { Button } from "@chakra-ui/react";
+import { Button } from "@mui/material";
+
 import { useMoralis } from "react-moralis";
 import { useNetwork } from "../../contexts/networkContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
 
 export const AddNetworkButton = (props) => {
   const ethereum = window.ethereum;
   const { web3 } = useMoralis();
+  const { darkBoxShadow } = useGradient();
   const { networkId, setNetworkId } = useNetwork();
   const networkIDHex = web3.utils.toHex("137");
 
@@ -60,14 +64,15 @@ export const AddNetworkButton = (props) => {
 
   return (
     <Button
-      mr={2}
-      mt={-2}
-      className="ExpertButton"
-      boxShadow="dark-lg"
-      visible={window.ethereum.chainId === networkIDHex ? "hidden" : "visible"}
-      onClick={addPolygonNetwork}
+    	sx={{mr:2, mt:2, boxShadow:darkBoxShadow}}
+      	className="ExpertButton"
+      	variant="contained"
+      	onClick={addPolygonNetwork}
     >
       Add Polygon
     </Button>
   );
 };
+
+ // visible={window.ethereum.chainId === networkIDHex ? "hidden" : "visible"}
+

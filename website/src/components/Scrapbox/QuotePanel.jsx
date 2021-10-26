@@ -1,15 +1,21 @@
 import React from "react";
-import { Avatar, Button, HStack, Text, VStack } from "@chakra-ui/react";
+import { Avatar, Button, Stack, Typography } from "@mui/material";
+
+import { DoItButton } from "./DoItButton";
+
 import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
-import { DoItButton } from "./DoItButton";
+import { useGradient } from "../../contexts/gradientsContext";
+
 
 export const QuotePanel = () => {
+
   const [visible, setVisible] = React.useState(false);
   const {
     fromToken: { price },
   } = useActions();
+
   const {
     setQuoteValid,
     fromToken,
@@ -19,7 +25,10 @@ export const QuotePanel = () => {
     toTokenAmount,
     estimatedGas,
   } = useQuote();
+
   const { setDialog } = useExperts();
+
+  const { darkBoxShadow } = useGradient();
 
   const handleCancel = (e) => {
     setQuoteValid("false");
@@ -27,37 +36,29 @@ export const QuotePanel = () => {
   };
 
   const ethGas = estimatedGas / 10 ** 9;
+
   const usdGas = (ethGas * price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
+
   return (
-    <VStack
-      alignItems="center"
-      justifyContent="center"
-      borderWidth={2}
-      borderRadius="3xl"
-      paddingLeft={10}
-      paddingRight={10}
-      paddingTop={5}
-      paddingBottom={5}
-      spacing={6}
-    >
-      <Text>Swap Estimate:</Text>
-      <HStack>
-        <Text>
+    <Stack sx={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: '3px', px: 10, py: 5 }} spacing={6}>
+      <Typography>Swap Estimate:</Typography>
+      <Stack direction='row'>
+        <Typography>
           Trade {(fromTokenAmount / 10 ** fromToken.decimals).toPrecision(3)}
-        </Text>
+        </Typography>
         <Avatar name={fromToken.name} src={fromToken.logoURI} size="sm" />
-        <Text>{fromToken.symbol}</Text>
-        <Text>
+        <Typography>{fromToken.symbol}</Typography>
+        <Typography>
           For {(toTokenAmount / 10 ** toToken.decimals).toPrecision(3)}
-        </Text>
+        </Typography>
         <Avatar name={toToken.name} src={toToken.logoURI} size="sm" />
-        <Text>{toToken.symbol}</Text>
-      </HStack>
-      <Text>
+        <Typography>{toToken.symbol}</Typography>
+      </Stack>
+      <Typography>
         Spending {ethGas} ETH (${usdGas}) transaction fee across:{" "}
         <span
           style={{ cursor: "pointer" }}
@@ -65,22 +66,20 @@ export const QuotePanel = () => {
         >
           (?)
         </span>
-      </Text>
-
+      </Typography>
       {visible && (
-        <HStack>
+        <Stack direction='row'>
           {protocols.map((dex) => (
-            <Text key={dex[0].name}> {dex[0].name}</Text>
+            <Typography key={dex[0].name}> {dex[0].name}</Typography>
           ))}
-        </HStack>
+        </Stack>
       )}
-
-      <HStack>
+      <Stack direction='row'>
         <DoItButton />
-        <Button onClick={handleCancel} boxShadow="dark-lg">
+        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow: darkBoxShadow }}>
           Cancel
         </Button>
-      </HStack>
-    </VStack>
+      </Stack>
+    </Stack>
   );
 };

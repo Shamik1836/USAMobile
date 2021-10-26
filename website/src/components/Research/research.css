@@ -1,14 +1,11 @@
 .load-content {
-    width: 100%;
     height: calc(100vh - 150px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 .card {
-    width: 100%;
     height: calc(100vh - 150px);
-    padding: 25px;
+}
+.card .header-title{
+    align-self: center;
 }
 .card .price {
     font-size: 23px;

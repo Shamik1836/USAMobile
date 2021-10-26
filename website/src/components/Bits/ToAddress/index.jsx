@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Box } from "@chakra-ui/react";
+import { Box } from '@mui/material';
 import { useMoralis } from "react-moralis";
 import ENSAddress from "@ensdomains/react-ens-address";
 
@@ -23,7 +23,7 @@ export const ToAddress = () => {
   }, [setToToken]);
 
   return (
-    <Box w="430px" className="to-address">
+    <Box  sx={{ minWidth:420}} className="to-address">
       {isWeb3Enabled && (
         <ENSAddress
           provider={web3.givenProvider || web3.currentProvider}

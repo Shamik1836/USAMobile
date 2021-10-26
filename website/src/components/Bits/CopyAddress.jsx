@@ -1,9 +1,13 @@
-import { Button, IconButton } from "@chakra-ui/react";
-import { CopyIcon, DownloadIcon } from "@chakra-ui/icons";
-import { useExperts } from "../../contexts/expertsContext";
-import { CopyToClipboard } from "react-copy-to-clipboard";
-import { useMoralis } from "react-moralis";
 import { useState, useEffect } from "react";
+import { useMoralis } from "react-moralis";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+
+import { Button,IconButton} from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+
+import { useExperts } from "../../contexts/expertsContext";
+
 
 export const CopyAddress = (props) => {
   const { isAuthenticated, user } = useMoralis();
@@ -33,16 +37,20 @@ export const CopyAddress = (props) => {
     <>
       <CopyToClipboard text={data} onCopy={() => setCopied(true)}>
         {props.mode === "copy" ? (
-          <IconButton
-            disabled={!isAuthenticated}
-            variant="outline"
-            aria-label="Copy Address to Clipboard"
-            icon={<CopyIcon />}
-          />
+          <ContentCopyIcon sx={{
+              width: 'auto',
+              borderColor: '#e2e8f0 !important',
+              border: 1,
+              borderRadius: '.3rem',
+              alignSelf: 'center',
+              boxShadow: darkBoxShadow,
+              p:1
+            }} />
         ) : (
-          <Button disabled={!isAuthenticated} rightIcon={<DownloadIcon />}>
+          <Button disabled={!isAuthenticated} variant="contained" endIcon={<DownloadIcon />}>
             Receive
           </Button>
+          
         )}
       </CopyToClipboard>
     </>

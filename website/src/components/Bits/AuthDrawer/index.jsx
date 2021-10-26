@@ -1,8 +1,11 @@
-import { Button, Input, HStack, Tooltip, VStack } from "@chakra-ui/react";
-import { Alert, AlertIcon, AlertDescription } from "@chakra-ui/react";
-import { useMoralis } from "react-moralis";
 import { useState } from "react";
-import "./AuthDrawer.css";
+import { useMoralis } from "react-moralis";
+import { Alert, Button, Stack, TextField, Tooltip } from "@mui/material";
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useGradient } from "../../../contexts/gradientsContext";
+
+import "./styles.css";
+
 
 export const AuthDrawer = (props) => {
   const {
@@ -16,7 +19,8 @@ export const AuthDrawer = (props) => {
     user,
   } = useMoralis();
 
-  console.groupCollapsed("AuthDrawer");
+  const { darkBoxShadow } = useGradient();
+
 
   const [userName, setUserName] = useState(
     user ? user.attributes.username : ""
@@ -84,100 +88,106 @@ export const AuthDrawer = (props) => {
   console.groupEnd();
 
   return (
-    <VStack
-      spacing={6}
-      borderWidth="5px"
-      borderRadius="md"
-      padding="30px"
-      mt="10px"
-      boxShadow="dark-lg"
+    <Stack
+      spacing={4}
+      sx={{
+        borderWidth: 5,
+        borderRadius: '.375rem',
+        p: 2,
+        my: 2,
+        mx: 5,
+        boxShadow: darkBoxShadow
+      }}
     >
       {authError != null && (
-        <Alert status="warning">
-          <AlertIcon />
-          <AlertDescription>{authError.message}</AlertDescription>
+        <Alert severity="warning">
+          {authError.message}
         </Alert>
       )}
       {isAuthenticated && (
-        <Tooltip label="Enter desired USA Wallet user name.">
-          <Input
-            placeholder="User Name *"
+        <Tooltip title="Enter desired USA Wallet user name.">
+          <TextField
+            label="User Name *"
             type="text"
-            variant="filled"
+            variant="outlined"
             value={userName}
             onChange={(event) => setUserName(event.currentTarget.value)}
-            boxShadow="dark-lg"
+            sx={{ boxShadow: darkBoxShadow }}
+
           />
         </Tooltip>
       )}
-      <Tooltip label="Enter email where you wish to recieve notifications.">
-        <Input
+      <Tooltip title="Enter email where you wish to recieve notifications.">
+        <TextField
           className={isAuthenticated ? "email verified" : "email"}
-          placeholder="E-mail *"
+          label="E-mail *"
           type="email"
-          variant="filled"
+          variant="outlined"
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
-          boxShadow="dark-lg"
+          sx={{ boxShadow: darkBoxShadow }}
         />
       </Tooltip>
       {user && user.attributes.emailVerified && (
-        <Alert status="warning">
-          <AlertIcon />
+        <Alert severity="warning">
           Check your email for validation link.
         </Alert>
       )}
-      <Tooltip label="Enter a password.">
-        <Input
-          placeholder="Password *"
+      <Tooltip title="Enter a password.">
+        <TextField
+          label="Password *"
           type="password"
-          variant="filled"
+          variant="outlined"
           value={password}
           onChange={(event) => setPassword(event.currentTarget.value)}
-          boxShadow="dark-lg"
+          sx={{ boxShadow: darkBoxShadow }}
         />
       </Tooltip>
 
       {!isAuthenticated ? (
         <>
-          <HStack>
-            <Tooltip label="Use the entered e-mail and password to create a new USA Wallet account.">
-              <Button onClick={handleSignUp} boxShadow="dark-lg">
+          <Stack direction="row">
+            <Tooltip title="Use the entered e-mail and password to create a new USA Wallet account.">
+              <Button variant="outlined" onClick={handleSignUp} sx={{ mr: 2 }}>
                 Sign up
               </Button>
             </Tooltip>
-            <Tooltip label="Log into USA Wallet with your e-mail and password.">
-              <Button onClick={handleLogIn} boxShadow="dark-lg">
+            <Tooltip title="Log into USA Wallet with your e-mail and password.">
+              <Button variant="outlined" onClick={handleLogIn}>
                 Log in
               </Button>
             </Tooltip>
-          </HStack>
-          <Tooltip label="Send password reset e-mail (coming soon).">
-            <Button
-              onClick={handlePasswordReset}
-              boxShadow="dark-lg"
-              disabled="1"
-            >
-              Password Reset
-            </Button>
+          </Stack>
+          <Tooltip title="Send password reset e-mail (coming soon).">
+            <span>
+              <Button
+                variant="outlined"
+                onClick={handlePasswordReset}
+                disabled
+                sx={{ boxShadow: darkBoxShadow }}
+              >
+                Password Reset
+              </Button>
+            </span>
           </Tooltip>
-          <Tooltip label="Use Metamask to authenticate into your USA Wallet account.">
-            <Button
-              isLoading={isAuthenticating}
+          <Tooltip title="Use Metamask to authenticate into your USA Wallet account.">
+            <LoadingButton
+              variant="outlined"
+              loading={isAuthenticating}
               onClick={handleAuthenticate}
-              boxShadow="dark-lg"
+              sx={{ boxShadow: darkBoxShadow }}
             >
               Use MetaMask
-            </Button>
+            </LoadingButton>
           </Tooltip>
         </>
       ) : (
-        <Tooltip label="Update your USA Wallet account to the currently entered user name, e-mail, and password.">
-          <Button onClick={handleSave} boxShadow="dark-lg">
+        <Tooltip title="Update your USA Wallet account to the currently entered user name, e-mail, and password.">
+          <Button variant="outlined" onClick={handleSave} sx={{ boxShadow: darkBoxShadow }}>
             Update signature.
           </Button>
         </Tooltip>
       )}
-    </VStack>
+    </Stack>
   );
 };

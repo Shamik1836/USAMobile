@@ -1,25 +1,38 @@
-import { Select } from "@chakra-ui/react";
+import { useState } from "react";
+
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useNetwork } from "../../contexts/networkContext";
 
 export const NetworkSelect = () => {
-  const { setNetworkId, setNetworkName } = useNetwork();
+	const { setNetworkId, setNetworkName } = useNetwork();
+	const [ value, setValue ] =  useState('');
 
-  const handleChange = async (e) => {
-    let selectedIndex = e.target.options.selectedIndex;
-    console.log("selectedIndex:", selectedIndex);
-    if (selectedIndex > 0) {
-      let selectedOption =
-        e.target.childNodes[selectedIndex].attributes.value.value;
-      console.log("selectedOption:", selectedOption);
-      setNetworkName(selectedOption === "ethereum" ? "eth" : "polygon");
-      setNetworkId(selectedOption === "ethereum" ? 1 : 137);
-    }
-  };
+	const handleChange = async (e) => {
+		let selectedOption = e.target.value;
+		 setValue(selectedOption)
+		 console.log("selectedOption:", selectedOption);
+		 setNetworkName(selectedOption === "ethereum" ? "eth" : "polygon");
+		 setNetworkId(selectedOption === "ethereum" ? 1 : 137);
+	};
 
-  return (
-    <Select placeholder="Select Network" width="750" onChange={handleChange}>
-      <option value="ethereum">Ethereum</option>
-      <option value="polygon">Polygon</option>
-    </Select>
-  );
+	return (
+		<FormControl id="networkslct" fullWidth>
+	        <InputLabel id="form-select-label">Select Network</InputLabel>
+	        <Select
+	          id="toToken"
+	          placeholder="Select Network"
+	          sx={{ width:750 }}
+	          onChange={handleChange}
+	          value = {value}
+	        >
+	          <MenuItem value='ethereum'>
+				Ethereum
+			</MenuItem>
+			<MenuItem value='polygon'>
+				Polygon
+			</MenuItem>
+	        </Select>
+	      </FormControl>
+		
+	);
 };

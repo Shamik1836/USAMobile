@@ -1,22 +1,30 @@
-import { IconButton, Tooltip, useColorMode } from "@chakra-ui/react";
-import { NotAllowedIcon, ChatIcon } from "@chakra-ui/icons";
+import { IconButton, Tooltip } from '@mui/material';
+
+import ChatIcon from '@mui/icons-material/Chat';
+import BlockIcon from '@mui/icons-material/Block';
+
 import { useExperts } from "../../contexts/expertsContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
+
 
 export const ExpertButton = () => {
   const { expertsOn, toggleExperts } = useExperts();
-  const { colorMode } = useColorMode();
+  const { darkBoxShadow } = useGradient();
+
+
 
   return (
-    <Tooltip label="Toggle expert advice.">
+    <Tooltip title="Toggle expert advice.">
       <IconButton
-        aria-label={expertsOn ? "Mute Expert Advice" : "Enable Expert Advice"}
-        icon={expertsOn ? <NotAllowedIcon /> : <ChatIcon />}
-        boxShadow="dark-lg"
-        mr={2}
-        mt={-2}
-        variant={colorMode === "light" ? "outline" : "solid"}
-        onClick={() => toggleExperts(!expertsOn)}
-      />
+        aria-label={expertsOn ? "Mute Expert Advice" : "Enable Expert Advice"} 
+        className="ExpertToggleButton"
+        sx={{ ml:1,boxShadow: darkBoxShadow }} 
+        variant="uw"
+        onClick={() => toggleExperts(!expertsOn)}>
+        {expertsOn ? <BlockIcon /> : <ChatIcon />}
+      </IconButton>
     </Tooltip>
+    
   );
 };

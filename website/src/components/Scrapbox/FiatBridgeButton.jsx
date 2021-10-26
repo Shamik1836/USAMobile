@@ -1,6 +1,10 @@
-import { Button } from "@chakra-ui/react";
+import { Button } from "@mui/material";
+
 //import { useMoralis } from "react-moralis";
 import { Moralis } from "moralis";
+
+import { useGradient } from "../../contexts/gradientsContext";
+
 
 // const apiKey = "pk_test_hs1NrnFxqmMLHWTNAwnr6yXC08raWH7JAThOpswFb3E0";
 // const appId = "UeAbfYO3C29W5EHdz5c5BuCItODRdOw8RcHDpAud";
@@ -11,6 +15,8 @@ const serverUrl = "https://c9amlzqi9ar9.usemoralis.com:2053/server";
 
 export const FiatBridgeButton = () => {
   //const { Moralis } = useMoralis();
+
+  const { darkBoxShadow } = useGradient();
 
   const handlePress = async () => {
     await Moralis.initialize(appId);
@@ -30,10 +36,8 @@ export const FiatBridgeButton = () => {
   return (
     <>
       <Button
-        mr={2}
-        mt={-2}
+      	sx={{ mr:2, mt:-2, boxShadow: darkBoxShadow}}
         className="BuyButton"
-        boxShadow="dark-lg"
         onClick={handlePress}
       >
         Buy/Sell Crypto

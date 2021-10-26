@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Heading, HStack, VStack } from "@chakra-ui/react";
+import { Box, Button, Stack } from '@mui/material';
+
 import { SendPanel } from "../Blocks/SendPanel";
 import { AddressPanel } from "../Blocks/AddressPanel";
+import { Heading } from '../UW/Heading';
+
+
 import { useExperts } from "../../contexts/expertsContext";
+import { useGradient } from "../../contexts/gradientsContext";
+
 
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
+  const { darkBoxShadow } = useGradient();
+
 
   useEffect(() => {
     setActionMode("send");
@@ -29,21 +37,22 @@ export const SendReceive = () => {
   };
 
   return (
-    <Box align="center">
-      <Heading>Transfer Cryptocurrency</Heading>
+    <Box sx={{textAlign:'center', mt:1}}>
+      <Heading variant="h4">Transfer Cryptocurrency</Heading>
       <br />
-      <VStack>
-        <HStack>
-          <Button onClick={handleSendMode} boxShadow="dark-lg">
+      <Stack sx={{alignItems: 'center'}}>
+        <Stack direction="row">
+          <Button onClick={handleSendMode} sx={{mr:1,boxShadow:darkBoxShadow}}>
             Send
           </Button>
-          <Button onClick={handleReceiveMode} boxShadow="dark-lg">
+          <Button onClick={handleReceiveMode} sx={{boxShadow:darkBoxShadow}}>
             Receive
           </Button>
-        </HStack>
-      </VStack>
+        </Stack>
+      </Stack>
       <br />
       {localMode === "send" && <SendPanel />}
+      <br />
       {localMode === "receive" && <AddressPanel />}
     </Box>
   );

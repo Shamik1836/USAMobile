@@ -1,17 +1,13 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormErrorMessage,
-  Tooltip,
-  useColorMode,
-  useToast,
-} from "@chakra-ui/react";
 import { useState } from "react";
+import { Box, FormControl, Tooltip } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
+import { useColorMode } from "../../contexts/colorModeContext";
+import { useGradient } from "../../contexts/gradientsContext";
 const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
 
 export const RequestQuote = () => {
@@ -28,8 +24,10 @@ export const RequestQuote = () => {
     setEstimatedGas,
   } = useQuote();
   const { setDialog } = useExperts();
+  // const toast = useToast();
+
   const { colorMode } = useColorMode();
-  const toast = useToast();
+  const { darkBoxShadow } = useGradient();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -77,11 +75,11 @@ export const RequestQuote = () => {
             oneInchQuote.message
           );
           setQuoteValid("false");
-          toast({
-            description: oneInchQuote.message,
-            status: "error",
-            isClosable: true,
-          });
+          // toast({
+          //   description: oneInchQuote.message,
+          //   status: "error",
+          //   isClosable: true,
+          // });
           return;
         }
         console.groupEnd();
@@ -91,19 +89,20 @@ export const RequestQuote = () => {
 
   return (
     <Box>
-      <FormControl id="sendstart">
-        <Tooltip label="Preview token transmission.">
-          <Button
-            isDisabled={!txAmount || !toSymbol}
-            variant={colorMode === "light" ? "outline" : "solid"}
-            boxShadow="dark-lg"
-            isLoading={loading}
-            onClick={handlePress}
-          >
-            Get Swap Quote
-          </Button>
+      <FormControl id="sendstart" fullWidth>
+        <Tooltip title="Preview token transmission.">
+          <span>
+            <LoadingButton
+              disabled={!txAmount || !toSymbol}
+              variant={colorMode === "light" ? "outlined" : "contained"}
+              sx={{ boxShadow: darkBoxShadow }}
+              loading={loading}
+              onClick={handlePress}
+            >
+              Get Swap Quote
+            </LoadingButton>
+          </span>
         </Tooltip>
-        <FormErrorMessage>Well shoot.</FormErrorMessage>
       </FormControl>
     </Box>
   );

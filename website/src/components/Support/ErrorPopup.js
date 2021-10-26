@@ -1,43 +1,42 @@
-import {
-  Button,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { React } from "react";
+import * as React from 'react';
+import {Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material';
 
 export const ErrorPopup = (props) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { cancelRef } = React.useRef();
+  const [open, setOpen] = React.useState(false);
+  const handleClickOpen = () => {setOpen(true);};
+  const handleClose = () => {setOpen(false);};
 
   return (
-    <>
-      <Button onClick={onOpen}>Discard</Button>
-      <AlertDialog
-        motionPreset="slideInBottom"
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-        isOpen={isOpen}
-        isCentered
+    <div>
+      <Button variant="contained" onClick={handleClickOpen}>
+        Discard
+      </Button>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
       >
-        <AlertDialogOverlay />
+        <DialogTitle id="alert-dialog-title">
+          {props.title}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {props.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+   );
+}
 
-        <AlertDialogContent>
-          <AlertDialogHeader>{props.title}</AlertDialogHeader>
-          <AlertDialogCloseButton />
-          <AlertDialogBody>{props.message}</AlertDialogBody>
-          <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose}>
-              Ok
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-};
+
+
+
+  

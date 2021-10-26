@@ -1,26 +1,22 @@
-import {
-  Heading,
-  IconButton,
-  Text,
-  HStack,
-  VStack,
-  useColorMode,
-} from "@chakra-ui/react";
+import { useState, useEffect } from "react";
 import { useMoralis } from "react-moralis";
 import { CopyToClipboard } from "react-copy-to-clipboard";
-import { useState, useEffect } from "react";
-import { useExperts } from "../../contexts/expertsContext";
-// import { useActions } from "../../contexts/actionsContext";
-import { CopyIcon } from "@chakra-ui/icons";
-// import { ToSelect } from "../Bits/ToSelect";
-// import { AmountSelect } from "../Bits/AmountSelect";
 import QRCode from "react-qr-code";
+
+import { Box, Stack } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+
+import { useExperts } from "../../contexts/expertsContext";
+import { useColorMode } from '../../contexts/colorModeContext';
 import { useGradient } from "../../contexts/gradientsContext";
+import { Heading } from '../UW/Heading';
+import { Text } from '../UW/Text';
 
 export const AddressPanel = () => {
+
+  const { lightModeBG, darkModeBG, darkBoxShadow } = useGradient();
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
   const { setDialog } = useExperts();
   // const { toSymbol, toAddress, txAmount } = useActions();
   const [copied, setCopied] = useState(false);
@@ -29,13 +25,15 @@ export const AddressPanel = () => {
   const ethAddress = user?.attributes.ethAddress;
 
   useEffect(() => {
+    console.log('Called....')
     if (copied) {
+      console.log('Copy Done');
       setDialog(
         "Your wallet address has been copied to the clipboard.  " +
-          "Paste your address as the destination " +
-          "in the market withdraw or send entry, " +
-          "then carefully check the address before sending!  " +
-          "Malware can change your destination address in the clipboard!"
+        "Paste your address as the destination " +
+        "in the market withdraw or send entry, " +
+        "then carefully check the address before sending!  " +
+        "Malware can change your destination address in the clipboard!"
       );
       setCopied(false);
     } else {
@@ -44,37 +42,43 @@ export const AddressPanel = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [copied, isAuthenticated]);
+  }, [copied]);
 
   return (
-    <VStack
-      alignItems="center"
-      justifyContent="center"
-      borderWidth={2}
-      borderRadius="3xl"
-      paddingLeft={10}
-      paddingRight={10}
-      paddingTop={5}
-      paddingBottom={5}
-      spacing={6}
-      bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+    <Box
+      sx={{
+        display: 'inline-flex', minWidth: 460, maxWidth: 660, m: 'auto',
+        borderRadius: '1.5rem',
+        borderWidth: 2,
+        backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)
+      }}
     >
-      <Heading>Your Address:</Heading>
-      <QRCode value={ethAddress} />
-      <HStack>
-        <Text>{ethAddress}</Text>
-        <CopyToClipboard text={data} onCopy={() => setCopied(true)}>
-          <IconButton
-            disabled={!isAuthenticated}
-            variant="outline"
-            aria-label="Copy Address to Clipboard"
-            icon={<CopyIcon />}
-          />
-        </CopyToClipboard>
-      </HStack>
-      {/* <Text>Configure Request:</Text>
-      <ToSelect />
-      <AmountSelect /> */}
-    </VStack>
+      <Stack
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: 5, py: 2.5
+        }}
+        spacing={6}
+      >
+        <Heading variant='h4'>Your Address:</Heading>
+        <QRCode value={ethAddress} />
+        <Stack direction="row" spacing={1}>
+          <Text sx={{ lineHeight: 2.5 }}>{ethAddress}</Text>
+          <CopyToClipboard text={data} onCopy={(text, result) => setCopied(result)}>
+            <ContentCopyIcon sx={{
+              width: 'auto',
+              borderColor: '#e2e8f0 !important',
+              border: 1,
+              borderRadius: '.3rem',
+              alignSelf: 'center',
+              boxShadow: darkBoxShadow,
+              color: (colorMode === 'light' ? '#000000de' : '#ffffffeb'),
+              p:1
+            }} />
+          </CopyToClipboard>
+        </Stack>
+      </Stack>
+    </Box>
   );
 };

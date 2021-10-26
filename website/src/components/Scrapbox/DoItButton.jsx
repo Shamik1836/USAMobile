@@ -1,12 +1,13 @@
 import { useState } from "react";
-
-import { Button, Tooltip } from "@chakra-ui/react";
+import { useMoralis } from "react-moralis";
+import { Button, Tooltip } from "@mui/material";
 
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useActions } from "../../contexts/actionsContext";
+import { useGradient } from "../../contexts/gradientsContext";
 
-import { useMoralis } from "react-moralis";
+
 
 const oneInchApprove = "https://api.1inch.exchange/v3.0/1/approve/calldata";
 const oneInchSwap = "https://api.1inch.exchange/v3.0/1/swap?";
@@ -17,6 +18,8 @@ export const DoItButton = (props) => {
   const { txAmount } = useActions();
   const { Moralis, user } = useMoralis();
   const { setDialog } = useExperts();
+  const { darkBoxShadow } = useGradient();
+
 
   const [preApproved, setPreApproved] = useState(false);
 
@@ -107,11 +110,11 @@ export const DoItButton = (props) => {
   };
 
   return (
-    <Tooltip label="Submit swap order.">
+    <Tooltip title="Submit swap order.">
       <Button
-        mr={2}
         className="ExpertButton"
-        boxShadow="dark-lg"
+        variant="contained"
+        sx={{ boxShadow:darkBoxShadow, mr:2}}
         onClick={handlePress}
       >
         Do it.

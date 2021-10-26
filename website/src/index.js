@@ -2,19 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./components/App";
 import reportWebVitals from "./components/Support/reportWebVitals";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+
 import { MoralisProvider } from "react-moralis";
 import { ExpertsProvider } from "./contexts/expertsContext";
 import { ActionsProvider } from "./contexts/actionsContext";
 import { QuoteProvider } from "./contexts/quoteContext";
-import { GradientProvider } from "./contexts/gradientsContext";
 
-const theme = extendTheme({
-  config: {
-    initialColorMode: "dark",
-    useSystemColorMode: false,
-  },
-});
+import { ColorModeProvider } from "./contexts/colorModeContext";
+
 
 // eslint-disable-next-line no-unused-vars
 const dotenv = require("dotenv").config();
@@ -45,19 +40,17 @@ console.groupEnd();
 
 ReactDOM.render(
   <React.StrictMode>
-    <ChakraProvider theme={theme}>
+    <ColorModeProvider>
       <MoralisProvider appId={appId} serverUrl={serverUrl}>
         <ExpertsProvider>
           <ActionsProvider>
             <QuoteProvider>
-              <GradientProvider>
-                <App />
-              </GradientProvider>
+              <App />
             </QuoteProvider>
           </ActionsProvider>
         </ExpertsProvider>
       </MoralisProvider>
-    </ChakraProvider>
+    </ColorModeProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

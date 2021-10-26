@@ -1,4 +1,5 @@
-import { Box, Flex, Spacer, Text } from "@chakra-ui/react";
+import { Box, Typography} from '@mui/material';
+
 import { MetaMask } from "../Guides/MetaMask";
 import { PayPal } from "../Guides/PayPal";
 import { UniSwap } from "../Guides/UniSwap";
@@ -9,18 +10,17 @@ export const Assistants = () => {
 
   if (expertsOn === true) {
     return (
-      <Flex margin={5}>
-        <Box width="200px" margin={7} padding={3} text-align="center">
-          <Text text-align="center">{dialog}</Text>
+      <Box sx={{m:3}}>
+        <Box width="200px" sx={{m:3, p:3}}>
+          <Typography>{dialog}</Typography>
         </Box>
-        <Spacer />
         <Box>
           {actionMode === "swap" && <UniSwap />}
           {actionMode === "recieve" && <PayPal />}
           {actionMode === "invest" && <MetaMask />}
           {actionMode === "send" && <MetaMask />}
         </Box>
-      </Flex>
+      </Box>
     );
   } else {
     return null;

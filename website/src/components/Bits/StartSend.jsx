@@ -1,9 +1,16 @@
-import { Box, Button, Tooltip } from "@chakra-ui/react";
+import { Box,Tooltip } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+
+
 import { useWeb3Transfer } from "react-moralis";
 import { useActions } from "../../contexts/actionsContext";
+import { useGradient } from "../../contexts/gradientsContext";
 
 export const StartSend = () => {
+
   const { fromAddress, toAddress, txAmount } = useActions();
+  const { darkBoxShadow } = useGradient();
+
   const { fetch, isFetching } = useWeb3Transfer({
     amount: txAmount,
     receiver: toAddress,
@@ -13,16 +20,20 @@ export const StartSend = () => {
 
   return (
     <Box>
-      <Tooltip label="Preview token transmission.">
-        <Button
-          isLoading={isFetching}
-          isDisabled={!txAmount || !toAddress}
-          boxShadow="dark-lg"
-          onClick={fetch}
-        >
-          Preview Send Order
-        </Button>
-      </Tooltip>
+        <Tooltip title="Preview token transmission.">
+          <span>
+            <LoadingButton
+              variant="contained"
+              disabled={!txAmount || !toAddress}
+              loading={isFetching}
+              onClick={fetch}
+              sx={{ boxShadow: darkBoxShadow }}
+            >
+              Preview Send Order
+            </LoadingButton>
+            
+          </span>
+        </Tooltip>
     </Box>
   );
 };

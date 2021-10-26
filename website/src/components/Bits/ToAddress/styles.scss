@@ -12,8 +12,8 @@
     .cmp-address {
       height: auto;
       background: inherit;
-      border: 1px solid var(--chakra-colors-whiteAlpha-300);
-      box-shadow: var(--chakra-shadows-dark-lg);
+      border: 1px solid #ffffff29;
+      box-shadow: #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px, #00000066 0px 15px 40px 0px;
 
       .input-wrapper {
         margin-top: 0;
@@ -31,7 +31,7 @@
 
         input {
           width: 100%;
-          height: calc(var(--chakra-sizes-10) - 2px);
+          height: calc(2.5rem - 2px);
           margin-right: 5px;
           background: inherit;
           color: inherit;
@@ -51,3 +51,58 @@
     }
   }
 }
+
+
+// .to-address {
+//   .loader {
+//     height: 40px;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//   }
+
+//   .cmp-address-wrapper {
+//     height: auto;
+
+//     .cmp-address {
+//       height: auto;
+//       background: inherit;
+//       // border: 1px solid var(--chakra-colors-whiteAlpha-300);
+//       // box-shadow: var(--chakra-shadows-dark-lg);
+
+//       .input-wrapper {
+//         margin-top: 0;
+
+//         .indicator {
+//           display: flex;
+//           top: initial;
+//           margin-top: 0;
+
+//           .blockies {
+//             width: 25px !important;
+//             height: 25px !important;
+//           }
+//         }
+
+//         input {
+//           width: 100%;
+//           // height: calc(var(--chakra-sizes-10) - 2px);
+//           margin-right: 5px;
+//           background: inherit;
+//           color: inherit;
+//           font-size: inherit;
+//         }
+//       }
+
+//       .info-wrapper {
+//         .resolved {
+//           position: initial;
+//           width: 100%;
+//           text-align: left;
+//           color: inherit;
+//           opacity: 0.3;
+//         }
+//       }
+//     }
+//   }
+// }

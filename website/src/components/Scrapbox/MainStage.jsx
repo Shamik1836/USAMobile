@@ -1,9 +1,10 @@
-import { Box, Flex, Text, HStack, VStack } from "@chakra-ui/react";
+import React from "react";
+import { Box, Stack, Typography } from "@mui/material";
+
 import { CopyAddress } from "../Bits/CopyAddress";
 import { ActionPanel } from "../Blocks/ActionPanel";
 import { useMoralis } from "react-moralis";
 import { TokenTable } from "../Blocks/TokenTable";
-import React from "react";
 
 import WheatField from "../../media/Padding/wheatField.jpeg";
 
@@ -11,31 +12,31 @@ export const MainStage = () => {
   const { isAuthenticated, user } = useMoralis();
 
   return (
-    <Flex justifyContent="center">
-      <VStack spacing={9} overflow="hidden">
-        <Text>
+    <Box sx={{display:'flex', justifyContent:'center'}}>
+      <Stack spacing={9}  sx={{overflow:'hidden'}}>
+        <Typography>
           ----------<i>Main Stage</i>----------
-        </Text>
+        </Typography>
         {isAuthenticated ? (
           <>
-            <HStack>
+            <Stack direction="row">
               {user !== null && (
-                <Text>Ethereum address: {user?.attributes["ethAddress"]}</Text>
+                <Typography>Ethereum address: {user?.attributes["ethAddress"]}</Typography>
               )}
               <CopyAddress mode="copy" />
-            </HStack>
+            </Stack>
             <ActionPanel />
             <TokenTable />
           </>
         ) : (
           <>
-            <Box height="10px" />
-            <Box borderRadius="3xl" margin="20px" overflow="hidden">
+            <Box  sx={{ height:10}}/>
+            <Box sx={{ borderRadius:3, m:2.5, overflow:'hidden'}}>
               <img src={WheatField} alt="Amber Waves of Grain" />
             </Box>
           </>
         )}
-      </VStack>
+      </Stack>
     </Flex>
   );
 };

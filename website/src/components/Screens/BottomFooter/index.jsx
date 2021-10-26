@@ -1,33 +1,41 @@
-import { HStack, Image, Spacer, Text, VStack } from "@chakra-ui/react";
+import { Stack, Box, Typography } from "@mui/material";
+
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { fab } from "@fortawesome/free-brands-svg-icons";
 import { faCheckSquare, faCoffee } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ByMoralis } from "react-moralis";
-import "./BottomFooter.css";
-import ladyLib from "../../media/Padding/LadyLiberty.jpg";
+
+import "./styles.css";
+import ladyLib from "../../../media/Padding/LadyLiberty.jpg";
 
 library.add(fab, faCheckSquare, faCoffee);
 
 export const BottomFooter = () => {
   return (
-    <VStack justifyContent="center">
-      <Image
-        src={ladyLib}
-        width="400px"
-        borderRadius="20px"
-        boxShadow="light-lg"
-      />
+    <Stack 
+    	sx={{
+    		justifyContent:'center', 
+    		alignItems:'center', 
+    		m:2.5,
+           p:2.5
+       }}
+    >
+    	<Box
+	      component="img"
+	      sx={{ width: 400, borderRadius:2.5, }}
+	      src={ladyLib}
+	    />
       <br />
       <br />
-      <HStack>
+      <Stack direction="row">
         <ByMoralis scale="50" />
-      </HStack>
-      <HStack></HStack>
-      <HStack>
-        <Text>Join the Crypto Nation: </Text>
-      </HStack>
-      <HStack>
+      </Stack>
+      <Stack></Stack>
+      <Stack sx={{mt:2}}>
+        <Typography>Join the Crypto Nation: </Typography>
+      </Stack>
+      <Stack direction="row" spacing={1}  sx={{mt:2}}>
         <FontAwesomeIcon
           className="FAIcon"
           icon={["fab", "discord"]}
@@ -52,8 +60,8 @@ export const BottomFooter = () => {
           size="2x"
           color="lightblue"
         />
-      </HStack>
-      <Spacer />
-    </VStack>
+      </Stack>
+      {/*<Spacer />*/}
+    </Stack>
   );
 };
