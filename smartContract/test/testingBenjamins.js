@@ -19,6 +19,7 @@ const scale6dec = 1000000;
 
 let testingUserAddressesArray = [];
 
+const baseFee = 1;
 const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];      // TODO: check if can/should be used
 const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75];  // TODO: check if can/should be used
 
@@ -116,7 +117,11 @@ async function balUSDCinCents(userToQuery) {
 }
 
 async function balUSDC(userToQuery) {
-  return balUSDCinCents(userToQuery)/100;
+  return (await balUSDCinCents(userToQuery)/100);
+}
+
+async function balUSDCin6decBN(userToQuery) {
+  return await polygonUSDC.balanceOf(userToQuery);
 }
 
 async function balBNJI(userToQuery) {
@@ -675,7 +680,7 @@ describe("Benjamins Test", function () {
         
   });  
   */
-   /* 
+    
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
 
     await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -684,13 +689,13 @@ describe("Benjamins Test", function () {
     await mintBlocks(5);  
     
     await expect( testBurning("Test 4.2, should REVERT, burning after 5 blocks", 10, testUser_1, testUser_1) ).to.be.revertedWith(
-      "BNJ, specifiedAmountBurn: sender is not yet allowed to withdraw/burn"
+      "Anti-flashloan withdraw timeout in effect."
     );
 
     expect(await balBNJI(testUser_1)).to.equal(20);
   });    
 
-  
+  /*
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
     
     await testMinting("Test 5.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);        
@@ -705,7 +710,7 @@ describe("Benjamins Test", function () {
     expect(await balUSDC(testUser_1)).to.equal(3000);   // this will throw, see what value is found instead
 
   });    
-  
+  /*
   it("Test 6. Should REVERT: testUser_1 tries to burn more tokens than they have", async function () {   
     
     await testMinting("Test 6.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
@@ -719,19 +724,19 @@ describe("Benjamins Test", function () {
 
     expect(await balBNJI(testUser_1)).to.equal(10);
   });  
-    
+  */  
   it("Test 7. Token price should increase following bonding curve", async function () {   
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);   
     expect(await balBNJI(testUser_1)).to.equal(2000);
     await mintBlocks(1);  
     
-    const balanceUSDCbefore1st = await balUSDC(testUser_1); 
+    const balanceUSDCbefore1stBN = await balUSDCin6decBN(testUser_1); 
     await testMinting("Test 7.2, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(2010); 
-    const balanceUSDCafter1st = await balUSDC(testUser_1);
-    const firstPriceForTenInCents = dividefrom6decToUSDCcents(bigNumberToNumber(balanceUSDCbefore1st-balanceUSDCafter1st));  
+    const balanceUSDCafter1stBN = await balUSDCin6decBN(testUser_1);
+    const firstPriceForTenInCents = dividefrom6decToUSDCcents(balanceUSDCbefore1stBN-balanceUSDCafter1stBN);  
     await mintBlocks(1);    
 
     await testMinting("Test 7.3, minting 1000 BNJI to caller", 1000, testUser_1, testUser_1);   
@@ -739,17 +744,17 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(3010);
     await mintBlocks(1);    
 
-    const balanceUSDCbefore2nd = await balUSDC(testUser_1);
+    const balanceUSDCbefore2ndBN = await balUSDCin6decBN(testUser_1);
     await testMinting("Test 7.4, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(3020);
-    const balanceUSDCafter2nd = await balUSDC(testUser_1);
-    const secondPriceForTenInCents = dividefrom6decToUSDCcents(bigNumberToNumber(balanceUSDCbefore2nd-balanceUSDCafter2nd));
+    const balanceUSDCafter2ndBN = await balUSDCin6decBN(testUser_1);
+    const secondPriceForTenInCents = dividefrom6decToUSDCcents(balanceUSDCbefore2ndBN-balanceUSDCafter2ndBN);
 
-    expect(firstPriceForTenInCents).to.equal(715);
-    expect(secondPriceForTenInCents).to.equal(717); 
+    expect(firstPriceForTenInCents).to.equal(713);
+    expect(secondPriceForTenInCents).to.equal(715); 
   });  
-    
+  /*  
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
 
     await addUserAccDataPoints(testUser_1); 
@@ -789,7 +794,7 @@ describe("Benjamins Test", function () {
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
 
   });  
-
+  /*
   it("Test 9. Account levels should be triggered when reching threshold", async function () {   
 
     await addUserAccDataPoints(testUser_1);  

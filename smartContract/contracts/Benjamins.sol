@@ -297,7 +297,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
         uint256 blockNum = block.number;
         uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        uint256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
+        uint256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1]; // TODO: fix: could come out negative in total (underflow) or discountLevel(_toWhom)-1 could be negative?
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
