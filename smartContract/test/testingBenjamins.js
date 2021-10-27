@@ -265,7 +265,7 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
 async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
 
- //console.log('calling address in testBurning is now:', callingAccAddress);
+ console.log('calling address in testBurning is now:', callingAccAddress);
  
   const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
 
@@ -709,7 +709,7 @@ describe("Benjamins Test", function () {
     await testBurning("Test 5.2, burning after 11 blocks", 19, testUser_1, testUser_1);
 
     expect(await balBNJI(testUser_1)).to.equal(0);
-    expect(await balUSDC(testUser_1)).to.equal(2999.87);   // this will throw, see what value is found instead
+    expect(await balUSDC(testUser_1)).to.equal(2999.74);   // this will throw, see what value is found instead
 
   });    
   /*
