@@ -43,7 +43,7 @@ export const CopyAddress = (props) => {
               border: 1,
               borderRadius: '.3rem',
               alignSelf: 'center',
-              boxShadow: darkBoxShadow,
+              boxShadow: 'var(--boxShadow)',
               p:1
             }} />
         ) : (

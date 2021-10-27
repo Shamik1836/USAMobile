@@ -10,6 +10,7 @@ export const Text = ({ variant='body1', ...props}) => {
       		fontFamily:'P22-Typewriter',
           color: 'text.primary'
       	}}
+        {...props}
       >
         {props.children}
       </Typography>    

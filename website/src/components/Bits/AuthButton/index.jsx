@@ -6,7 +6,6 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 import { AuthDrawer } from '../AuthDrawer';
 import { DrawerHeader } from '../DrawerHeader';
-import { useGradient } from "../../../contexts/gradientsContext";
 
 
 import "./styles.css";
@@ -16,7 +15,6 @@ export const AuthButton = () => {
 	const { isAuthenticated, logout } = useMoralis();
 	const [ isOpen, setIsOpen ] = useState(false);
 
-	const { darkBoxShadow } = useGradient();
 
 	const toggleDrawer = (open) => {
 		setIsOpen(open);
@@ -32,11 +30,11 @@ export const AuthButton = () => {
 					<IconButton
 						aria-label="Log Out"
 						className="LogoutButton"
-						sx={{boxShadow: darkBoxShadow }} 
+						sx={{boxShadow: "var(--boxShadow)" }} 
 						variant="uw"
 						onClick={() => logout()}
 					>
-						<LockOpenIcon />
+						<LockOpenIcon className="nav-bar-icon" />
 					</IconButton>
 				</Tooltip>
 			) : (
@@ -45,11 +43,11 @@ export const AuthButton = () => {
 						<IconButton
 							aria-label="Log In"
 							className="LoginButton"
-							sx={{boxShadow: darkBoxShadow }} 
+							sx={{boxShadow: "var(--boxShadow)" }} 
 							variant="uw"
 							onClick={() => toggleDrawer(true)}
 						>
-							<LockIcon />
+							<LockIcon className="nav-bar-icon" />
 						</IconButton>
 					</Tooltip>
 					<Drawer open={isOpen} anchor="right" onClose={onCloseDrawer}>

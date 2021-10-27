@@ -5,7 +5,6 @@ import { Button, Tooltip } from "@mui/material";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useActions } from "../../contexts/actionsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 
 
@@ -18,7 +17,6 @@ export const DoItButton = (props) => {
   const { txAmount } = useActions();
   const { Moralis, user } = useMoralis();
   const { setDialog } = useExperts();
-  const { darkBoxShadow } = useGradient();
 
 
   const [preApproved, setPreApproved] = useState(false);
@@ -114,7 +112,7 @@ export const DoItButton = (props) => {
       <Button
         className="ExpertButton"
         variant="contained"
-        sx={{ boxShadow:darkBoxShadow, mr:2}}
+        sx={{ boxShadow:"var(--boxShadow)", mr:2}}
         onClick={handlePress}
       >
         Do it.

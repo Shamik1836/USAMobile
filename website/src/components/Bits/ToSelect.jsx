@@ -4,14 +4,12 @@ import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
-// import { useGradient } from "../../contexts/gradientsContext";
 
 
 const TokenList = require("../../data/TokenList.json");
 
 export const ToSelect = () => {
   const [ value, setValue ] =  useState('');
-  // const { darkBoxShadow } = useGradient();
 
 
   const { fromSymbol, setToToken } = useActions();
@@ -52,8 +50,7 @@ export const ToSelect = () => {
           id="toToken"
           label="Select a token to receive."
           sx={{ 
-            // boxShadow: darkBoxShadow, 
-            width:320
+            // boxShadow: 'var(--boxShadow)', 
           }}
           onChange={handleChange}
           value = {value}

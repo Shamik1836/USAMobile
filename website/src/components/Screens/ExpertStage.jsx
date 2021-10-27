@@ -4,8 +4,6 @@ import { LibertyFox } from "../Guides/LibertyFox";
 import { SamEagle } from "../Guides/SamEagle";
 import { Benicorn } from "../Guides/Benicorn";
 import { useExperts } from "../../contexts/expertsContext";
-import { useColorMode } from "../../contexts/colorModeContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { Text } from '../UW/Text';
 
@@ -27,8 +25,6 @@ const Icons = {
 
 export const ExpertStage = () => {
   const { expertsOn, actionMode, dialog } = useExperts();
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG, darkBoxShadow} = useGradient();
   const Icon = Icons[actionMode];
 
 
@@ -45,12 +41,12 @@ export const ExpertStage = () => {
             m: 2.5,
             p: 2.5,
             width: 400,
-            boxShadow: darkBoxShadow,
-            backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG),
+            boxShadow: "var(--boxShadow)",
+            backgroundImage: "var(--bg)",
           }}
         >
           <Box sx={{ display: 'flex', flex:1, alignSelf:'center', p: 1.5 }}>
-            <Text>
+            <Text style={{wordBreak:'break-word'}}>
               {dialog}
             </Text>
           </Box>
