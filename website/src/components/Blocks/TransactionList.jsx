@@ -3,7 +3,7 @@ import { Skeleton } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { useTransactions } from "../../hooks/useTransactions";
 
-import "./styles.scss";
+import "./styles.css";
 
 export const TransactionList = (props) => {
   const { Txs, isLoading } = useTransactions({ chain: "eth" });
