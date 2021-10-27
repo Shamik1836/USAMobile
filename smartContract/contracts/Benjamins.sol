@@ -118,6 +118,15 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function decimals() public view override returns (uint8) {
         return _decimals;
     }
+
+    function calcTransportFee(uint256 amountOfBNJI) internal view returns (uint256) {
+        uint256 beforeFeeInUSDCin6dec = quoteUSDC(amountOfBNJI, false);                
+        console.log(beforeFeeInUSDCin6dec, 'beforeFeeInUSDCin6dec, calcTransportFee, BNJ');
+        uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
+        uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
+        console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec, calcTransportFee, BNJ'); 
+        return feeRoundedDownIn6dec;
+    }
     
     // modified ERC20 transfer()
     function transfer(address recipient, uint256 amount) 
@@ -127,6 +136,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         returns(bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
+
+        uint256 transportFeeRoundedIn6dec = calcTransportFee(amount);
+        
+        // pull USDC from user (msg.sender), push to feeReceiver           
+        polygonUSDC.transferFrom(msg.sender, feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
+
         _transfer(_msgSender(), recipient, amount);
         //checking recipient's discount level after changes            
         uint8 newUserDiscountLevel = discountLevel(recipient);
@@ -148,7 +163,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     returns (bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
-        // transferring funds
+
+        uint256 transportFeeRoundedIn6dec = calcTransportFee(amount);        
+        // pull USDC from user (sender), push to feeReceiver           
+        polygonUSDC.transferFrom(sender, feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
+
+        // transferring BNJIs
         _transfer (sender, recipient, amount); 
         // checking if allowance was enough
         uint256 currentAllowance = allowance(sender, _msgSender());        
@@ -222,24 +242,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Return address discount level as an uint8 as a function of balance.
     function discountLevel(address _whom) public view returns(uint8) {
         uint256 userBalance = balanceOf(_whom); // lookup once.  
-       //console.log('userBalance:', userBalance);     
+        //console.log('userBalance:', userBalance);     
         //console.log('levelAntes.length:', levelAntes.length);  
         uint8 currentLevel = 0;
         for (uint8 index = 0; index < levelAntes.length ; index++){ // TODO: fix, last level is wrong
             if (userBalance >= levelAntes[index]) {
                 currentLevel++;
-            }
-
-            /*
-           //console.log('currentLevel inside loop:', currentLevel);
-            if (currentLevel == levelAntes.length-1) {
-                //console.log('currentLevel reached 4');
-                //break; // TODO: check if okay now
-                //console.log('currentLevel returned:', currentLevel);
-                return currentLevel+1;
-            }*/
+            }          
         }   
-       //console.log('currentLevel returned:', currentLevel);
         return currentLevel;
     }
 
