@@ -202,13 +202,17 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 supply = totalSupply();
         uint256 supply2 = supply*supply;  // Supply squared
         uint256 supplyAfterTx;
+        uint256 supplyAfterTx2;
+        uint256 squareDiff;
         if (isMint==true){
             supplyAfterTx = supply + _amount; // post-mint supply on mint
+            supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
+            squareDiff = supplyAfterTx2 - supply2;
         } else {
             supplyAfterTx = supply - _amount; // post-mint supply on burn
-        }              
-        uint256 supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
-        uint256 squareDiff = supplyAfterTx2 - supply2;
+            supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
+            squareDiff = supply2 - supplyAfterTx2;
+        }            
         uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;
         uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
         uint256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents

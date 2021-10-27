@@ -1095,7 +1095,7 @@ describe("Benjamins Test", function () {
     expect(user_2_USDCbalBefore).to.equal(0);
 
     expect(user_1_USDCbalAfter).to.equal(2914.29);   
-    expect(user_2_USDCbalAfter).to.equal(35.09);       
+    expect(user_2_USDCbalAfter).to.equal(35.08);       
 
     expect(user_1_USDCbalBefore).to.equal(user_1_USDCbalAfter);  
   });  
