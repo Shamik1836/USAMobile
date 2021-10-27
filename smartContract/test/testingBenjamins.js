@@ -996,7 +996,7 @@ describe("Benjamins Test", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
     await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(30); 
+    await mintBlocks(60); // TODO: dummy value for testing, 2 blocks per day, will be 43200 on polygon mainnet
 
     await benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 40); 
     

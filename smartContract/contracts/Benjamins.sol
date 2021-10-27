@@ -88,10 +88,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Are we past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
         uint256 blockNum = block.number;
-        uint256 holdTime = blockNum - lastUpgradeBlockHeight[msg.sender]; 
+        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck]; 
+        console.log('holdTime calculated:', holdTime);
+        console.log('holdTime necessary, i.e. blocksPerDay*levelHolds[discountLevel(userToCheck)]:', blocksPerDay*levelHolds[discountLevel(userToCheck)]);
         require(holdTime > antiFlashLoan, 
             'Anti-flashloan withdraw timeout in effect.');
-        require(holdTime >  blocksPerDay*levelHolds[discountLevel(msg.sender)], 
+        require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 
             'Discount level withdraw timeout in effect.');
         _;
     }
@@ -118,36 +120,45 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
     
     // modified ERC20 transfer()
-    function transfer(address recipiant, uint256 amount) 
+    function transfer(address recipient, uint256 amount) 
         public 
         override 
         returns(bool) {
-        return transferFrom(_msgSender(), recipiant, amount);
+        //checking recipient's discount level before transfer
+        uint8 originalUserDiscountLevel = discountLevel(recipient); 
+        _transfer(_msgSender(), recipient, amount);
+        //checking recipient's discount level after changes            
+        uint8 newUserDiscountLevel = discountLevel(recipient);
+        // if discount level is different now, adjusting the holding times 
+        if ( newUserDiscountLevel > originalUserDiscountLevel){
+            adjustUpgradeTimeouts(recipient);
+        }
+        return true;
     } 
 
     // modified ERC20 transferFrom() // TODO: use msg.sender or _msgSender() ?
     // Cannot send until holding time is passed for sender.
     // Creates possible lockout time for receiver.
-    function transferFrom(address sender, address recipiant, uint256 amount) 
+    function transferFrom(address sender, address recipient, uint256 amount) 
         public 
         override 
         nonReentrant
         withdrawAllowed(sender) 
     returns (bool) {
-        //checking recipiant's discount level before transfer
-        uint8 originalUserDiscountLevel = discountLevel(recipiant); 
+        //checking recipient's discount level before transfer
+        uint8 originalUserDiscountLevel = discountLevel(recipient); 
         // transferring funds
-        _transfer (sender, recipiant, amount); 
+        _transfer (sender, recipient, amount); 
         // checking if allowance was enough
         uint256 currentAllowance = allowance(sender, _msgSender());        
         require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
         // decreasing allowance by transferred amount
         _approve(sender, _msgSender(), currentAllowance - amount);   
-        //checking recipiant's discount level after changes            
-        uint8 newUserDiscountLevel = discountLevel(recipiant);
+        //checking recipient's discount level after changes            
+        uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times 
         if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(recipiant);
+            adjustUpgradeTimeouts(recipient);
         }
         return true;
     }
