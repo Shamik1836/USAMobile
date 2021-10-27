@@ -4,7 +4,6 @@ import { Button, Tooltip } from "@mui/material";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useActions } from "../../contexts/actionsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { useSendTransaction } from "../../hooks/useSendTransaction";
 
@@ -15,7 +14,6 @@ export const ApproveButton = (props) => {
   const { txAmount } = useActions();
   const { user } = useMoralis();
   const { setDialog } = useExperts();
-  const { darkBoxShadow } = useGradient();
 
 
   const preApprove = async () => {
@@ -101,7 +99,7 @@ export const ApproveButton = (props) => {
   return (
     <Tooltip title="Submit swap order.">
       <Button
-        sx={{ boxShadow:darkBoxShadow, mr:2, mt:-2}}
+        sx={{ boxShadow:"var(--boxShadow)", mr:2, mt:-2}}
         variant="contained"
         className="ExpertButton"
         onClick={handlePress}
