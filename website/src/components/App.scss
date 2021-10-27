@@ -1,6 +1,10 @@
 /* @import "../fonts/unibomber.css"; */
 @import "../fonts/logofont.css";
 
+html {
+  overflow: initial !important;
+}
+
 body {
   &.light {
     --bg: linear-gradient(
@@ -33,6 +37,21 @@ body {
   background-attachment: fixed;
   background-image: var(--bg);
   font-family: LogoFont;
+}
+
+#transakFiatOnOffRamp {
+  .transak_modal-overlay {
+    display: none;
+  }
+
+  .transak_modal {
+    position: initial;
+    transform: none;
+
+    .transak_close {
+      display: none;
+    }
+  }
 }
 
 .AppOuterFlex {
