@@ -1,6 +1,6 @@
 import { IconButton, Tooltip } from '@mui/material';
-import Brightness3Icon from '@mui/icons-material/Brightness3';
-import Brightness5Icon from '@mui/icons-material/Brightness5';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import NightlightSharpIcon from '@mui/icons-material/NightlightSharp';
 
 import { useColorMode } from '../../../contexts/colorModeContext';
 import { useGradient } from "../../../contexts/gradientsContext";
@@ -19,7 +19,9 @@ export const LightSwitch = () => {
         sx={{boxShadow: darkBoxShadow }} 
         variant="uw"
         onClick={toggleColorMode}>
-        {colorMode === "light" ? <Brightness3Icon /> : <Brightness5Icon />}
+        {colorMode === "light" ? 
+          <NightlightSharpIcon className="nav-bar-icon" sx={{transform: 'rotate(-45deg)' }} /> : <LightModeIcon className="nav-bar-icon" />
+        }
       </IconButton>
     </Tooltip>
 

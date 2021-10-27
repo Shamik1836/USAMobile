@@ -30,13 +30,11 @@ body{
 
 
 .light-border{
-  border-color: #E2E8F0 !important;
-  border:  solid;
+  border:  4px solid #E2E8F0;
 }
 
 .dark-border{
-  /*border-color: #ffffff29 !important;*/
-  /*border:  solid;*/
+  border:  4px solid #ffffff29;
 }
 
 .NavBar{

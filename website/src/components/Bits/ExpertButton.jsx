@@ -22,7 +22,7 @@ export const ExpertButton = () => {
         sx={{ ml:1,boxShadow: darkBoxShadow }} 
         variant="uw"
         onClick={() => toggleExperts(!expertsOn)}>
-        {expertsOn ? <BlockIcon /> : <ChatIcon />}
+        {expertsOn ? <BlockIcon className="nav-bar-icon" /> : <ChatIcon className="nav-bar-icon" />}
       </IconButton>
     </Tooltip>
     
