@@ -18,9 +18,8 @@ export const SendPanel = () => {
       sx={{
         display: 'inline-flex', minWidth: 420, maxWidth: 660, m: 'auto',
         borderRadius: '1.5rem',
-        border: 2,
-        backgroundImage: 'var(--bg)',
-        borderColor:'var(--borderColor)'
+        borderWidth: 2,
+        backgroundImage: 'var(--bg)'
       }}
     >
       <Stack sx={{ alignItems: 'flex-start', justifyContent: 'center', px: 5, py: 2.5 }} spacing={3}>

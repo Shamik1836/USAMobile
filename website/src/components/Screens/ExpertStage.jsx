@@ -46,7 +46,7 @@ export const ExpertStage = () => {
           }}
         >
           <Box sx={{ display: 'flex', flex:1, alignSelf:'center', p: 1.5 }}>
-            <Text style={{wordBreak:'break-word'}}>
+            <Text>
               {dialog}
             </Text>
           </Box>

@@ -21,23 +21,18 @@ export const SwapPanel = () => {
 
 
   return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        m: 'auto',
-        mb:3,
-        backgroundImage: 'var(--bg)',
-        border: 2,
-        borderRadius: '1.5rem',
-        borderColor:'var(--borderColor)'
-      }}>
-
-      <Stack sx={{ alignItems: 'center', justifyContent: 'center', px: 5, py: 2.5 }} spacing={3}>
+    <Box sx={{ display: 'inline-flex', minWidth: 420, maxWidth:660, m: 'auto', backgroundImage: 'var(--bg)',
+      borderRadius: '1.5rem',
+      borderWidth: 2,
+    }}>
+      <Stack sx={{alignItems: 'center', justifyContent: 'center', px: 5, py: 2.5}}>
         <FromSelect />
         {!!fromSymbol && (
           <>
-            <AmountSelect />
-            <ToSelect />
+            <Stack direction='row' spacing={1} sx={{my: 3}}>
+              <AmountSelect />
+              <ToSelect/>
+            </Stack>
             <RequestQuote />
           </>
         )}

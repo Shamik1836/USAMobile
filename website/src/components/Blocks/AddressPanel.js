@@ -45,11 +45,10 @@ export const AddressPanel = () => {
   return (
     <Box
       sx={{
-        display: 'inline-flex', m: 'auto', mb:3,
+        display: 'inline-flex', minWidth: 460, maxWidth: 660, m: 'auto',
         borderRadius: '1.5rem',
-        border: 2,
-        backgroundImage: 'var(--bg)',
-        borderColor:'var(--borderColor)'
+        borderWidth: 2,
+        backgroundImage: 'var(--bg)'
       }}
     >
       <Stack
