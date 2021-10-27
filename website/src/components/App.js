@@ -1,5 +1,5 @@
 import { useMoralis } from "react-moralis";
-import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 
 import { Box, Button, Stack } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -80,11 +80,19 @@ function App() {
               </Link>
             </Stack>
             <Switch>
-              <Route exact path="/" component={PortfolioPrices} />
-              <Route path="/PortfolioPrices" component={PortfolioPrices} />
-              <Route path="/SwapTrade" component={SwapTrade} />
-              <Route path="/BuySell" component={BuySell} />
-              <Route path="/SendRecieve" component={SendReceive} />
+              <Route exact path="/PortfolioPrices">
+                <PortfolioPrices />
+              </Route>
+              <Route exact path="/SwapTrade">
+                <SwapTrade />
+              </Route>
+              <Route exact path="/BuySell">
+                <BuySell />
+              </Route>
+              <Route exact path="/SendRecieve">
+                <SendReceive />
+              </Route>
+              <Redirect to="/PortfolioPrices" />
             </Switch>
           </BrowserRouter>
         ) : (
