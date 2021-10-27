@@ -72,7 +72,7 @@ async function addUserAccDataPoints(userToCheck){
     user2DiscountDataArray.push(userDiscountNow);
 
   } else {
-    console.log("addUserAccDataPoints: user account not set up for data points!")
+   //console.log("addUserAccDataPoints: user account not set up for data points!")
   }
 }
 
@@ -80,13 +80,13 @@ async function addUserAccDataPoints(userToCheck){
 function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
   if  (userToCheck == testUser_1){
     for (let index = 0; index < user1LevelDataArray.length; index++) {
-      console.log("userToCheck", userToCheck);
-      console.log("index", index);
-      console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
-      console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
+     //console.log("userToCheck", userToCheck);
+     //console.log("index", index);
+     //console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
+     //console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
 
-      console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
-      console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
+     //console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
+     //console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
       expect(user1LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
       expect(user1DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
     }
@@ -177,13 +177,13 @@ async function getMaticBalance(adress) {
 }
 
 function decipherBlockFeedback(blockResponseObject) {
-  console.log("User is holding his BNJI this many blocks so far:", bigNumberToNumber( blockResponseObject.blocksHoldingSoFar));
-  console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
+ //console.log("User is holding his BNJI this many blocks so far:", bigNumberToNumber( blockResponseObject.blocksHoldingSoFar));
+ //console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
 }
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
-  console.log('calling address in testMinting is now:', callingAccAddress);
+ console.log('calling address in testMinting is now:', callingAccAddress);
  
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply()); 
 
@@ -207,7 +207,7 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
-  console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
+ console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
 
   // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
   await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
@@ -227,29 +227,29 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   const contractAMUSDCdiffMintInCents = contractAMUSDCbalanceAfterMintInCents - contractAMUSDCbalanceBeforeMintInCents;
   const feeReceiverUSDCdiffMintInCents = feeReceiverUSDCBalanceAfterMintInCents - feeReceiverUSDCBalanceBeforeMintInCents;     
   
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
+ //console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
+ //console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
 
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${callingAccAddress} USDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${callingAccAddress} USDC balance after ${mintName}`);    
+ //console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${callingAccAddress} USDC balance before ${mintName}`);
+ //console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${callingAccAddress} USDC balance after ${mintName}`);    
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
+ //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before ${mintName}`);
+ //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
   
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
-  console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `approx. of what benjaminsContract received in amUSDC (incl. interest already accrued)`);
+ //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
+ //console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `approx. of what benjaminsContract received in amUSDC (incl. interest already accrued)`);
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `approx. of what should be the fee received, in USDC (difference between paid by user and received by protocol, changed by interest already accrued)`); 
+ //console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
+ //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `approx. of what should be the fee received, in USDC (difference between paid by user and received by protocol, changed by interest already accrued)`); 
 
-  console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
-  console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
+ //console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
+ //console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
 
-  console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
-  console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after${mintName}`);
+ //console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
+ //console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after${mintName}`);
 
-  console.log(receivingAddressBNJIbalBeforeMint, `receivingAddress owns/manages this many benjamins before ${mintName}`);
-  console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
+ //console.log(receivingAddressBNJIbalBeforeMint, `receivingAddress owns/manages this many benjamins before ${mintName}`);
+ //console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
 
   
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
@@ -258,14 +258,14 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   confirmMint();
 
-  console.log(`==============================================================================`);
-  console.log(`==============================================================================`);
+ //console.log(`==============================================================================`);
+ //console.log(`==============================================================================`);
 
 };
 
 async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
 
-  console.log('calling address in testBurning is now:', callingAccAddress);
+ //console.log('calling address in testBurning is now:', callingAccAddress);
  
   const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
 
@@ -284,7 +284,7 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   // descr: function burnTo(uint256 _amount, address _toWhom)
   await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);  
   
-  console.log(`${callingAccAddress} is burning this many tokens:`, amountToBurn, 'for:', receivingAddress );
+ //console.log(`${callingAccAddress} is burning this many tokens:`, amountToBurn, 'for:', receivingAddress );
 
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress); 
@@ -303,36 +303,36 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   
   //const burningAccBNJIdifference = callingAddressBNJIbalBeforeBurn - callingAccBNJIbalAfter;
   
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeBurnInCents), `benjaminsContract amUSDC balance before ${burnName}`);
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterBurnInCents), `benjaminsContract amUSDC balance after ${burnName}`);
+ //console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeBurnInCents), `benjaminsContract amUSDC balance before ${burnName}`);
+ //console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterBurnInCents), `benjaminsContract amUSDC balance after ${burnName}`);
 
-  console.log(fromCentsToUSDC(callingAddressBNJIbalBeforeBurn), `${callingAccAddress} BNJI balance before ${burnName}`);
-  console.log(fromCentsToUSDC(callingAccBNJIbalAfter), `${callingAccAddress} BNJI balance after ${burnName}`);    
+ //console.log(fromCentsToUSDC(callingAddressBNJIbalBeforeBurn), `${callingAccAddress} BNJI balance before ${burnName}`);
+ //console.log(fromCentsToUSDC(callingAccBNJIbalAfter), `${callingAccAddress} BNJI balance after ${burnName}`);    
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents), `feeReceiver USDC balance before ${burnName}`);
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents), `feeReceiver USDC balance after ${burnName}`);
+ //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents), `feeReceiver USDC balance before ${burnName}`);
+ //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents), `feeReceiver USDC balance after ${burnName}`);
   
-  console.log(fromCentsToUSDC(receivingAccBurnReturnReceivedInCents), `${callingAccAddress} burn return received in USDC`);
-  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `approx. of what benjaminsContract paid out in amUSDC (incl. interest already accrued) `);
+ //console.log(fromCentsToUSDC(receivingAccBurnReturnReceivedInCents), `${callingAccAddress} burn return received in USDC`);
+ //console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `approx. of what benjaminsContract paid out in amUSDC (incl. interest already accrued) `);
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
-  console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - receivingAccBurnReturnReceivedInCents), `approx. of what should be the fee received, in USDC (difference between received by user and paid by protocol, changed by interest already accrued)`); 
+ //console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
+ //console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - receivingAccBurnReturnReceivedInCents), `approx. of what should be the fee received, in USDC (difference between received by user and paid by protocol, changed by interest already accrued)`); 
 
-  console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
-  console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
+ //console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
+ //console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
 
-  console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${burnName}`);
-  console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after ${burnName}`);
+ //console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${burnName}`);
+ //console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after ${burnName}`);
   
-  console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
+ //console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
 
   //burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(contractAMUSDCdiffBurnInCents);
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
   confirmBurn();
 
-  console.log(`==============================================================================`);
-  console.log(`==============================================================================`);
+ //console.log(`==============================================================================`);
+ //console.log(`==============================================================================`);
 
 };
 
@@ -372,11 +372,11 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const feeModifier = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;  
   console.log("feeModifier: ", feeModifier); 
 
-  console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
+  //console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
   const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100);   // TODO: needs to change, reply will come in different format
-  console.log("mintFeeStarterInCents: ", mintFeeStarterInCents); 
+  //console.log("mintFeeStarterInCents: ", mintFeeStarterInCents); 
   const mintFeeInCentsRoundedDown = mintFeeStarterInCents - (mintFeeStarterInCents % 1);
-  console.log("mintFeeInCentsRoundedDown: ", mintFeeInCentsRoundedDown); 
+  console.log(mintFeeInCentsRoundedDown, "mintFeeInCentsRoundedDown, calcMintApprovalAndPrep"); 
 
   // results, toPayTotalInUSDC can be displayed to user
   const toPayTotalInCents = mintingCostInCentsRoundedDown + mintFeeInCentsRoundedDown;
@@ -387,9 +387,9 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   mintPriceTotalInUSDCShouldBeNowGlobalV = toPayTotalInUSDC;
   mintAllowanceInUSDCCentsShouldBeNowGlobalV = toPayTotalInCents;  
 
-  console.log(usersTokenAtStart, "this was the users token balance at start, calcMintApprovalAndPrep");  
-  console.log(userLevel, "this was the users applied account level, calcMintApprovalAndPrep");
-  console.log(feeModifier, "this was the fee modifier in percent, calcMintApprovalAndPrep");
+ //console.log(usersTokenAtStart, "this was the users token balance at start, calcMintApprovalAndPrep");  
+ //console.log(userLevel, "this was the users applied account level, calcMintApprovalAndPrep");
+ //console.log(feeModifier, "this was the fee modifier in percent, calcMintApprovalAndPrep");
 
   return toPayTotalIn6dec;
 }
@@ -420,12 +420,12 @@ async function calcBurnVariables(amountToBurn, accountBurning) {
   tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
   burnReturnTotalInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
 
-  console.log("tokensShouldExistNowGlobalV:", tokensShouldExistNowGlobalV );
-  console.log("burnReturnTotalInUSDCShouldBeNowGlobalV:", burnReturnTotalInUSDCShouldBeNowGlobalV );
+ //console.log("tokensShouldExistNowGlobalV:", tokensShouldExistNowGlobalV );
+ //console.log("burnReturnTotalInUSDCShouldBeNowGlobalV:", burnReturnTotalInUSDCShouldBeNowGlobalV );
 
-  console.log(usersTokenAtStart, "this is the burning users token balance found at start, calcBurnVariables");  
-  console.log(userLevel, "this is the burning users account level found at start, calcBurnVariables");
-  console.log(feeModifier/100, "this is the applicable fee modifier in percent found at start, calcBurnVariables");
+ //console.log(usersTokenAtStart, "this is the burning users token balance found at start, calcBurnVariables");  
+ //console.log(userLevel, "this is the burning users account level found at start, calcBurnVariables");
+ //console.log(feeModifier/100, "this is the applicable fee modifier in percent found at start, calcBurnVariables");
      
 }
 
@@ -497,8 +497,8 @@ describe("Benjamins Test", function () {
     // after deployment, checking allowance between BenjaminsContract and LendingPool
     const contractAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(benjaminsContract.address, polygonLendingPool.address)) ;
     const deployerAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(deployer, polygonLendingPool.address)) ;
-    console.log("contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
-    console.log("deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
+   //console.log("contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
+   //console.log("deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
     */   
 
     //console.log("polygonUSDC address: ", polygonUSDC.address);   
@@ -624,29 +624,28 @@ describe("Benjamins Test", function () {
     const testUser_1_USDCbalance = await balUSDC(testUser_1);
     const testUser_1_BNJIbalance = await balBNJI(testUser_1) ;
 
-    console.log('testUser_1 is:', testUser_1);
-    console.log(`testUser_1 has in Matic:`, testUser_1_MATICbalance);
-    console.log(`testUser_1 has in USDC:`, divideFrom6decToUSDC(testUser_1_USDCbalance));   
-    console.log(`testUser_1 has in BNJI:`, testUser_1_BNJIbalance);      
+   //console.log('testUser_1 is:', testUser_1);
+   //console.log(`testUser_1 has in Matic:`, testUser_1_MATICbalance);
+   //console.log(`testUser_1 has in USDC:`, divideFrom6decToUSDC(testUser_1_USDCbalance));   
+   //console.log(`testUser_1 has in BNJI:`, testUser_1_BNJIbalance);      
 
     const testUser_2_MATICbalance = await getMaticBalance(testUser_2);
     const testUser_2_USDCbalance = await balUSDCinCents(testUser_2);
     const testUser_2_BNJIbalance = await balBNJI(testUser_2) ;
 
-    console.log('testUser_2 is:', testUser_2);
-    console.log(`testUser_2 has in Matic:`, testUser_2_MATICbalance);
-    console.log(`testUser_2 has in USDC:`, testUser_2_USDCbalance/100);   
-    console.log(`testUser_2 has in BNJI:`, testUser_2_BNJIbalance);      
+   //console.log('testUser_2 is:', testUser_2);
+   //console.log(`testUser_2 has in Matic:`, testUser_2_MATICbalance);
+   //console.log(`testUser_2 has in USDC:`, testUser_2_USDCbalance/100);   
+   //console.log(`testUser_2 has in BNJI:`, testUser_2_BNJIbalance);      
     */
   })      
   
   /*
-  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
-    
+  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {      
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);
   });
-  
+  /*
   it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () { 
         
     await addUserAccDataPoints(testUser_1);        
@@ -663,7 +662,7 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,0,5];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
-  });*/
+  });
     
   /*
   // TODO: keep? calling does not work, sent arguments must be in integers
@@ -695,22 +694,25 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(20);
   });    */
 
-  /*
+  
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
     
+    expect(await balBNJI(testUser_1)).to.equal(0); 
+    expect(await balUSDC(testUser_1)).to.equal(3000); 
+
     await testMinting("Test 5.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);        
 
     expect(await balBNJI(testUser_1)).to.equal(19); 
-    expect(await balUSDC(testUser_1)).to.equal(3000); // this will throw, see what value is found instead
+    expect(await balUSDC(testUser_1)).to.equal(2986.44);
     await mintBlocks(11); 
               
     await testBurning("Test 5.2, burning after 11 blocks", 19, testUser_1, testUser_1);
 
     expect(await balBNJI(testUser_1)).to.equal(0);
-    expect(await balUSDC(testUser_1)).to.equal(3000);   // this will throw, see what value is found instead
+    expect(await balUSDC(testUser_1)).to.equal(2999.87);   // this will throw, see what value is found instead
 
   });    
-  *//*
+  /*
   it("Test 6. Should REVERT: testUser_1 tries to burn more tokens than they have", async function () {   
     
     await testMinting("Test 6.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
@@ -723,8 +725,8 @@ describe("Benjamins Test", function () {
     );
 
     expect(await balBNJI(testUser_1)).to.equal(10);
-  });  
-  
+  }); */ 
+  /*
   it("Test 7. Token price should increase following bonding curve", async function () {   
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);   
@@ -753,7 +755,7 @@ describe("Benjamins Test", function () {
 
     expect(firstPriceForTenInCents).to.equal(713);
     expect(secondPriceForTenInCents).to.equal(715); 
-  });  
+  });  /*
   
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
 
@@ -983,7 +985,7 @@ describe("Benjamins Test", function () {
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
   });  
-  */
+  *//*
   it("Test 18. It is possible to transfer tokens", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
@@ -1014,7 +1016,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Discounts = [0,5];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
   });  
-  /*
+  
   it("Test 19. It is possible to mint tokens to another account", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
@@ -1040,7 +1042,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Discounts = [0,20];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
   });  
- 
+ /*
   it("Test 20. It is possible to burn tokens and reward the USDC to another account", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  

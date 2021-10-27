@@ -72,7 +72,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     );
     event profitTaken(uint256 availableIn6dec, uint256 amountUSDCin6dec);
     event LendingPoolDeposit (uint256 amountUSDCin6dec, address payer);  
-    event LendingPoolWithdrawal (uint256 amountUSDCin6dec, address payee);
+    event LendingPoolWithdrawal (uint256 amountUSDCBeforeFeein6dec, address payee);
 
     // owner overrides paused.
     modifier whenAvailable() {
@@ -89,8 +89,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     modifier withdrawAllowed(address userToCheck) {
         uint256 blockNum = block.number;
         uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck]; 
-        console.log('holdTime calculated:', holdTime);
-        console.log('holdTime necessary, i.e. blocksPerDay*levelHolds[discountLevel(userToCheck)]:', blocksPerDay*levelHolds[discountLevel(userToCheck)]);
+       //console.log('holdTime calculated:', holdTime);
+       //console.log('holdTime necessary, i.e. blocksPerDay*levelHolds[discountLevel(userToCheck)]:', blocksPerDay*levelHolds[discountLevel(userToCheck)]);
         require(holdTime > antiFlashLoan, 
             'Anti-flashloan withdraw timeout in effect.');
         require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 
@@ -171,7 +171,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Buy BNJI with USDC for another address
     function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
         uint8 originalUserDiscountLevel = discountLevel(_toWhom);
-        changeSupply(_toWhom, _amount);
+        changeSupply(_toWhom, _amount, true);
         uint8 newUserDiscountLevel = discountLevel(_toWhom);
         if ( newUserDiscountLevel > originalUserDiscountLevel){
             adjustUpgradeTimeouts(_toWhom);
@@ -191,7 +191,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         wontBreakTheBank(_amount)
         withdrawAllowed(msg.sender)
     {
-        changeSupply(_toWhom, _amount);
+        changeSupply(_toWhom, _amount, false);
     }
 
     // Quote USDC for mint(positive) or burn(negative)
@@ -212,7 +212,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Return address discount level as an uint8 as a function of balance.
     function discountLevel(address _whom) public view returns(uint8) {
         uint256 userBalance = balanceOf(_whom); // lookup once.  
-        console.log('userBalance:', userBalance);     
+       //console.log('userBalance:', userBalance);     
         //console.log('levelAntes.length:', levelAntes.length);  
         uint8 currentLevel = 0;
         for (uint8 index = 0; index < levelAntes.length ; index++){ // TODO: fix, last level is wrong
@@ -221,7 +221,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             }
 
             /*
-            console.log('currentLevel inside loop:', currentLevel);
+           //console.log('currentLevel inside loop:', currentLevel);
             if (currentLevel == levelAntes.length-1) {
                 //console.log('currentLevel reached 4');
                 //break; // TODO: check if okay now
@@ -229,7 +229,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
                 return currentLevel+1;
             }*/
         }   
-        console.log('currentLevel returned:', currentLevel);
+       //console.log('currentLevel returned:', currentLevel);
         return currentLevel;
     }
 
@@ -241,40 +241,44 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         view
         returns (uint16)
     {   
-        console.log("discountLevel(forWhom):", discountLevel(forWhom));        
+       //console.log("discountLevel(forWhom):", discountLevel(forWhom));        
         //console.log("levelDiscounts[discountLevel(forWhom):", levelDiscounts[ 0 ]  ); // TODO: fix, throws
         //uint8 _discountLevel = discountLevel(forWhom);
         //uint8 _diff = uint8(100) - _discountLevel;
         //uint16 _diff16 = uint16(_diff); 
-         console.log("uint16(100*baseFee):", uint16(100*baseFee)); 
-          console.log("uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]):", uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)])); 
-        return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // TODO: fix, dummy response atm //return 10000;//
+        //console.log("uint16(100*baseFee):", uint16(100*baseFee)); 
+         //console.log("uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]):", uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)])); 
+        return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // 
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, uint256 _amountBNJI) internal nonReentrant {
+    function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal nonReentrant {
         // Calculate change
-        uint256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); // negative on burn
-        console.log('principleInUSDCin6dec:', principleInUSDCin6dec);
-        uint256 fee = principleInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; // always positive
+        uint256 principleInUSDCin6dec = quoteUSDC(_amountBNJI); 
+        console.log(principleInUSDCin6dec, 'BNJ, principleInUSDCin6dec');
+        uint256 fee = principleInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
         uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
-        console.log('feeRoundedDownIn6dec:', feeRoundedDownIn6dec);
-        uint256 endAmountInUSDCin6dec = principleInUSDCin6dec + feeRoundedDownIn6dec; // negative on burn
-        console.log('endAmountInUSDCin6dec:', endAmountInUSDCin6dec);
+        console.log(feeRoundedDownIn6dec, ' BNJ, feeRoundedDownIn6dec');
+        uint256 endAmountInUSDCin6dec = principleInUSDCin6dec + feeRoundedDownIn6dec; 
+        console.log(endAmountInUSDCin6dec, 'BNJ, endAmountInUSDCin6dec');
 
         // Execute exchange
-        if (_amountBNJI > 0) {
+        if (isMint == true) {
+            // moving funds for minting
+            moveUSDC(msg.sender, _forWhom, principleInUSDCin6dec, feeRoundedDownIn6dec, true);
             // minting
-            moveUSDC(msg.sender, _forWhom, endAmountInUSDCin6dec);
             _mint(_forWhom, _amountBNJI);
+            // update reserve
+            reserveInUSDCin6dec += principleInUSDCin6dec;
         } else {
             // burning
             _burn(msg.sender, _amountBNJI);
-            moveUSDC(msg.sender, _forWhom, principleInUSDCin6dec);            
+            // moving funds for burning
+            moveUSDC(msg.sender, _forWhom, principleInUSDCin6dec, feeRoundedDownIn6dec, false);      
+            // update reserve
+            reserveInUSDCin6dec -= principleInUSDCin6dec;      
         }
 
-        // Record change.
-        reserveInUSDCin6dec += principleInUSDCin6dec; // TODO: check if uint256 is correct here for principle, should not be negative on burn?
         emit exchanged(msg.sender, _forWhom, _amountBNJI, endAmountInUSDCin6dec, fee);
     }
 
@@ -282,25 +286,34 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function moveUSDC(
         address _payer, 
         address _payee, 
-        uint256 _amountUSDCin6dec // negative when burning, does not include fee. positive when minting, includes fee.
+        uint256 _principleInUSDCin6dec,
+        uint256 _feeRoundedDownIn6dec,
+        bool isMint // negative when burning, does not include fee. positive when minting, includes fee.
     ) internal {
-        if (_amountUSDCin6dec > 0) {         
-            console.log('_payer:', _payer);
-            console.log('_amountUSDCin6dec:', _amountUSDCin6dec);
-            console.log('polygonUSDC.allowance(_payer, address(this)):', polygonUSDC.allowance(_payer, address(this)));   
+        uint256 _totalAmountUSDCin6dec = _principleInUSDCin6dec + _feeRoundedDownIn6dec;
+        
+        if (isMint == true) {         
+           //console.log('_payer:', _payer);
+           //console.log('_amountUSDCin6dec:', _amountUSDCin6dec);
+           //console.log('polygonUSDC.allowance(_payer, address(this)):', polygonUSDC.allowance(_payer, address(this))); 
+            
             // pull USDC from user (_payer), push to this contract           
-            polygonUSDC.transferFrom(_payer, address(this), _amountUSDCin6dec);             
-            // this contract gives the Aave lending pool allowance to pull in _amount of USDC (in 6 decimals unit) from this contract 
-            polygonUSDC.approve(address(polygonLendingPool), _amountUSDCin6dec); // TODO: check if this is coming in formatted in 6 decimal units, i.e. USDC * 1000000 or cents * 10000
+            polygonUSDC.transferFrom(_payer, address(this), _totalAmountUSDCin6dec);            
+            // pushing fee from this contract to feeReceiver address
+            polygonUSDC.transfer(feeReceiver, _feeRoundedDownIn6dec); 
+            // this contract gives the Aave lending pool allowance to pull in the principle from this contract 
+            polygonUSDC.approve(address(polygonLendingPool), _principleInUSDCin6dec); 
             // lending pool is queried to pull in the approved USDC (in 6 decimals unit)  
-            polygonLendingPool.deposit(address(polygonUSDC), _amountUSDCin6dec, address(this), 0); // TODO: also needs 6 decimals format
-            emit LendingPoolDeposit(_amountUSDCin6dec, _payer);
+            polygonLendingPool.deposit(address(polygonUSDC), _principleInUSDCin6dec, address(this), 0); 
+            emit LendingPoolDeposit(_principleInUSDCin6dec, _payer);
         } else {                     
             // lending pool is queried to push USDC (in 6 decimals unit) without fee back to this contract
-            polygonLendingPool.withdraw(address(polygonUSDC), _amountUSDCin6dec, address(this)); // TODO: also needs 6 decimals format
-            emit LendingPoolWithdrawal(_amountUSDCin6dec, _payee);
-            // take USDC from this contract, push to user (_payee)
-            polygonUSDC.transfer(_payee, _amountUSDCin6dec);            
+            polygonLendingPool.withdraw(address(polygonUSDC), _totalAmountUSDCin6dec, address(this)); 
+            emit LendingPoolWithdrawal(_totalAmountUSDCin6dec, _payee);
+            // pushing fee from this contract to feeReceiver address
+            polygonUSDC.transfer(feeReceiver, _feeRoundedDownIn6dec); 
+            // push USDC from this contract to user (_payee)
+            polygonUSDC.transfer(_payee, _principleInUSDCin6dec);            
         }
     }   
 
