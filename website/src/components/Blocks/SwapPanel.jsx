@@ -4,8 +4,6 @@ import { Box, Stack } from '@mui/material';
 import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
-import { useColorMode } from '../../contexts/colorModeContext';
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
@@ -19,13 +17,11 @@ import { QuotePanel } from "../Scrapbox/QuotePanel";
 
 export const SwapPanel = () => {
   const { fromSymbol } = useActions();
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
   const { quoteValid } = useQuote();
 
 
   return (
-    <Box sx={{ display: 'inline-flex', minWidth: 420, maxWidth:660, m: 'auto', backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG),
+    <Box sx={{ display: 'inline-flex', minWidth: 420, maxWidth:660, m: 'auto', backgroundImage: 'var(--bg)',
       borderRadius: '1.5rem',
       borderWidth: 2,
     }}>

@@ -10,7 +10,6 @@ import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
 
 import { useColorMode } from '../../contexts/colorModeContext';
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { getDataByCoinID } from "../../hooks/action";
 import Card from "../Research/card";
@@ -19,7 +18,6 @@ import Loader from "../Research/load";
 
 export const TokenTable = () => {
   const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
 
   const { positions, isLoading, totalValue } = usePositions();
 
@@ -116,7 +114,7 @@ export const TokenTable = () => {
   return (
    <Box sx={{ display: 'inline-flex', minWidth: 560, maxWidth:600, m:'auto'}}>
       <TableContainer component={Paper} sx={{ borderRadius: '1.5rem',borderWidth: 4}} className={(colorMode === 'light' ? 'light-border' : 'dark-border')}>
-        <Table aria-label="collapsible table" sx={{backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)}}>
+        <Table aria-label="collapsible table" sx={{backgroundImage: 'var(--bg)'}}>
           <TableHead>
             <TableRow>
              <TableCell align="center" colSpan={6}>

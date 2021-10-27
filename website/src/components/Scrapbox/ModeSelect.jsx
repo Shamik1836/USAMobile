@@ -5,14 +5,12 @@ import RestoreIcon from '@mui/icons-material/Restore';
 
 
 import { useExperts } from "../../contexts/expertsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { CopyAddress } from "../Bits/CopyAddress";
 
 
 export const ModeSelect = () => {
   const { setActionMode, setDialog } = useExperts();
-  const { darkBoxShadow } = useGradient();
 
   return (
     <>
@@ -22,7 +20,7 @@ export const ModeSelect = () => {
           <Button
             endIcon={<LoopIcon />}
             variant="contained"
-        	sx={{ boxShadow:darkBoxShadow}}
+        	sx={{ boxShadow:"var(--boxShadow)"}}
             boxShadow="dark-lg"
             onClick={() => {
               setActionMode("swap");
@@ -36,7 +34,7 @@ export const ModeSelect = () => {
           <Button
             endIcon={<EmailIcon />}
             variant="contained"
-        	sx={{ boxShadow:darkBoxShadow}}
+        	sx={{ boxShadow:"var(--boxShadow)"}}
             onClick={() => {
               setActionMode("send");
               setDialog('"Enter the destination Ethereum address."');
@@ -49,7 +47,7 @@ export const ModeSelect = () => {
           <Button
             endIcon={<RestoreIcon />}
             variant="contained"
-        	sx={{ boxShadow:darkBoxShadow}}
+        	sx={{ boxShadow:"var(--boxShadow)"}}
             onClick={() => {
               setActionMode("invest");
               setDialog("Ask about our CRYPTO PATRIOTS program, coming soon!");

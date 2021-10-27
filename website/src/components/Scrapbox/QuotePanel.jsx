@@ -6,7 +6,6 @@ import { DoItButton } from "./DoItButton";
 import { useActions } from "../../contexts/actionsContext";
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 
 export const QuotePanel = () => {
@@ -28,7 +27,6 @@ export const QuotePanel = () => {
 
   const { setDialog } = useExperts();
 
-  const { darkBoxShadow } = useGradient();
 
   const handleCancel = (e) => {
     setQuoteValid("false");
@@ -76,7 +74,7 @@ export const QuotePanel = () => {
       )}
       <Stack direction='row'>
         <DoItButton />
-        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow: darkBoxShadow }}>
+        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow: "var(--boxShadow)" }}>
           Cancel
         </Button>
       </Stack>

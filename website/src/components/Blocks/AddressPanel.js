@@ -8,13 +8,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import { useExperts } from "../../contexts/expertsContext";
 import { useColorMode } from '../../contexts/colorModeContext';
-import { useGradient } from "../../contexts/gradientsContext";
 import { Heading } from '../UW/Heading';
 import { Text } from '../UW/Text';
 
 export const AddressPanel = () => {
 
-  const { lightModeBG, darkModeBG, darkBoxShadow } = useGradient();
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
   const { setDialog } = useExperts();
@@ -50,7 +48,7 @@ export const AddressPanel = () => {
         display: 'inline-flex', minWidth: 460, maxWidth: 660, m: 'auto',
         borderRadius: '1.5rem',
         borderWidth: 2,
-        backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)
+        backgroundImage: 'var(--bg)'
       }}
     >
       <Stack
@@ -72,7 +70,7 @@ export const AddressPanel = () => {
               border: 1,
               borderRadius: '.3rem',
               alignSelf: 'center',
-              boxShadow: darkBoxShadow,
+              boxShadow: "var(--boxShadow)",
               color: (colorMode === 'light' ? '#000000de' : '#ffffffeb'),
               p:1
             }} />
