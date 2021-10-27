@@ -42,7 +42,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8 antiFlashLoan = 10; // number of blocks hold to defend vs. flash loans.
     uint blocksPerDay = 2; // TODO: change to 43200
     uint256 curveFactor = 800000; // Inverselope of the bonding curve.
-    uint8 baseFee = 2; // in percent as an integer
+    uint8 baseFee = 1; // in percent as an integer  // TODO: change to real value, this is for testing
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
@@ -54,7 +54,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [ uint32(0), 20, 60, 100, 500, 2000]; // in Benjamins
+        levelAntes =     [ 20, 60, 100, 500, 2000]; // in Benjamins
         levelHolds =     [         0,  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
         levelDiscounts = [         0,  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
@@ -202,16 +202,21 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function discountLevel(address _whom) public view returns(uint8) {
         uint256 userBalance = balanceOf(_whom); // lookup once.  
         console.log('userBalance:', userBalance);     
-         console.log('levelAntes.length:', levelAntes.length);  
-        uint8 currentLevel;
-        for (currentLevel = 0; currentLevel<levelAntes.length && userBalance >= levelAntes[currentLevel+1] ; currentLevel ++){ // TODO: fix, last level is wrong
+        //console.log('levelAntes.length:', levelAntes.length);  
+        uint8 currentLevel = 0;
+        for (uint8 index = 0; index < levelAntes.length ; index++){ // TODO: fix, last level is wrong
+            if (userBalance >= levelAntes[index]) {
+                currentLevel++;
+            }
+
+            /*
             console.log('currentLevel inside loop:', currentLevel);
-            if (currentLevel == levelAntes.length-2) {
+            if (currentLevel == levelAntes.length-1) {
                 //console.log('currentLevel reached 4');
                 //break; // TODO: check if okay now
                 //console.log('currentLevel returned:', currentLevel);
                 return currentLevel+1;
-            }
+            }*/
         }   
         console.log('currentLevel returned:', currentLevel);
         return currentLevel;
@@ -230,6 +235,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         //uint8 _discountLevel = discountLevel(forWhom);
         //uint8 _diff = uint8(100) - _discountLevel;
         //uint16 _diff16 = uint16(_diff); 
+         console.log("uint16(100*baseFee):", uint16(100*baseFee)); 
+          console.log("uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]):", uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)])); 
         return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // TODO: fix, dummy response atm //return 10000;//
     }
 

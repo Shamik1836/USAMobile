@@ -61,7 +61,7 @@ let user2DiscountDataArray = [];
 // querrying and saving account level and account discount info for userToCheck, and saving them to an array for later confirmation
 async function addUserAccDataPoints(userToCheck){
   const userLevelNow = bigNumberToNumber (await benjaminsContract.discountLevel(userToCheck));
-  const userDiscountNow = bigNumberToNumber (await benjaminsContract.quoteFeePercentage(userToCheck)/10000); 
+  const userDiscountNow = 100 - bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100); 
   
   if (userToCheck == testUser_1){
     user1LevelDataArray.push(userLevelNow);
@@ -79,16 +79,29 @@ async function addUserAccDataPoints(userToCheck){
 function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
   if  (userToCheck == testUser_1){
     for (let index = 0; index < user1LevelDataArray.length; index++) {
-      expect(expectedUserLevelsArray[index]).to.equal(user1LevelDataArray[index]); 
-      expect(expectedUserDiscountArray[index]).to.equal(user1DiscountDataArray[index]);
+      console.log("userToCheck", userToCheck);
+      console.log("index", index);
+      console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
+      console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
+
+      console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
+      console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
+      expect(user1LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
+      expect(user1DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
     }
   } else if (userToCheck == testUser_2) {
 
     for (let index = 0; index < user2LevelDataArray.length; index++) {
-      expect(expectedUserLevelsArray[index]).to.equal(user2LevelDataArray[index]); 
-      expect(expectedUserDiscountArray[index]).to.equal(user2DiscountDataArray[index]);
+      expect(user2LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
+      expect(user2DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
     }
   }
+  // resetting for next test
+  user1LevelDataArray = [];
+  user1DiscountDataArray = [];
+  user2LevelDataArray = [];
+  user2DiscountDataArray = [];
+  
 }
 
 // simulate the passing of blocks
@@ -345,13 +358,13 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   // getting accounts' feeModifier and starting with calculated fee, then rounding down to cents
   // descr.: quoteFeePercentage(address forWhom, int256 amount)    
 
-  const discountLevel = await benjaminsContract.discountLevel(accountMinting);
-  console.log("discountLevel: ", discountLevel); 
+  //const discountLevel = await benjaminsContract.discountLevel(accountMinting);
+  //console.log("discountLevel: ", discountLevel); 
 
-  const quoteFeePercentage = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;
-  console.log("quoteFeePercentage: ", quoteFeePercentage); 
+  //const quoteFeePercentage = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;
+  //console.log("quoteFeePercentage: ", quoteFeePercentage); 
 
-  const feeModifier = bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountMinting))/10000;  
+  const feeModifier = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;  
   console.log("feeModifier: ", feeModifier); 
 
   console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
@@ -628,7 +641,7 @@ describe("Benjamins Test", function () {
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);
   });
-  /*
+  
   it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () { 
         
     await addUserAccDataPoints(testUser_1);        
