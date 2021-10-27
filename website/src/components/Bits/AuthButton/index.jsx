@@ -34,7 +34,7 @@ export const AuthButton = () => {
 						variant="uw"
 						onClick={() => logout()}
 					>
-						<LockOpenIcon />
+						<LockOpenIcon className="nav-bar-icon" />
 					</IconButton>
 				</Tooltip>
 			) : (
@@ -47,7 +47,7 @@ export const AuthButton = () => {
 							variant="uw"
 							onClick={() => toggleDrawer(true)}
 						>
-							<LockIcon />
+							<LockIcon className="nav-bar-icon" />
 						</IconButton>
 					</Tooltip>
 					<Drawer open={isOpen} anchor="right" onClose={onCloseDrawer}>

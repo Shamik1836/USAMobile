@@ -31,7 +31,7 @@ function App() {
         <ExpertStage />
         {isAuthenticated ? (
           <BrowserRouter>
-            <Stack direction="row" sx={{justifyContent:'center', mb:2}} spacing={1}>
+            <Stack direction="row" sx={{alignSelf:'center', justifyContent:'center', mb:2}} spacing={1}>
               <Link to="/PortfolioPrices" className="NavBar">
                 <Button variant="uw" 
                   sx={{ 
