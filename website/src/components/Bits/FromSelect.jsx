@@ -5,7 +5,6 @@ import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 
-// import { useGradient } from "../../contexts/gradientsContext";
 
 export const FromSelect = () => {
 
@@ -14,7 +13,6 @@ export const FromSelect = () => {
   const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
   
-  // const { darkBoxShadow } = useGradient();
 
 
   useEffect(() => {
@@ -47,7 +45,7 @@ export const FromSelect = () => {
   return (
     <Box sx={{width:'100%'}}>
       <FormControl sx={{ 
-        // boxShadow: darkBoxShadow
+        // boxShadow: "var(--boxShadow)"
       }} id="swapfrom" fullWidth>
         <InputLabel id="form-select-label">Select a token to act with.</InputLabel>
         <Select 
@@ -55,7 +53,7 @@ export const FromSelect = () => {
           label="Select a token to act with."
           sx={{ 
             minWidth: 340,
-            //boxShadow: darkBoxShadow
+            //boxShadow: "var(--boxShadow)"
           }}
           onChange={handleChange}
           value = {value}

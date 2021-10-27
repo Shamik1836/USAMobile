@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useMoralis } from "react-moralis";
 import { Alert, Button, Stack, TextField, Tooltip } from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useGradient } from "../../../contexts/gradientsContext";
 
 import "./styles.css";
 
@@ -19,7 +18,6 @@ export const AuthDrawer = (props) => {
     user,
   } = useMoralis();
 
-  const { darkBoxShadow } = useGradient();
 
 
   const [userName, setUserName] = useState(
@@ -96,7 +94,7 @@ export const AuthDrawer = (props) => {
         p: 2,
         my: 2,
         mx: 5,
-        boxShadow: darkBoxShadow
+        boxShadow: "var(--boxShadow)"
       }}
     >
       {authError != null && (
@@ -112,7 +110,7 @@ export const AuthDrawer = (props) => {
             variant="outlined"
             value={userName}
             onChange={(event) => setUserName(event.currentTarget.value)}
-            sx={{ boxShadow: darkBoxShadow }}
+            sx={{ boxShadow: "var(--boxShadow)" }}
 
           />
         </Tooltip>
@@ -125,7 +123,7 @@ export const AuthDrawer = (props) => {
           variant="outlined"
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
-          sx={{ boxShadow: darkBoxShadow }}
+          sx={{ boxShadow: "var(--boxShadow)" }}
         />
       </Tooltip>
       {user && user.attributes.emailVerified && (
@@ -140,7 +138,7 @@ export const AuthDrawer = (props) => {
           variant="outlined"
           value={password}
           onChange={(event) => setPassword(event.currentTarget.value)}
-          sx={{ boxShadow: darkBoxShadow }}
+          sx={{ boxShadow: "var(--boxShadow)" }}
         />
       </Tooltip>
 
@@ -164,7 +162,7 @@ export const AuthDrawer = (props) => {
                 variant="outlined"
                 onClick={handlePasswordReset}
                 disabled
-                sx={{ boxShadow: darkBoxShadow }}
+                sx={{ boxShadow: "var(--boxShadow)" }}
               >
                 Password Reset
               </Button>
@@ -175,7 +173,7 @@ export const AuthDrawer = (props) => {
               variant="outlined"
               loading={isAuthenticating}
               onClick={handleAuthenticate}
-              sx={{ boxShadow: darkBoxShadow }}
+              sx={{ boxShadow: "var(--boxShadow)" }}
             >
               Use MetaMask
             </LoadingButton>
@@ -183,7 +181,7 @@ export const AuthDrawer = (props) => {
         </>
       ) : (
         <Tooltip title="Update your USA Wallet account to the currently entered user name, e-mail, and password.">
-          <Button variant="outlined" onClick={handleSave} sx={{ boxShadow: darkBoxShadow }}>
+          <Button variant="outlined" onClick={handleSave} sx={{ boxShadow: "var(--boxShadow)" }}>
             Update signature.
           </Button>
         </Tooltip>

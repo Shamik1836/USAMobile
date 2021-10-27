@@ -2,13 +2,11 @@ import { Button } from "@mui/material";
 
 import { useMoralis } from "react-moralis";
 import { useNetwork } from "../../contexts/networkContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 
 export const AddNetworkButton = (props) => {
   const ethereum = window.ethereum;
   const { web3 } = useMoralis();
-  const { darkBoxShadow } = useGradient();
   const { networkId, setNetworkId } = useNetwork();
   const networkIDHex = web3.utils.toHex("137");
 
@@ -64,7 +62,7 @@ export const AddNetworkButton = (props) => {
 
   return (
     <Button
-    	sx={{mr:2, mt:2, boxShadow:darkBoxShadow}}
+    	sx={{mr:2, mt:2, boxShadow:"var(--boxShadow)"}}
       	className="ExpertButton"
       	variant="contained"
       	onClick={addPolygonNetwork}

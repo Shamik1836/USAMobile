@@ -7,7 +7,6 @@ import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
 import { useColorMode } from "../../contexts/colorModeContext";
-import { useGradient } from "../../contexts/gradientsContext";
 const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
 
 export const RequestQuote = () => {
@@ -27,7 +26,6 @@ export const RequestQuote = () => {
   // const toast = useToast();
 
   const { colorMode } = useColorMode();
-  const { darkBoxShadow } = useGradient();
 
   const handlePress = async () => {
     console.groupCollapsed("GetQuote::inputs");
@@ -95,7 +93,7 @@ export const RequestQuote = () => {
             <LoadingButton
               disabled={!txAmount || !toSymbol}
               variant={colorMode === "light" ? "outlined" : "contained"}
-              sx={{ boxShadow: darkBoxShadow }}
+              sx={{ boxShadow: "var(--boxShadow)" }}
               loading={loading}
               onClick={handlePress}
             >

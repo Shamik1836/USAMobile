@@ -9,8 +9,6 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { usePositions } from "../../hooks/usePositions";
 import { TransactionList } from "./TransactionList";
 
-import { useColorMode } from '../../contexts/colorModeContext';
-import { useGradient } from "../../contexts/gradientsContext";
 
 import { getDataByCoinID } from "../../hooks/action";
 import Card from "../Research/card";
@@ -18,8 +16,6 @@ import Loader from "../Research/load";
 
 
 export const TokenTable = () => {
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG } = useGradient();
 
   const { positions, isLoading, totalValue } = usePositions();
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -112,9 +108,11 @@ export const TokenTable = () => {
         sx={{ 
           p:2.5, 
           borderRadius: '1.5rem', 
-          backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG)
+          backgroundImage: 'var(--bg)',
+          border:4,
+          borderColor:'var(--borderColor)'
         }} 
-        className={(colorMode === 'light' ? 'light-border' : 'dark-border')}>
+       >
         <Table aria-label="collapsible table">
           <TableHead>
             <TableRow>

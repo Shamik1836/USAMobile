@@ -7,13 +7,11 @@ import { Heading } from '../UW/Heading';
 
 
 import { useExperts } from "../../contexts/expertsContext";
-import { useGradient } from "../../contexts/gradientsContext";
 
 
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
-  const { darkBoxShadow } = useGradient();
 
 
   useEffect(() => {
@@ -37,15 +35,15 @@ export const SendReceive = () => {
   };
 
   return (
-    <Box sx={{textAlign:'center', mt:1}}>
+    <Box sx={{textAlign:'center', mt:1, mb:3}}>
       <Heading variant="h4">Transfer Cryptocurrency</Heading>
       <br />
       <Stack sx={{alignItems: 'center'}}>
         <Stack direction="row">
-          <Button onClick={handleSendMode} sx={{mr:1,boxShadow:darkBoxShadow}}>
+          <Button onClick={handleSendMode} sx={{mr:1,boxShadow:"var(--boxShadow)"}}>
             Send
           </Button>
-          <Button onClick={handleReceiveMode} sx={{boxShadow:darkBoxShadow}}>
+          <Button onClick={handleReceiveMode} sx={{boxShadow:"var(--boxShadow)"}}>
             Receive
           </Button>
         </Stack>

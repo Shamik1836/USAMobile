@@ -1,5 +1,5 @@
 import { useMoralis } from "react-moralis";
-import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 
 import { Box, Button, Stack } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -15,21 +15,17 @@ import { BuySell } from "./Screens/BuySell";
 import { SendReceive } from "./Screens/SendReceive";
 import { BottomFooter } from "./Screens/BottomFooter";
 
-import { useColorMode } from '../contexts/colorModeContext';
-import { useGradient } from "../contexts/gradientsContext";
 
-import "./App.css";
+import "./App.scss";
 
 
 function App() {
   const { isAuthenticated } = useMoralis();
-  const { colorMode } = useColorMode();
-  const { lightModeBG, darkModeBG, darkBoxShadow } = useGradient();
   
   var paddingLeft = { paddingLeft: "10px" };
 
   return (
-    <Box sx={{ backgroundImage: (colorMode === 'light' ? lightModeBG : darkModeBG), minHeight: '100vh' }}>
+    <Box>
       <Stack>
         <TopNavBar />
         <ExpertStage />
@@ -39,7 +35,7 @@ function App() {
               <Link to="/PortfolioPrices" className="NavBar">
                 <Button variant="uw" 
                   sx={{ 
-                    boxShadow: darkBoxShadow,
+                    boxShadow: "var(--boxShadow)",
                    }}
                   startIcon={<VisibilityIcon />}
                 >
@@ -49,7 +45,7 @@ function App() {
               <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
                 <Button variant="uw"
                   sx={{ 
-                    boxShadow: darkBoxShadow,
+                    boxShadow: "var(--boxShadow)",
                 
                    }}
                   startIcon={<LoopIcon />}
@@ -60,7 +56,7 @@ function App() {
              <Link to="/BuySell" className="NavBar" style={paddingLeft}>
                 <Button variant="uw"
                   sx={{ 
-                    boxShadow: darkBoxShadow,
+                    boxShadow: "var(--boxShadow)",
                    }}
                   startIcon={<LinkIcon />}
                 >
@@ -71,7 +67,7 @@ function App() {
               <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
                 <Button variant="uw"
                  sx={{ 
-                    boxShadow: darkBoxShadow,
+                    boxShadow: "var(--boxShadow)",
                    }}
                   startIcon={<MailIcon />}
                 >
@@ -80,11 +76,19 @@ function App() {
               </Link>
             </Stack>
             <Switch>
-              <Route exact path="/" component={PortfolioPrices} />
-              <Route path="/PortfolioPrices" component={PortfolioPrices} />
-              <Route path="/SwapTrade" component={SwapTrade} />
-              <Route path="/BuySell" component={BuySell} />
-              <Route path="/SendRecieve" component={SendReceive} />
+              <Route exact path="/PortfolioPrices">
+                <PortfolioPrices />
+              </Route>
+              <Route exact path="/SwapTrade">
+                <SwapTrade />
+              </Route>
+              <Route exact path="/BuySell">
+                <BuySell />
+              </Route>
+              <Route exact path="/SendRecieve">
+                <SendReceive />
+              </Route>
+              <Redirect to="/PortfolioPrices" />
             </Switch>
           </BrowserRouter>
         ) : (
