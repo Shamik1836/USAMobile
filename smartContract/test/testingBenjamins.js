@@ -7,13 +7,17 @@ const { fixture } = deployments;
 
 let tokensShouldExistNowGlobalV;
 let mintPriceTotalInUSDCShouldBeNowGlobalV; 
+let mintFeeInUSDCShouldBeNowGlobalV; 
 let mintAllowanceInUSDCCentsShouldBeNowGlobalV;
-//let burnReturnTotalInUSDCShouldBeNowGlobalV;
+let burnReturnTotalInUSDCShouldBeNowGlobalV;
+let burnFeeInUSDCShouldBeNowGlobalV;
 
 let tokensExistQueriedGlobalV;
 let mintPriceTotalInUSDCWasPaidNowGlobalV;
+let mintFeeInUSDCWasPaidNowGlobalV;
 let mintAllowanceInUSDCCentsWasNowGlobalV;
-//let burnReturnTotalInUSDCWasPaidNowGlobalV;
+let burnReturnTotalInUSDCWasPaidNowGlobalV;
+let burnFeeInUSDCWasPaidNowGlobalV;
 
 const scale6dec = 1000000;
 
@@ -181,6 +185,13 @@ function decipherBlockFeedback(blockResponseObject) {
  //console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
 }
 
+function getRoundedFee(userLevel, principalInUSDCcents){    
+  const feeModifier = (100 * baseFee * (100-levelDiscountsArray[userLevel])) /10000;
+  const feeStarterInCents = ((principalInUSDCcents * feeModifier ) /100);   
+  const feeInCentsRoundedDown = feeStarterInCents - (feeStarterInCents % 1);
+  return feeInCentsRoundedDown  
+}
+
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
  console.log('calling address in testMinting is now:', callingAccAddress);
@@ -253,13 +264,14 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
+  mintFeeInUSDCWasPaidNowGlobalV = feeReceiverUSDCdiffMintInCents/100;
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
   mintAllowanceInUSDCCentsWasNowGlobalV = dividefrom6decToUSDCcents(givenAllowanceToBNJIcontractIn6dec);
 
   confirmMint();
 
- console.log(`==============================================================================`);
- console.log(`==============================================================================`);
+  console.log(`==============================================================================`);
+  console.log(`==============================================================================`);
 
 };
 
@@ -326,7 +338,8 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   
  //console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
 
-  //burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(contractAMUSDCdiffBurnInCents);
+  burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(receivingAccBurnReturnReceivedInCents);
+  burnFeeInUSDCWasPaidNowGlobalV = feeReceiverUSDCdiffBurnInCents/100;
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
   confirmBurn();
@@ -336,15 +349,56 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
 
 };
 
+function resetTrackers(){
+  tokensShouldExistNowGlobalV = 0;
+  mintPriceTotalInUSDCShouldBeNowGlobalV = 0; 
+  mintFeeInUSDCShouldBeNowGlobalV = 0; 
+
+  mintAllowanceInUSDCCentsShouldBeNowGlobalV = 0;
+  burnReturnTotalInUSDCShouldBeNowGlobalV = 0;
+  burnFeeInUSDCShouldBeNowGlobalV = 0;
+
+  tokensExistQueriedGlobalV = 0;
+  mintPriceTotalInUSDCWasPaidNowGlobalV = 0;
+  mintFeeInUSDCWasPaidNowGlobalV = 0;
+
+  mintAllowanceInUSDCCentsWasNowGlobalV = 0;
+  burnReturnTotalInUSDCWasPaidNowGlobalV = 0;
+  burnFeeInUSDCWasPaidNowGlobalV = 0;
+} 
+
 function confirmMint(){  
+  console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmMint');
+  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
+  
+  console.log(mintPriceTotalInUSDCShouldBeNowGlobalV, 'mintPriceTotalInUSDCShouldBeNowGlobalV, confirmMint');
+  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
+
+  console.log(mintFeeInUSDCShouldBeNowGlobalV, 'mintFeeInUSDCShouldBeNowGlobalV, confirmMint');
+  console.log(mintFeeInUSDCWasPaidNowGlobalV, 'mintFeeInUSDCWasPaidNowGlobalV, confirmMint');
+
+  console.log(mintAllowanceInUSDCCentsShouldBeNowGlobalV, 'mintAllowanceInUSDCCentsShouldBeNowGlobalV, confirmMint');
+  console.log(mintAllowanceInUSDCCentsWasNowGlobalV, 'mintAllowanceInUSDCCentsWasNowGlobalV, confirmMint');
+
   expect(tokensShouldExistNowGlobalV).to.equal( Number (tokensExistQueriedGlobalV));
   expect(mintPriceTotalInUSDCShouldBeNowGlobalV).to.equal(Number (mintPriceTotalInUSDCWasPaidNowGlobalV));
+  expect(mintFeeInUSDCShouldBeNowGlobalV).to.equal(Number (mintFeeInUSDCWasPaidNowGlobalV));
   expect(mintAllowanceInUSDCCentsShouldBeNowGlobalV).to.equal(Number (mintAllowanceInUSDCCentsWasNowGlobalV));
 };
 
 function confirmBurn(){  
+  console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmBurn');
+  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmBurn');
+  
+  console.log(burnReturnTotalInUSDCShouldBeNowGlobalV, 'burnReturnTotalInUSDCShouldBeNowGlobalV, confirmBurn');
+  console.log(burnReturnTotalInUSDCWasPaidNowGlobalV, 'burnReturnTotalInUSDCWasPaidNowGlobalV, confirmBurn');
+  
+  console.log(burnFeeInUSDCShouldBeNowGlobalV, 'burnFeeInUSDCShouldBeNowGlobalV, confirmBurn');
+  console.log(burnFeeInUSDCWasPaidNowGlobalV, 'burnFeeInUSDCWasPaidNowGlobalV, confirmBurn');
+
   expect(tokensShouldExistNowGlobalV).to.equal(Number(tokensExistQueriedGlobalV));
-  //expect(burnReturnTotalInUSDCShouldBeNowGlobalV).to.equal(Number(burnReturnTotalInUSDCWasPaidNowGlobalV));
+  expect(burnReturnTotalInUSDCShouldBeNowGlobalV).to.equal(Number(burnReturnTotalInUSDCWasPaidNowGlobalV));
+  expect(burnFeeInUSDCShouldBeNowGlobalV).to.equal(Number(burnFeeInUSDCWasPaidNowGlobalV));
 };
 
 async function calcMintApprovalAndPrep(amountToMint, accountMinting) {  
@@ -358,33 +412,19 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
-  const mintingCostInCentsRoundedDown = mintingCostInCents - (mintingCostInCents % 1);
+  const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
-  // getting accounts' feeModifier and starting with calculated fee, then rounding down to cents
-  // descr.: quoteFeePercentage(address forWhom, int256 amount)    
-
-  //const discountLevel = await benjaminsContract.discountLevel(accountMinting);
-  //console.log("discountLevel: ", discountLevel); 
-
-  //const quoteFeePercentage = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;
-  //console.log("quoteFeePercentage: ", quoteFeePercentage); 
-
-  const feeModifier = await benjaminsContract.quoteFeePercentage(accountMinting)/10000;  
-  console.log("feeModifier: ", feeModifier); 
-
-  //console.log("Got here with no errors 5 ===== = = = = = = = = = = = = ");
-  const mintFeeStarterInCents = ((mintingCostInCents * feeModifier ) /100);   // TODO: needs to change, reply will come in different format
-  //console.log("mintFeeStarterInCents: ", mintFeeStarterInCents); 
-  const mintFeeInCentsRoundedDown = mintFeeStarterInCents - (mintFeeStarterInCents % 1);
+  const mintFeeInCentsRoundedDown = getRoundedFee(userLevel, mintingCostRoundedDownInCents);  
   console.log(mintFeeInCentsRoundedDown, "mintFeeInCentsRoundedDown, calcMintApprovalAndPrep"); 
 
   // results, toPayTotalInUSDC can be displayed to user
-  const toPayTotalInCents = mintingCostInCentsRoundedDown + mintFeeInCentsRoundedDown;
+  const toPayTotalInCents = mintingCostRoundedDownInCents + mintFeeInCentsRoundedDown;
   const toPayTotalInUSDC = toPayTotalInCents / 100;
   const toPayTotalIn6dec = toPayTotalInCents * 10000;    
 
   tokensShouldExistNowGlobalV = amountOfTokensAfterMint;
   mintPriceTotalInUSDCShouldBeNowGlobalV = toPayTotalInUSDC;
+  mintFeeInUSDCShouldBeNowGlobalV = mintFeeInCentsRoundedDown/100;
   mintAllowanceInUSDCCentsShouldBeNowGlobalV = toPayTotalInCents;  
 
  //console.log(usersTokenAtStart, "this was the users token balance at start, calcMintApprovalAndPrep");  
@@ -402,23 +442,21 @@ async function calcBurnVariables(amountToBurn, accountBurning) {
   const usersTokenAtStart = await balBNJI(accountBurning);
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountBurning)); 
   
-  const totalReturnForTokensBurningNowInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
-  const totalReturnForTokensBurningNowInCents = totalReturnForTokensBurningNowInUSDC * 100;
-  const inCentsRoundedDownBurn = totalReturnForTokensBurningNowInCents - (totalReturnForTokensBurningNowInCents % 1);
   
+  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
+  const burnReturnInCents = burnReturnInUSDC * 100;
+  const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
   
-  // descr.: quoteFeePercentage(address forWhom, int256 amount)  
-  const feeModifier = 100 - bigNumberToNumber(await benjaminsContract.quoteFeePercentage(accountBurning));   
-  const burnFeeStarterInCents = ((totalReturnForTokensBurningNowInCents * feeModifier * baseFee) /100 ) /100; // TODO: needs to change, reply will come in different format
-  const burnFeeInCentsRoundedDown = burnFeeStarterInCents - (burnFeeStarterInCents % 1);
+  const burnFeeInCentsRoundedDown = getRoundedFee(userLevel, burnReturnRoundedDownInCents); 
 
-  const toReceiveTotalInCents = inCentsRoundedDownBurn - burnFeeInCentsRoundedDown;
+  const toReceiveTotalInCents = burnReturnRoundedDownInCents - burnFeeInCentsRoundedDown;
   const toReceiveTotalInUSDC = toReceiveTotalInCents / 100;
   const toReceiveTotalIn6dec = toReceiveTotalInCents * 10000;
 
  
   tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
   burnReturnTotalInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
+  burnFeeInUSDCShouldBeNowGlobalV = burnFeeInCentsRoundedDown/100;
 
  //console.log("tokensShouldExistNowGlobalV:", tokensShouldExistNowGlobalV );
  //console.log("burnReturnTotalInUSDCShouldBeNowGlobalV:", burnReturnTotalInUSDCShouldBeNowGlobalV );
@@ -601,6 +639,8 @@ describe("Benjamins Test", function () {
     //console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);                   
   
     await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
+
+    resetTrackers();
 
     await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);    
         
