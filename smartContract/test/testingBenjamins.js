@@ -640,7 +640,7 @@ describe("Benjamins Test", function () {
     */
   })      
   
-  
+  /*
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
     
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
@@ -663,7 +663,7 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,0,5];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
-  });
+  });*/
     
   /*
   // TODO: keep? calling does not work, sent arguments must be in integers
@@ -679,7 +679,7 @@ describe("Benjamins Test", function () {
 
         
   });  
-  */
+  *//*
     
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
 
@@ -693,7 +693,7 @@ describe("Benjamins Test", function () {
     );
 
     expect(await balBNJI(testUser_1)).to.equal(20);
-  });    
+  });    */
 
   /*
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
@@ -710,7 +710,7 @@ describe("Benjamins Test", function () {
     expect(await balUSDC(testUser_1)).to.equal(3000);   // this will throw, see what value is found instead
 
   });    
-  /*
+  *//*
   it("Test 6. Should REVERT: testUser_1 tries to burn more tokens than they have", async function () {   
     
     await testMinting("Test 6.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
@@ -719,12 +719,12 @@ describe("Benjamins Test", function () {
     await mintBlocks(11);    
 
     await expect( testBurning("Test 6.2, should REVERT, burning more BNJIs than user has", 12, testUser_1, testUser_1) ).to.be.revertedWith(
-      "BNJ, Users tokenBalance must be equal to or more than amount to burn."
+      "Insufficient Benjamins."
     );
 
     expect(await balBNJI(testUser_1)).to.equal(10);
   });  
-  */  
+  
   it("Test 7. Token price should increase following bonding curve", async function () {   
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);   
@@ -754,7 +754,7 @@ describe("Benjamins Test", function () {
     expect(firstPriceForTenInCents).to.equal(713);
     expect(secondPriceForTenInCents).to.equal(715); 
   });  
-  /*  
+  
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
 
     await addUserAccDataPoints(testUser_1); 
@@ -794,8 +794,8 @@ describe("Benjamins Test", function () {
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
 
   });  
-  /*
-  it("Test 9. Account levels should be triggered when reching threshold", async function () {   
+  
+  it("Test 9. Account levels should be triggered when reaching threshold", async function () {   
 
     await addUserAccDataPoints(testUser_1);  
     await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -832,7 +832,7 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,5,10,20,40,75];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);     
   });  
-
+  
   it("Test 10. Account Level 2 can be purchased in one go ", async function () {   
 
     await addUserAccDataPoints(testUser_1);
@@ -983,7 +983,7 @@ describe("Benjamins Test", function () {
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
   });  
-  
+  */
   it("Test 18. It is possible to transfer tokens", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
@@ -1014,7 +1014,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Discounts = [0,5];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
   });  
-
+  /*
   it("Test 19. It is possible to mint tokens to another account", async function () {   
 
     expect(await balBNJI(testUser_1)).to.equal(0);  

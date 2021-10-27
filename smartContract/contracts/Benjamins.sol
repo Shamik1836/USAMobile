@@ -54,9 +54,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [ 20, 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =     [         0,  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
-        levelDiscounts = [         0,  5, 10,  20,  40,   75]; // in percent*100, forced type
+        levelAntes =     [    20, 60, 100, 500, 2000]; // in Benjamins
+        levelHolds =     [ 0,  2,  7,  30,  90,  360]; // Forced type.  Disallow assumption.
+        levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
         pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
     }
@@ -297,7 +297,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
         uint256 blockNum = block.number;
         uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        uint256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1]; // TODO: fix: could come out negative in total (underflow) or discountLevel(_toWhom)-1 could be negative?
+        uint256 levelNow = levelHolds[discountLevel(_toWhom)];
+        if (levelNow != 0){
+            levelNow = levelHolds[discountLevel(_toWhom)-1];
+        }
+        int256 timeSinceLastHoldEnd = int256(timeSinceLastHoldStart) - int256(levelNow); // TODO: fix: could come out negative in total (underflow) or discountLevel(_toWhom)-1 could be negative?
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
