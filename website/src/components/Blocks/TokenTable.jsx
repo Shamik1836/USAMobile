@@ -43,8 +43,8 @@ export const TokenTable = () => {
     const [open, setOpen] = React.useState(false);
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' }, px:2, py:1 }} onClick={() => handleClickRow(position)}>
-          <TableCell sx={{border:0}}>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} style={{cursor: 'pointer'}} onClick={()=>handleClickRow(position)}>
+          <TableCell component="th" scope="row">
             <Avatar
               sx={{ background: '#790d01' }}
               name={position.symbol}
@@ -136,10 +136,11 @@ export const TokenTable = () => {
         open={modalOpen}
         aria-labelledby="Transaction Details Modal"
         aria-describedby="We will display Row Details here."
-        sx={{ maxWidth: '56rem', mx: 'auto', my: '3.56rem', px: 3, py: 1 }}>
-
-        <Box sx={{ background: 'white' }}>
-          {selectedCoin ? <Card data={selectedCoin} onClose={() => onModalClose()} /> : <Loader />}
+        sx={{maxWidth:'56rem', mx:'auto', my:'3.56rem', px:3, py:1}}
+        onBackdropClick={onModalClose}
+      >
+        <Box sx={{background:'white'}}>
+          {selectedCoin ? <Card data={selectedCoin} onClose={onModalClose} /> : <Loader />}
         </Box>
       </Modal>
     </Box>
