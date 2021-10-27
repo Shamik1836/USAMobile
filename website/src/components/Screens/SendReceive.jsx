@@ -35,7 +35,7 @@ export const SendReceive = () => {
   };
 
   return (
-    <Box sx={{textAlign:'center', mt:1}}>
+    <Box sx={{textAlign:'center', mt:1, mb:3}}>
       <Heading variant="h4">Transfer Cryptocurrency</Heading>
       <br />
       <Stack sx={{alignItems: 'center'}}>

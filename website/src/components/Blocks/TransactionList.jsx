@@ -3,16 +3,18 @@ import { Skeleton } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { useTransactions } from "../../hooks/useTransactions";
 
+import "./styles.css";
+
 export const TransactionList = (props) => {
   const { Txs, isLoading } = useTransactions({ chain: "eth" });
   return (
         <Table size="small" aria-label="purchases">
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell align="right">Transacted With</TableCell>
-              <TableCell align="right">Amount</TableCell>
+              <TableCell className="tx-header-title" align="center">Date</TableCell>
+              <TableCell className="tx-header-title" align="center">Time</TableCell>
+              <TableCell className="tx-header-title" align="center">Transacted With</TableCell>
+              <TableCell className="tx-header-title" align="center">Amount</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -29,10 +31,10 @@ export const TransactionList = (props) => {
                 Tx.timestamp = new Date(Tx.block_timestamp);
                 return (
                   <TableRow key={Tx.hash}>
-                    <TableCell>{Tx.timestamp.toLocaleDateString()}</TableCell>
-                    <TableCell>{Tx.timestamp.toLocaleTimeString()}</TableCell>
-                    <TableCell>{Tx.counterparty}</TableCell>
-                    <TableCell>{(Tx.amount / 10 ** props.decimals).toPrecision(3)}</TableCell>
+                    <TableCell align="center">{Tx.timestamp.toLocaleDateString()}</TableCell>
+                    <TableCell align="center">{Tx.timestamp.toLocaleTimeString()}</TableCell>
+                    <TableCell align="center">{Tx.counterparty}</TableCell>
+                    <TableCell align="center">{(Tx.amount / 10 ** props.decimals).toPrecision(3)}</TableCell>
                   </TableRow>
                 );
               })

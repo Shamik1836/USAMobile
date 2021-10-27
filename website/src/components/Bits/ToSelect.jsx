@@ -51,7 +51,6 @@ export const ToSelect = () => {
           label="Select a token to receive."
           sx={{ 
             // boxShadow: 'var(--boxShadow)', 
-            width:320
           }}
           onChange={handleChange}
           value = {value}

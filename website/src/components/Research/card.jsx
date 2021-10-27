@@ -20,14 +20,14 @@ function Card({ data, onClose }) {
             sx={{ height: 70, width: 70 }}
             src={data.image.large}
           />
-          <div className="header-title">
+          <Box className="header-title">
             <Typography>{data.name}</Typography>
             <Typography>Currency</Typography>
-          </div>
+          </Box>
         </Box>
         <Box>
           <IconButton onClick={onClose}>
-            <CloseIcon />
+            <CloseIcon color='primary'/>
           </IconButton>
         </Box>
       </Box>
@@ -39,7 +39,7 @@ function Card({ data, onClose }) {
           mt: 3.75,
         }}
       >
-        <div>
+        <Box>
           <Typography className="title">Market Price</Typography>
           <Typography className="price">
             ${market_data.current_price.usd}
@@ -47,8 +47,8 @@ function Card({ data, onClose }) {
           <Typography className="title">
             {market_data.current_price.btc} BTC
           </Typography>
-        </div>
-        <div>
+        </Box>
+        <Box>
           <Typography className="title">24H Change</Typography>
           <Typography className="percent">
             {market_data.price_change_percentage_24h}%
@@ -56,8 +56,8 @@ function Card({ data, onClose }) {
           <Typography className="i-price">
             ${market_data.price_change_24h}
           </Typography>
-        </div>
-        <div>
+        </Box>
+        <Box>
           <Typography className="title">7D Change</Typography>
           <Typography className="percent">
             {market_data.price_change_percentage_7d}%
@@ -68,7 +68,7 @@ function Card({ data, onClose }) {
               market_data.price_change_percentage_7d) /
               100}
           </Typography>
-        </div>
+        </Box>
       </Box>
       <Box
         sx={{
@@ -78,7 +78,7 @@ function Card({ data, onClose }) {
           mt: 3.75,
         }}
       >
-        <div>
+        <Box>
           <Typography className="title">Market Cap</Typography>
           <Typography fontSize="14px" className="price">
             ${market_data.market_cap.usd}
@@ -86,8 +86,8 @@ function Card({ data, onClose }) {
           <Typography className="title">
             {market_data.market_cap.btc} BTC
           </Typography>
-        </div>
-        <div>
+        </Box>
+        <Box>
           <Typography className="title">24H Volume</Typography>
           <Typography className="title" fontSize="14px" opacity={1}>
             ${market_data.market_cap_change_24h}
@@ -95,7 +95,7 @@ function Card({ data, onClose }) {
           <Typography className="title">
             {market_data.market_cap_change_24h_in_currency.btc} BTC
           </Typography>
-        </div>
+        </Box>
       </Box>
     </Box>
   );
