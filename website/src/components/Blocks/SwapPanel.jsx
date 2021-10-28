@@ -27,7 +27,7 @@ export const SwapPanel = () => {
         m: 'auto',
         mb:3,
         backgroundImage: 'var(--bg)',
-        border: 2,
+        border: 4,
         borderRadius: '1.5rem',
         borderColor:'var(--borderColor)'
       }}>
