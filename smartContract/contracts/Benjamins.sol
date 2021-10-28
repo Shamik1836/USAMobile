@@ -58,7 +58,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         levelHolds =     [ 0,  2,  7,  30,  90,  360]; // in days
         levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent*100, forced type
                 
-        pause(); // TODO: verify this fires correctly, since pausable unpauses via its constructor
+        pause(); 
     }
 
     event newDepositAccount(address account);
