@@ -723,7 +723,7 @@ describe("Benjamins Test", function () {
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
   });
-  /*  
+    
   // took out test 3, can be replaced. at the moment not possible to call function with fractions of tokens as argument
     
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 

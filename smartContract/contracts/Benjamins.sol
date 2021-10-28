@@ -75,9 +75,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     event LendingPoolWithdrawal (uint256 amountUSDCBeforeFeein6dec, address payee);
 
     // owner overrides paused.
-    modifier whenAvailable() {
-        console.log('_msgSender() is:', _msgSender());
-        require(!paused() || (/*msg.sender*/_msgSender() == owner()), "Benjamins is paused.");
+    modifier whenAvailable() {        
+        require(!paused() || (_msgSender() == owner()), "Benjamins is paused.");
         _;
     }
     // Account has sufficient funds
@@ -151,8 +150,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times 
         if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(recipient);
-        }
+           newLevelReached(recipient);
+        } 
         return true;
     } 
 
@@ -187,7 +186,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times 
         if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(recipient);
+            newLevelReached(recipient);
         }
         return true;
     }
@@ -203,7 +202,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         changeSupply(_toWhom, _amount, true);
         uint8 newUserDiscountLevel = discountLevel(_toWhom);
         if ( newUserDiscountLevel > originalUserDiscountLevel){
-            adjustUpgradeTimeouts(_toWhom);
+            newLevelReached(_toWhom);
         }
     }
 
@@ -244,7 +243,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;
         uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
         uint256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents
-        return amountInUSDCin6dec - stubble;
+        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;
+        require (endAmountUSDCin6dec >= 5000000, "BNJ, quoteUSDC: Minimum BNJI value to move is $5 USDC" );
+        return endAmountUSDCin6dec;
     }
 
     // Return address discount level as an uint8 as a function of balance.
@@ -281,7 +282,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, true); 
         } else {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, false); 
-        }        
+        } 
         console.log(beforeFeeInUSDCin6dec, 'BNJ, beforeFeeInUSDCin6dec');
         uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
         uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
@@ -339,41 +340,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             // pushing USDC from this contract to user (_payee)
             polygonUSDC.transfer(_payee, _afterFeeUSDCin6dec);            
         }
-    }   
-
-    /* OLD CODE, just to compare
-    // Only reset last upgrade block height if its a new hold.
-    function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
-        int256 blockNum = int256(block.number);
-        int256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
-        if (timeSinceLastHoldEnd > 0) {
-            lastUpgradeBlockHeight[_toWhom] = blockNum; 
-        }
     }      
-    */
 
-    // Only reset last upgrade block height if its a new hold.
-    function adjustUpgradeTimeouts(address _toWhom) internal whenAvailable returns (bool) {
-        uint256 blockNum = block.number;
-        uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        uint256 requiredTimeNow = levelHolds[discountLevel(_toWhom)];
-        if (requiredTimeNow != 0){
-            requiredTimeNow = levelHolds[discountLevel(_toWhom)-1]; // TODO: understand this betterm probably fix
-        }
-        int256 timeSinceLastHoldEnd = int256(timeSinceLastHoldStart) - int256(requiredTimeNow); // TODO: test. also, what is the logic when lowering account level?
-        if (timeSinceLastHoldEnd > 0) {
-            lastUpgradeBlockHeight[_toWhom] = blockNum; 
-        }
+    // Updating time counter measuring holding times, triggered when reaching new account level
+    function newLevelReached(address _toWhom) internal whenAvailable returns (bool) {
+        lastUpgradeBlockHeight[_toWhom] = block.number;
     }  
-
-    /*
-    // Absolute value function needed to make fee work for burn
-    function abs(int x) private pure returns (int) {
-        return x >= 0 ? x : -x;
-    }    
-    */
-
+   
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {       
         uint256 availableIn6dec = polygonAMUSDC.balanceOf(address(this)) - reserveInUSDCin6dec;
