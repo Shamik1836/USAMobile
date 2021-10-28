@@ -101,7 +101,7 @@ export const TokenTable = () => {
                   History
                 </Typography>
                 {position.name === "Ether" && (
-                  <TransactionList chain="eth" decimals={position.decimals} />
+                  <TransactionList chain={position.symbol.toLowerCase()} decimals={position.decimals} />
                 )}
               </Box>
             </Collapse>
