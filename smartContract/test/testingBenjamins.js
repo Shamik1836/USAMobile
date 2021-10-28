@@ -657,7 +657,7 @@ describe("Benjamins Test", function () {
     //const deployerUSDCbalEnd2 = await balUSDCinCents(deployer);
     //console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);                   
   
-    //await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
+    await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
 
     resetTrackers();
     

@@ -359,7 +359,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
         uint256 requiredTimeNow = levelHolds[discountLevel(_toWhom)];
         if (requiredTimeNow != 0){
-            requiredTimeNow = levelHolds[discountLevel(_toWhom)-1];
+            requiredTimeNow = levelHolds[discountLevel(_toWhom)-1]; // TODO: understand this betterm probably fix
         }
         int256 timeSinceLastHoldEnd = int256(timeSinceLastHoldStart) - int256(requiredTimeNow); // TODO: test. also, what is the logic when lowering account level?
         if (timeSinceLastHoldEnd > 0) {
