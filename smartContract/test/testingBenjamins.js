@@ -198,49 +198,48 @@ async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingA
   console.log(receivingAddress, 'receivingAddress in testTransfer');
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(callingAccAddress)); 
   console.log(userLevel, 'userLevel in testTransfer');
+
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-  const feeInCentsRoundedDown = await calcBurnVariables(amountBNJIsToTransfer, callingAccAddress, true);
-  // old console.log(totalValueIn6dec, 'totalValueIn6dec in testTransfer');
-  // old const feeInCentsRoundedDown = getRoundedFee(userLevel, dividefrom6decToUSDCcents(totalValueIn6dec));
-  console.log(feeInCentsRoundedDown, 'feeInCentsRoundedDown to be approved in testTransfer');  
-  
+  const feeInCentsRoundedDown = await calcBurnVariables(amountBNJIsToTransfer, callingAccAddress, true);  
+  console.log(feeInCentsRoundedDown, 'feeInCentsRoundedDown to be approved in testTransfer');    
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
-
+  // calling transfer function on benjaminscontract  
   await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJIsToTransfer);
 }
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
  console.log('calling address in testMinting is now:', callingAccAddress);
- 
+  
+  
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply()); 
-
+  
   const receivingAddressBNJIbalBeforeMint = await balBNJI(receivingAddress);
   const contractBNJIbalBefore = await balBNJI(benjaminsContract.address); 
-
+  
   const callingAccUSDCBalanceBeforeMintInCents = await balUSDCinCents(callingAccAddress);  
   const feeReceiverUSDCBalanceBeforeMintInCents = await balUSDCinCents(feeReceiver); 
-
+  
   const contractAMUSDCbalanceBeforeMintInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
+  
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-
+  
   const restAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
   expect(await restAllowanceToBNJIcontractIn6dec).to.equal(0);
-
-  const amountToApproveIn6dec = await calcMintApprovalAndPrep(amountToMint, callingAccAddress);
+  
+  const amountToApproveIn6dec = await calcMintApprovalAndPrep(amountToMint, callingAccAddress);  // pausing issue is here TODO:fix
   console.log(bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in testMinting', );  
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
-
+  
   const givenAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
   //console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
   console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
-
+  
   // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
   await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
 
@@ -428,7 +427,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);  
 
   const usersTokenAtStart = await balBNJI(accountMinting);
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
+  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); // TODO: fix, pausing issue is in this call
   
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
@@ -508,12 +507,10 @@ describe("Benjamins Test", function () {
     testingUserAddressesArray.push(testUser_3);
     testingUserAddressesArray.push(testUser_4);
     testingUserAddressesArray.push(testUser_5);
-
     
     // Deploy contract
     await fixture(["Benjamins"]);
-    benjaminsContract = await ethers.getContract("Benjamins");    
-    
+    benjaminsContract = await ethers.getContract("Benjamins");      
 
     polygonUSDC = new ethers.Contract(
       polygonUSDCaddress,
@@ -660,10 +657,10 @@ describe("Benjamins Test", function () {
     //const deployerUSDCbalEnd2 = await balUSDCinCents(deployer);
     //console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);                   
   
-    await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
+    //await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
 
     resetTrackers();
-
+    
     await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);    
         
     for (let index = 0; index < 2; index++) {
@@ -704,6 +701,7 @@ describe("Benjamins Test", function () {
   
   
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {      
+    
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);
   });
@@ -725,7 +723,7 @@ describe("Benjamins Test", function () {
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
   });
-    
+  /*  
   // took out test 3, can be replaced. at the moment not possible to call function with fractions of tokens as argument
     
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 

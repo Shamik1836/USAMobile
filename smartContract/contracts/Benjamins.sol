@@ -76,7 +76,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // owner overrides paused.
     modifier whenAvailable() {
-        require(!paused() || (msg.sender == owner()), "Benjamins is paused.");
+        console.log('_msgSender() is:', _msgSender());
+        require(!paused() || (/*msg.sender*/_msgSender() == owner()), "Benjamins is paused.");
         _;
     }
     // Account has sufficient funds
@@ -128,22 +129,25 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return feeRoundedDownIn6dec;
     }
     
-    // modified ERC20 transfer()
+    // modified ERC20 transfer() // TODO: use msg.sender or _msgSender() ?
     function transfer(address recipient, uint256 amount) 
         public 
         override 
-        withdrawAllowed(msg.sender)
+        withdrawAllowed(_msgSender())
+        whenAvailable
         returns(bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
 
+        // calculating transport fee
         uint256 transportFeeRoundedIn6dec = calcTransportFee(amount);
         
-        // pull USDC from user (msg.sender), push to feeReceiver           
-        polygonUSDC.transferFrom(msg.sender, feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
+        // pull USDC from user (_msgSender()), push to feeReceiver           
+        polygonUSDC.transferFrom(_msgSender(), feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
 
+        // transferring BNJIs
         _transfer(_msgSender(), recipient, amount);
-        //checking recipient's discount level after changes            
+        //checking recipient's discount level after changes        // TODO: check/think about senders discount level/holding times    
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times 
         if ( newUserDiscountLevel > originalUserDiscountLevel){
@@ -155,26 +159,30 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // modified ERC20 transferFrom() // TODO: use msg.sender or _msgSender() ?
     // Cannot send until holding time is passed for sender.
     // Creates possible lockout time for receiver.
-    function transferFrom(address sender, address recipient, uint256 amount) 
+    function transferFrom(address sender, address recipient, uint256 amountBNJIs) 
         public 
         override 
         nonReentrant
-        withdrawAllowed(sender) 
+        withdrawAllowed(sender)
+        whenAvailable 
     returns (bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
 
-        uint256 transportFeeRoundedIn6dec = calcTransportFee(amount);        
+        uint256 transportFeeRoundedIn6dec = calcTransportFee(amountBNJIs);
+
         // pull USDC from user (sender), push to feeReceiver           
         polygonUSDC.transferFrom(sender, feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
 
+        // checking if allowance for BNJIs is enough
+        uint256 currentBNJIAllowance = allowance(sender, _msgSender());  
+        require(currentBNJIAllowance >= amountBNJIs, "Benjamins: transfer amount exceeds allowance");      
+
         // transferring BNJIs
-        _transfer (sender, recipient, amount); 
-        // checking if allowance was enough
-        uint256 currentAllowance = allowance(sender, _msgSender());        
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        // decreasing allowance by transferred amount
-        _approve(sender, _msgSender(), currentAllowance - amount);   
+        _transfer (sender, recipient, amountBNJIs); 
+
+        // decreasing BNJI allowance by transferred amount
+        _approve(sender, _msgSender(), currentBNJIAllowance - amountBNJIs);   
         //checking recipient's discount level after changes            
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times 
@@ -217,7 +225,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Quote USDC for mint(positive) or burn(negative)
     // based on circulation and amount (and sign of amount)
-    function quoteUSDC(uint256 _amount, bool isMint) public view returns (uint256) {       
+    function quoteUSDC(uint256 _amount, bool isMint) public view whenAvailable returns (uint256) {       
         // Basic integral
         uint256 supply = totalSupply();
         uint256 supply2 = supply*supply;  // Supply squared
@@ -240,7 +248,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Return address discount level as an uint8 as a function of balance.
-    function discountLevel(address _whom) public view returns(uint8) {
+    function discountLevel(address _whom) public view whenAvailable returns(uint8) {
         uint256 userBalance = balanceOf(_whom); // lookup once.  
         //console.log('userBalance:', userBalance);     
         //console.log('levelAntes.length:', levelAntes.length);  
@@ -259,13 +267,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function quoteFeePercentage(address forWhom)
         public
         view
+        whenAvailable
         returns (uint16)
     {          
         return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // 
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal nonReentrant {
+    function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal whenAvailable nonReentrant {
         uint256 beforeFeeInUSDCin6dec;
         // Calculate change in tokens and value of difference
         if (isMint == true) {
@@ -304,7 +313,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 _beforeFeeInUSDCin6dec,
         uint256 _feeRoundedDownIn6dec,
         bool isMint // negative when burning, does not include fee. positive when minting, includes fee.
-    ) internal {        
+    ) internal whenAvailable {        
         if (isMint == true) {     
             // on minting, fee is added to price
             uint256 _afterFeeUSDCin6dec = _beforeFeeInUSDCin6dec + _feeRoundedDownIn6dec;
@@ -332,24 +341,38 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         }
     }   
 
+    /* OLD CODE, just to compare
     // Only reset last upgrade block height if its a new hold.
     function adjustUpgradeTimeouts(address _toWhom) internal returns (bool) {
-        uint256 blockNum = block.number;
-        uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
-        uint256 levelNow = levelHolds[discountLevel(_toWhom)];
-        if (levelNow != 0){
-            levelNow = levelHolds[discountLevel(_toWhom)-1];
-        }
-        int256 timeSinceLastHoldEnd = int256(timeSinceLastHoldStart) - int256(levelNow); // TODO: fix: could come out negative in total (underflow) or discountLevel(_toWhom)-1 could be negative?
+        int256 blockNum = int256(block.number);
+        int256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
+        int256 timeSinceLastHoldEnd = timeSinceLastHoldStart - levelHolds[discountLevel(_toWhom)-1];
         if (timeSinceLastHoldEnd > 0) {
             lastUpgradeBlockHeight[_toWhom] = blockNum; 
         }
     }      
+    */
 
+    // Only reset last upgrade block height if its a new hold.
+    function adjustUpgradeTimeouts(address _toWhom) internal whenAvailable returns (bool) {
+        uint256 blockNum = block.number;
+        uint256 timeSinceLastHoldStart = blockNum - lastUpgradeBlockHeight[_toWhom];
+        uint256 requiredTimeNow = levelHolds[discountLevel(_toWhom)];
+        if (requiredTimeNow != 0){
+            requiredTimeNow = levelHolds[discountLevel(_toWhom)-1];
+        }
+        int256 timeSinceLastHoldEnd = int256(timeSinceLastHoldStart) - int256(requiredTimeNow); // TODO: test. also, what is the logic when lowering account level?
+        if (timeSinceLastHoldEnd > 0) {
+            lastUpgradeBlockHeight[_toWhom] = blockNum; 
+        }
+    }  
+
+    /*
     // Absolute value function needed to make fee work for burn
     function abs(int x) private pure returns (int) {
         return x >= 0 ? x : -x;
     }    
+    */
 
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {       
