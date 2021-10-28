@@ -11,11 +11,9 @@
 // import { useMoralis } from "react-moralis";
 // import { useState } from "react";
 // import { ErrorBox } from "../Support/ErrorPopup";
-// import { useGradient } from "../../contexts/gradientsContext";
 
 // export const Auth = () => {
 //   const { colorMode, toggleColorMode } = useColorMode();
-//   const { lightModeBG, darkModeBG } = useGradient();
 //   const { authenticate, authError, isAuthenticating, login, signup } =
 //     useMoralis();
 //   const [email, setEmail] = useState();
@@ -57,14 +55,14 @@
 //       <HStack>
 //         <Button
 //           onClick={() => signup(email, password, email)}
-//           bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+//           bgGradient='var(--bg)'
 //           boxShadow="dark-lg"
 //         >
 //           Sign up
 //         </Button>
 //         <Button
 //           onClick={() => login(email, password)}
-//           bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+//           bgGradient='var(--bg)'
 //           boxShadow="dark-lg"
 //         >
 //           LogIn
@@ -72,7 +70,7 @@
 //         <Button
 //           isLoading={isAuthenticating}
 //           onClick={() => authenticate()}
-//           bgGradient={colorMode === "light" ? lightModeBG : darkModeBG}
+//           bgGradient='var(--bg)'
 //           boxShadow="dark-lg"
 //         >
 //           Authenticate via Wallet

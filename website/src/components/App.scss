@@ -1,0 +1,80 @@
+/* @import "../fonts/unibomber.css"; */
+@import "../fonts/logofont.css";
+
+html {
+  overflow: initial !important;
+}
+
+body {
+  &.light {
+    --bg: linear-gradient(
+      to bottom right,
+      #4299e1,
+      #fc8181,
+      #ffffff,
+      #fc8181,
+      #ffffff
+    );
+    --boxShadow: #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px,
+      #00000066 0px 15px 40px 0px;
+    --borderColor: #E2E8F0;
+  }
+
+  &.dark {
+    --bg: linear-gradient(
+      to bottom right,
+      #1a365d,
+      grey,
+      #1a365d,
+      #808080,
+      #1a365d
+    );
+    --boxShadow: #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px,
+      #00000066 0px 15px 40px 0px;
+    --borderColor: #ffffff29;
+  }
+
+  margin: 0;
+  min-height: 100vh;
+  background-attachment: fixed;
+  background-image: var(--bg);
+  font-family: LogoFont;
+}
+
+#transakFiatOnOffRamp {
+  .transak_modal-overlay {
+    display: none;
+  }
+
+  .transak_modal {
+    position: initial;
+    transform: none;
+
+    .transak_close {
+      display: none;
+    }
+  }
+}
+
+.AppOuterFlex {
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: -45vw;
+  background-size: 180vw;
+  background-clip: border-box;
+  background-repeat: repeat-y;
+}
+
+.AppOuterFlex.lightBG {
+  background-image: linear-gradient(70deg, blue, white, red);
+  background-image: url("../media/wallpapers/light1.svg");
+}
+.AppOuterFlex.darkBG {
+  background-color: linear-gradient(to right, blue, black, red);
+  background-image: url("../media/wallpapers/dark1.svg");
+  background-position: -50vw;
+}
+
+.NavBar{
+  text-decoration: none;
+}

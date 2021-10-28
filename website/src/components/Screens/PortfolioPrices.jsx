@@ -15,7 +15,7 @@ export const PortfolioPrices = () => {
   });
 
   return (
-    <Box sx={{textAlign: 'center', mt:1}}>
+    <Box sx={{textAlign: 'center', mt:1, mb:3}}>
       <Heading variant='h4'>
         Portfolio and Prices
       </Heading>
