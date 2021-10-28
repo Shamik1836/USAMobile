@@ -17,12 +17,12 @@ export const BuySell = memo(() => {
         apiKey: process.env.REACT_APP_TRANSAK_API_KEY,
         environment:
           process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING",
-        defaultCryptoCurrency: "ETH",
+        defaultCryptoCurrency: "USDC",
         walletAddress: ethAddress,
         themeColor: "000000",
         fiatCurrency: "USD",
         email: emailAddress,
-        // network: "ethereum",
+        defaultNetwork: "polygon",
         redirectURL: "",
         hostURL: window.location.origin,
         widgetWidth: "450px",
@@ -31,18 +31,35 @@ export const BuySell = memo(() => {
 
       transak.init();
 
-      // To get all the events
       transak.on(transak.ALL_EVENTS, (data) => {
         console.log(data);
       });
 
-      // This will trigger when the user marks payment is made.
-      transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (orderData) => {
-        console.log(orderData);
+      transak.on(transak.EVENTS.TRANSAK_WIDGET_OPEN, (data) => {
+        setDialog("Place an order to buy cryptocurrency.");
+      });
+
+      transak.on(transak.EVENTS.TRANSAK_ORDER_CREATED, (data) => {
+        console.log(data);
+        setDialog("Transak order created");
+      });
+
+      transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data) => {
+        console.log(data);
+        setDialog("Transak order successful");
+      });
+
+      transak.on(transak.EVENTS.TRANSAK_ORDER_FAILED, (data) => {
+        console.log(data);
+        setDialog("Transak order failed");
+      });
+
+      transak.on(transak.EVENTS.TRANSAK_ORDER_CANCELLED, (data) => {
+        console.log(data);
+        setDialog("Transak order cancelled");
       });
 
       setActionMode("buy");
-      setDialog("Place an order to buy cryptocurrency.");
 
       return () => {
         transak.close();
