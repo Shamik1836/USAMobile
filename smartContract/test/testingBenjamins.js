@@ -657,7 +657,7 @@ describe("Benjamins Test", function () {
     //const deployerUSDCbalEnd2 = await balUSDCinCents(deployer);
     //console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);                   
   
-    await benjaminsContract.connect(deployerSigner).unpause();  // <====== TODO: need to improve pausing and housekeeping functionality XXXXXX
+    await benjaminsContract.connect(deployerSigner).unpause(); 
 
     resetTrackers();
     
@@ -699,9 +699,9 @@ describe("Benjamins Test", function () {
     */
   })      
   
-  
+  /*
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {      
-    
+     
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);
   });
@@ -725,7 +725,7 @@ describe("Benjamins Test", function () {
   });
     
   // took out test 3, can be replaced. at the moment not possible to call function with fractions of tokens as argument
-    
+  */  
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
 
     await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -735,12 +735,12 @@ describe("Benjamins Test", function () {
     
     await expect( testBurning("Test 4.2, should REVERT, burning after 5 blocks", 10, testUser_1, testUser_1) ).to.be.revertedWith(
       "Anti-flashloan withdraw timeout in effect."
-    );
+    );   
 
     expect(await balBNJI(testUser_1)).to.equal(20);
   });    
 
-  
+  /*
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
     
     expect(await balBNJI(testUser_1)).to.equal(0); 
@@ -1191,7 +1191,7 @@ describe("Benjamins Test", function () {
   });
   
   /*
-  it("Test 23. There is a transfer fee on (large) transfers.", async function () {  // TODO: see about this functionality
+  it("Test 23. There is a transfer fee on transfers.", async function () {  // TODO: see about this functionality
 
     await addUserAccDataPoints(testUser_1);    
     await addUserAccDataPoints(testUser_2);  
@@ -1220,5 +1220,117 @@ describe("Benjamins Test", function () {
     const expectedUser2Discounts = [0,40];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
   });*/
+
+  
+  it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
+    
+    // setup for test, testUser_1 mints 510 BNJIs and waits 180 blocks,
+    // after that, user would normally be able to transfer, burn etc
+    await addUserAccDataPoints(testUser_1);        
+    await testMinting("Test 23.1, minting 506 BNJI to caller", 510, testUser_1, testUser_1);  
+    expect(await balBNJI(testUser_1)).to.equal(510);
+    await mintBlocks(180);
+
+    // anybody who is not the owner cannot activate pause()
+    await expect( benjaminsContract.connect(testUser_1_Signer).pause() ).to.be.revertedWith(
+      "Ownable: caller is not the owner"
+    );   
+
+    // owner activates pause()
+    await benjaminsContract.connect(deployerSigner).pause(); 
+    
+    // when pause has been activated, normal users cannot use transfer
+    await expect( benjaminsContract.connect(testUser_1_Signer).transfer(testUser_2, 10)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+    
+    // when pause has been activated, normal users cannot use transferFrom
+    await expect( benjaminsContract.connect(testUser_1_Signer).transferFrom(testUser_2, testUser_3, 10)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+    // when pause has been activated, normal users cannot use mint
+    await expect( benjaminsContract.connect(testUser_1_Signer).mint(12)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+    // when pause has been activated, normal users cannot use mintTo
+    await expect( benjaminsContract.connect(testUser_1_Signer).mintTo(14, testUser_2)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+    
+    // when pause has been activated, normal users cannot use burn
+    await expect( benjaminsContract.connect(testUser_1_Signer).burn(11)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+    // when pause has been activated, normal users cannot use burnTo
+    await expect( benjaminsContract.connect(testUser_1_Signer).burnTo(16, testUser_2)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+    // when pause has been activated, normal users cannot use quoteUSDC
+    await expect( benjaminsContract.connect(testUser_1_Signer).quoteUSDC(100, true)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+    // when pause has been activated, normal users cannot use discountLevel
+    await expect( benjaminsContract.connect(testUser_1_Signer).discountLevel(testUser_2)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+
+     // when pause has been activated, normal users cannot use quoteFeePercentage
+     await expect( benjaminsContract.connect(testUser_1_Signer).quoteFeePercentage(testUser_2)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+    
+
+
+    //test preparation verification, contract owner should have 282840 tokens from "First Setup mint for 100k USDC"
+    expect(await balBNJI(deployer)).to.equal(282840);
+    // awaiting another 540 blocks, so that deployer can transfer and burn, since acc level 5
+    await mintBlocks(540);
+    // preparation for transfer, mint, etc., contract owner gives more than necessary USDC approval to benjaminsContract
+    await polygonUSDC.connect(deployerSigner).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
+    
+    // when paused is active, contract owner can use transfer
+    await benjaminsContract.connect(deployerSigner).transfer(testUser_2, 10);
+
+    
+
+    // todo: show USDC fee that was taken from testUser_1_Signer
+    // preparation for transferFrom, testUser_1 gives more than necessary USDC approval to benjaminsContract
+    await polygonUSDC.connect(testUser_1_Signer).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
+    // preparation for transferFrom, testUser_1 allows owner to handle 100 BNJIs 
+    await benjaminsContract.connect(testUser_1_Signer).approve(deployer, 100);    
+    // when paused is active, contract owner can use transferFrom to move 10 BNJIs from testUser_1 to testUser_3
+    await benjaminsContract.connect(deployerSigner).transferFrom(testUser_1, testUser_3, 10);
+    
+    // when paused is active, contract owner can use mint
+    await benjaminsContract.connect(deployerSigner).mint(12);
+
+    // when paused is active, contract owner can use mintTo to mint 14 BNJIs to testUser_2
+    await benjaminsContract.connect(deployerSigner).mintTo(14, testUser_2);
+
+    
+    
+    // when paused is active, contract owner can use burn
+    await benjaminsContract.connect(deployerSigner).burn(11);
+
+    // when paused is active, contract owner can use burnTo
+    await benjaminsContract.connect(deployerSigner).burnTo(16, testUser_2);
+
+    // when paused is active, contract owner can use quoteUSDC
+    await benjaminsContract.connect(deployerSigner).quoteUSDC(100, true);
+
+    // when paused is active, contract owner can use discountLevel
+    await benjaminsContract.connect(deployerSigner).discountLevel(testUser_2);
+
+    // when paused is active, contract owner can use quoteFeePercentage
+    await benjaminsContract.connect(deployerSigner).quoteFeePercentage(testUser_2);
+      
+    console.log("successfully got here");
+  });
+
   
 }); 

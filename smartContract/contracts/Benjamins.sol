@@ -132,8 +132,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function transfer(address recipient, uint256 amount) 
         public 
         override 
-        withdrawAllowed(_msgSender())
         whenAvailable
+        withdrawAllowed(_msgSender())        
         returns(bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
@@ -162,8 +162,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         public 
         override 
         nonReentrant
-        withdrawAllowed(sender)
         whenAvailable 
+        withdrawAllowed(sender)        
     returns (bool) {
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient); 
@@ -275,7 +275,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Execute mint (positive amount) or burn (negative amount).
-    function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal whenAvailable nonReentrant {
+    function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal nonReentrant whenAvailable {
         uint256 beforeFeeInUSDCin6dec;
         // Calculate change in tokens and value of difference
         if (isMint == true) {
