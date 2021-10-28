@@ -98,6 +98,8 @@ export const AmountSelect = ({ type }) => {
               value={value}
               onChange={onChange}
               onBlur={onBlur}
+              type="number"
+              step="0.01"
             />
           </div>
           <label htmlFor="amount-input">{isUSDMode ? "USD" : fromSymbol}</label>

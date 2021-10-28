@@ -47,7 +47,7 @@ export const AddressPanel = () => {
       sx={{
         display: 'inline-flex', m: 'auto', mb:3,
         borderRadius: '1.5rem',
-        border: 2,
+        border: 4,
         backgroundImage: 'var(--bg)',
         borderColor:'var(--borderColor)'
       }}

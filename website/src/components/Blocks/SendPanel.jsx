@@ -18,7 +18,7 @@ export const SendPanel = () => {
       sx={{
         display: 'inline-flex', minWidth: 420, maxWidth: 660, m: 'auto',
         borderRadius: '1.5rem',
-        border: 2,
+        border: 4,
         backgroundImage: 'var(--bg)',
         borderColor:'var(--borderColor)'
       }}
