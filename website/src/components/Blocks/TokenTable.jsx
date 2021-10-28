@@ -90,7 +90,7 @@ export const TokenTable = () => {
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{m:1}}>
                 {position.name === "Ether" && (
-                  <TransactionList chain="eth" decimals={position.decimals} />
+                  <TransactionList chain={position.symbol.toLowerCase()} decimals={position.decimals} />
                 )}
               </Box>
             </Collapse>

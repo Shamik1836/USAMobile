@@ -6,7 +6,7 @@ import { useTransactions } from "../../hooks/useTransactions";
 import "./styles.css";
 
 export const TransactionList = (props) => {
-  const { Txs, isLoading } = useTransactions({ chain: "eth" });
+  const { Txs, isLoading } = useTransactions({ chain: props.chain });
   return (
         <Table size="small" aria-label="purchases">
           <TableHead>

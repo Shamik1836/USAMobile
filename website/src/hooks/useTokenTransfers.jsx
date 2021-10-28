@@ -9,36 +9,47 @@ const MoralisAPIKey =
 const emptyList = [];
 
 export const useTokenTransfers = (props) => {
-  const { isAuthenticated, user, web3 } = useMoralis();
+  const { isAuthenticated, user, web3, Moralis } = useMoralis();
   const [Txs, setTxs] = useState(emptyList);
   const [isLoading, setIsLoading] = useState(false);
   const { networkName } = useNetwork();
 
   useEffect(() => {
     if (isAuthenticated) {
-      const APIKeyHex = web3.utils.asciiToHex(MoralisAPIKey);
-      const userAddress = user.attributes[networkName + "address"];
-      const requestURL = serverURL + userAddress + endPoint + networkName;
+      const currentUser = Moralis.User.current();
+      const address = currentUser?.attributes.ethAddress;
 
-      console.groupCollapsed("useTokenTransfers");
-      console.log("requestURL:", requestURL);
-
-      setIsLoading(true);
-
-      fetch(requestURL, {
-        method: "GET",
-        headers: {
-          "X-API-Key": APIKeyHex,
-        },
-      })
-        .then((response) => response.json())
-        .then((response) => {
-          console.log("response:", response);
-          console.groupEnd();
-          setTxs(response.result);
+      Moralis.Web3API.account
+        .getTokenTransfers({ chain: props.chain, address })
+        .then(response => {
+          let newTxs = response.result.map((Tx) => {
+            const output = { ...Tx };
+            switch (address) {
+              case Tx.from_address:
+                output.counterparty = Tx.to_address;
+                output.amount = -1 * parseFloat(Tx.value);
+                break;
+              case Tx.to_address:
+                output.counterparty = Tx.from_address;
+                output.amount = 1 * parseFloat(Tx.value);
+                break;
+              case undefined:
+                output.counterparty = undefined;
+                output.amount = undefined;
+                break;
+              default:
+                console.debug("Failed address: ", address);
+                console.debug("Failed Tx.from_address:", Tx.from_address);
+                console.debug("Failed Tx.to_address:", Tx.to_address);
+                output.counterparty = null;
+                output.amount = null;
+                break;
+            }
+            return output;
+          });
+          setTxs(newTxs);
           setIsLoading(false);
-          return response.result;
-        });
+        })
     } else {
       setTxs(emptyList);
       setIsLoading(false);
