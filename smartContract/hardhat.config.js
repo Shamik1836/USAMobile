@@ -59,11 +59,16 @@ module.exports = {
     deployer: `${process.env.DEPLOYER_ACC}`,               
     feeReceiver: `${process.env.FEE_RECEIVER_ACC}`,  // CHANGED FOR TESTING XXXXX
     accumulatedReceiver: `${process.env.ACCUMULATED_RECEIVER_ACC}`, // CHANGED FOR TESTING XXXXX
+    testUser_0: `${process.env.TEST_USER_0}`,  
     testUser_1: `${process.env.TEST_USER_1}`,
     testUser_2: `${process.env.TEST_USER_2}`,
     testUser_3: `${process.env.TEST_USER_3}`,
     testUser_4: `${process.env.TEST_USER_4}`,
-    testUser_5: `${process.env.TEST_USER_5}`,    
+    testUser_5: `${process.env.TEST_USER_5}`, 
+    testUser_6: `${process.env.TEST_USER_6}`,  
+    testUser_7: `${process.env.TEST_USER_7}`,  
+    testUser_8: `${process.env.TEST_USER_8}`,  
+    testUser_9: `${process.env.TEST_USER_9}`, 
   },
   gasReporter: {
     currency: "MATIC",
