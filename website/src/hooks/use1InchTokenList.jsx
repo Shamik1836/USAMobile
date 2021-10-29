@@ -1,43 +1,59 @@
 import { useEffect, useState } from "react";
 import { useNetwork } from "../contexts/networkContext";
 
-export const use1InchTokenList = (props) => {
-  const [tokenList, setTokenList] = useState({});
-  const { networkId } = useNetwork();
-  const oneInchTail =
-    "https://api.1inch.exchange/v3.0/" + networkId + "/tokens";
+const network_tokens = {
+  1: [
+    "ETH",
+    "WETH",
+    "1INCH",
+    "DAI",
+    "USDC",
+    "USDT",
+    "WBTC",
+    "stETH",
+    "USDP",
+    "TUSD",
+    "BNT",
+    "BAL",
+    "sUSD",
+  ],
+  137: [
+    "QUICK",
+    "SDT",
+    "MUST",
+    "USDC",
+    "WETH",
+    "WMATIC",
+    "MATIC",
+    "USDT",
+    "DAI",
+    "WBTC",
+  ],
+};
 
-  console.groupCollapsed("use1InchTokenList");
+export const use1InchTokenList = () => {
+  const [tokenList, setTokenList] = useState([]);
+  const [tokens, setTokens] = useState([]);
+  const { networkId } = useNetwork();
 
   useEffect(() => {
-    let myObj = {};
-    fetch(oneInchTail, {
+    fetch(`https://api.1inch.exchange/v3.0/${networkId}/tokens`, {
       method: "GET",
-      mode: "cors",
-      headers: { "Access-Control-Allow-Origin": true },
     })
       .then((response) => response.json())
       .then((oneInchData) => {
-        myObj = JSON.parse(oneInchData);
-        console.debug("Received oneInchData: ", myObj);
-        if (props.tokenSymbol) {
-          myObj = myObj.tokens.find(
-            (token) =>
-              token.symbol.toUpperCase() === props.tokenSymbol.toUpperCase()
-          );
-          console.debug(myObj.length + " token symbol matches found.");
-        } else {
-          myObj = myObj.tokens;
-        }
-        setTokenList({ myObj });
+        const tokens = Object.values(oneInchData.tokens);
+        setTokenList(tokens);
+        setTokens(
+          network_tokens[networkId].map((symbol) =>
+            tokens.find((item) => item.symbol === symbol)
+          )
+        );
       })
-      .error((err) => {
+      .catch((err) => {
         console.error(err);
       });
-  }, [props.tokenSymbol]);
+  }, [networkId]);
 
-  console.debug("Returning tokenData:", tokenList);
-  console.groupEnd();
-
-  return tokenList;
+  return { tokenList, tokens };
 };
