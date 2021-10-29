@@ -6,12 +6,13 @@ import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
 
-const TokenList = require("../../data/TokenList.json");
+import { use1InchTokenList } from "../../hooks/use1InchTokenList";
 
 export const ToSelect = () => {
   const [ value, setValue ] =  useState('');
 
 
+  const { tokens } = use1InchTokenList();
   const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
@@ -23,16 +24,16 @@ export const ToSelect = () => {
     setValue(selectedToken)
     if (selectedToken) {
       let selectedSymbol =selectedToken.symbol;
-      let token = TokenList.find(
+      let token = tokens.find(
         (token) => token.symbol === selectedSymbol
       );
       setToToken(token);
       setDialog(
         "Press the 'Get Swap Quote' " +
           "to get a quote to swap " +
-          fromSymbol?.toUpperCase() +
+          fromSymbol +
           " to " +
-          selectedSymbol.toUpperCase() +
+          selectedSymbol +
           "."
       );
     } else {
@@ -55,12 +56,12 @@ export const ToSelect = () => {
           onChange={handleChange}
           value = {value}
         >
-          {TokenList.filter(
-            (token) => token.symbol.toUpperCase() !== fromSymbol.toUpperCase()
+          {tokens.filter(
+            (token) => token.symbol !== fromSymbol
           ).map((token) => {
             return (
               <MenuItem key={token.networkId + token.name} value={token}>
-                   Into {token.name}
+                {token.name}
               </MenuItem>
             );
           })}

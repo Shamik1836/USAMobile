@@ -14,7 +14,7 @@ export const ActionsProvider = (props) => {
       value={{
         setFromToken,
         fromToken,
-        fromAddress: fromToken?.tokenAddress,
+        fromAddress: fromToken?.address,
         fromSymbol: fromToken?.symbol,
         setToToken,
         toToken,

@@ -7,9 +7,10 @@ import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
 
 import { useColorMode } from "../../contexts/colorModeContext";
-const oneInchHead = "https://api.1inch.exchange/v3.0/1/quote?";
+import { useNetwork } from "../../contexts/networkContext";
 
 export const RequestQuote = () => {
+  const { networkId } = useNetwork();
   const [loading, setLoading] = useState(false);
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
@@ -41,13 +42,15 @@ export const RequestQuote = () => {
     );
     setLoading(true);
     await fetch(
-      oneInchHead +
-      "fromTokenAddress=" +
-      fromAddress +
-      "&toTokenAddress=" +
-      toAddress +
-      "&amount=" +
-      txAmount
+      "https://api.1inch.exchange/v3.0/" +
+        networkId +
+        "/quote?" +
+        "fromTokenAddress=" +
+        fromAddress +
+        "&toTokenAddress=" +
+        toAddress +
+        "&amount=" +
+        txAmount
     )
       .then((response) => response.json())
       .then((oneInchQuote) => {

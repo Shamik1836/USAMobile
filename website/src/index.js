@@ -7,6 +7,7 @@ import { MoralisProvider } from "react-moralis";
 import { ExpertsProvider } from "./contexts/expertsContext";
 import { ActionsProvider } from "./contexts/actionsContext";
 import { QuoteProvider } from "./contexts/quoteContext";
+import { NetworkProvider } from "./contexts/networkContext";
 
 import { ColorModeProvider } from "./contexts/colorModeContext";
 
@@ -24,7 +25,9 @@ ReactDOM.render(
         <ExpertsProvider>
           <ActionsProvider>
             <QuoteProvider>
-              <App />
+              <NetworkProvider>
+                <App />
+              </NetworkProvider>
             </QuoteProvider>
           </ActionsProvider>
         </ExpertsProvider>

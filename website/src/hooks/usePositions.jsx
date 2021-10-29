@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useMoralis } from "react-moralis";
 // import { useNetwork } from "../contexts/networkContext";
 import coinGeckoList from "../data/coinGeckoTokenList.json";
+import { use1InchTokenList } from "./use1InchTokenList";
+
 const emptyList = [];
 const geckoHead =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=";
@@ -14,6 +16,7 @@ export const usePositions = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
   // const [allPositions, setAllPositions] = useState(emptyList);
+  const { tokenList } = use1InchTokenList();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,8 +45,9 @@ export const usePositions = () => {
             let runningTotal = 0;
             const newList = allPositions.map((token) => {
               // Merge position data with market data and augment.
+              const { symbol } = token;
               const output = { ...token };
-              const tokenData = data[token.symbol.toUpperCase()];
+              const tokenData = data[symbol];
               output.image = tokenData?.image;
               output.id = tokenData?.id
               output.price = tokenData?.current_price;
@@ -57,14 +61,14 @@ export const usePositions = () => {
                   " @ $" +
                   parseFloat(tokenData?.current_price).toFixed(2) +
                   "/" +
-                  output?.symbol.toUpperCase() +
+                  symbol +
                   " = $" +
                   parseFloat(output?.value).toFixed(2),
               ];
+              const tokenInfo = tokenList.find(item => item.symbol === symbol);
+              output.address = tokenInfo?.address;
               return output;
             });
-            const user = Moralis.User.current();
-            newList[0].tokenAddress = user?.attributes.ethAddress;
             // Done.  Report back to states.
             setPositions(newList);
             setTotalValue(runningTotal);
@@ -77,7 +81,7 @@ export const usePositions = () => {
       setIsLoading(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Moralis.Web3, isAuthenticated]);
+  }, [Moralis.Web3, isAuthenticated, tokenList]);
 
   return { positions, isLoading, totalValue };
 };
