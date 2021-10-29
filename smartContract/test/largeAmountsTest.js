@@ -429,7 +429,7 @@ function confirmMint(){
   console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
   
   console.log(mintPriceTotalInUSDCShouldBeNowGlobalV, 'mintPriceTotalInUSDCShouldBeNowGlobalV, confirmMint');
-  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
+  console.log(mintPriceTotalInUSDCWasPaidNowGlobalV, 'mintPriceTotalInUSDCWasPaidNowGlobalV, confirmMint');
 
   console.log(mintFeeInUSDCShouldBeNowGlobalV, 'mintFeeInUSDCShouldBeNowGlobalV, confirmMint');
   console.log(mintFeeInUSDCWasPaidNowGlobalV, 'mintFeeInUSDCWasPaidNowGlobalV, confirmMint');
@@ -465,7 +465,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);  
 
   const usersTokenAtStart = await balBNJI(accountMinting);
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); // TODO: fix, pausing issue is in this call
+  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting));
   
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
@@ -527,6 +527,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
 }
 
 async function getSignersAndStoreAddr(){
+  /*
   testUser_0_Signer = await ethers.provider.getSigner(testUser_0);
   testUser_1_Signer = await ethers.provider.getSigner(testUser_1); 
   testUser_2_Signer = await ethers.provider.getSigner(testUser_2); 
@@ -537,7 +538,8 @@ async function getSignersAndStoreAddr(){
   testUser_7_Signer = await ethers.provider.getSigner(testUser_7); 
   testUser_8_Signer = await ethers.provider.getSigner(testUser_8); 
   testUser_9_Signer = await ethers.provider.getSigner(testUser_9);
-    
+  */
+
   testUserAddressesArray.push(testUser_0); 
   testUserAddressesArray.push(testUser_1);   
   testUserAddressesArray.push(testUser_2); 
@@ -550,6 +552,7 @@ async function getSignersAndStoreAddr(){
   testUserAddressesArray.push(testUser_9); 
 }
 
+// checking balances and adding them up
 async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBool){
   for (let index = 0; index < 10; index++) {
     const testUserAddress = testUserAddressesArray[index];      
@@ -580,25 +583,84 @@ async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBoo
   totalUSDCcentsInTestAcc = 0;
 }
 
-async function runMintOrBurnLoop(loopsToRun) {
+async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray) {
   let randomMintOrBurn;
   let mintCounter = 0;
   let burnCounter = 0;
 
-  // running either minting or burning, this many loops: opCounter
-  for (opCounter = 1; opCounter <= loopsToRun; opCounter++) {
-    // randomizing minting or burning
-    randomMintOrBurn = Math.floor (Math.random() * 10);
-    console.log('randomMintOrBurn', randomMintOrBurn); 
+  let accPosCounter;
 
-    const acc5TokenBalanceOperationStart = bigNumberToNumber( await ourTokenContract.balanceOf(accounts[5].address) );
-    console.log(`acc5 has this many tokens before operation nr: ${opCounter} :`, acc5TokenBalanceOperationStart); 
+  // running either minting or burning, this many loops: loopsToRun
+  for (loopCounter = 1; loopCounter <= loopsToRun; loopCounter++) {
+    
+    // accounts are up next in the order they are sent in via accOrderArray
+    // when all 10 test accounts acted, array starts over, until loopsToRun are all done
+    accPosCounter = loopCounter-1;
+    if (accPosCounter>=10){
+      accPosCounter = accPosCounter%10;
+    }
+    //console.log("accPosCounter is:", accPosCounter)
+    const accNrNow = accOrderArray[accPosCounter];
+    const accNow = testUserAddressesArray[accNrNow];    
+    const signerNow = await ethers.provider.getSigner(accNow);
+    const accNowName = findUsernameForAddress(accNow);     
 
+    // MINTING
+    // if runMint == true, mint. 
+    if (runMint == true) {
+      console.log(`operation nr: ${loopCounter} is MINTING`);
+
+      const balUSDCcentsAtStart = await balUSDCinCents(accNow);
+      console.log(balUSDCcentsAtStart, `before operation nr: ${loopCounter}, ${accNowName} has this many USDC CENTS`);           
+
+      // local function to check minting amount repeatedly until it's okay
+      function checkMintingAmountOkay() {
+        if (mintAllowanceInUSDCCentsShouldBeNowGlobalV < 506 || (mintAllowanceInUSDCCentsShouldBeNowGlobalV) > balUSDCcentsAtStart) {
+          if (mintAllowanceInUSDCCentsShouldBeNowGlobalV < 506) {
+            console.log(`RECALC, mint call would be under $5`);  
+            randomAmountMinting = Math.floor (Math.random() * 10000); 
+          }
+          if ((mintAllowanceInUSDCCentsShouldBeNowGlobalV) > balUSDCcentsAtStart){
+            console.log(`RECALC, mint call would be too big for ${accNowName}'s USDC balance`) 
+            // halving the randomAmountMinting from before and rounding it down to full integers
+            randomAmountMinting = Math.floor(randomAmountMinting* 0.5); 
+          }          
+          
+          console.log('RECALC randomAmountMinting', randomAmountMinting);
+          calcMintVariables(tokensExistingNow, randomAmountMinting);  // this call will change mintAllowanceInUSDCCentsShouldBeNowGlobalV, so no endless loop
+          checkMintingAmountOkay();         
+        } 
+      }
+
+      // randomizing amount to mint
+      let randomAmountMinting = Math.floor (Math.random() * 10000);
+      console.log('randomAmountMinting', randomAmountMinting);         
+      
+      let tokensExistingNow = bigNumberToNumber( await benjaminsContract.totalSupply() );        
+      
+      //calcMintApprovalAndPrep(nrOfTokensExisting, amountToMint);
+      await calcMintApprovalAndPrep(randomAmountMinting, accNow);
+      
+      checkMintingAmountOkay(); // checking if amount is okay
+
+      console.log(`operation nr: ${loopCounter} will MINT this many tokens:`, randomAmountMinting);
+
+      mintCounter++;
+      //testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
+      //testMinting(mintName, amountToMint, ammountToApproveInCents, callingAcc, nrOfFaucetCalls)
+      await testMinting(`operation nr: ${loopCounter}, minting`, randomAmountMinting, accNow, accNow);
+
+      totalSpent += mintPriceTotalInUSDCWasPaidNowGlobalV;    
+
+    } 
+  }  
+
+  /*
     // BURNING
-    // if randomMintOrBurn = one of these: = 5,6,7,8, 9, burn.
+    // if randomMintOrBurn == false burn.
     // acc5 must have 20k tokens to be able to trigger burning
-    if (randomMintOrBurn > 5 && acc5TokenBalanceOperationStart > 20000){
-      console.log(`operation nr: ${opCounter} is BURNING`); 
+    else {
+      console.log(`operation nr: ${loopCounter} is BURNING`); 
     
       // local function to check burning amount repeatedly until it's okay
       function checkBurningAmountOkay() {
@@ -628,7 +690,7 @@ async function runMintOrBurnLoop(loopsToRun) {
       let randomAmountBurning = Math.floor (Math.random() * 100000);
       console.log('randomAmountBurning', randomAmountBurning);                 
       
-      let tokensExistingBeforeBurn = bigNumberToNumber( await ourTokenContract.totalSupply() );        
+      let tokensExistingBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );        
       
       //calcBurnVariables(nrOfTokensExisting, amountToBurn);         
 
@@ -636,12 +698,12 @@ async function runMintOrBurnLoop(loopsToRun) {
       
       checkBurningAmountOkay(); // checking if amount is okay
 
-      console.log(`operation nr: ${opCounter} will BURN this many tokens:`, randomAmountBurning);
+      console.log(`operation nr: ${loopCounter} will BURN this many tokens:`, randomAmountBurning);
 
       burnCounter++;
 
       //testBurning(burnName, amountToBurn, callingAcc)
-      await testBurning(`operation nr: ${opCounter}, burning`, randomAmountBurning, accounts[5]);
+      await testBurning(`operation nr: ${loopCounter}, burning`, randomAmountBurning, accounts[5]);
 
       totalReturned += burnReturnTotalInUSDCWasPaidNowGlobalV;
 
@@ -649,68 +711,19 @@ async function runMintOrBurnLoop(loopsToRun) {
       confirmBurn(tokensExistingBeforeBurn, randomAmountBurning); 
     }
 
-    // MINTING
-    // if randomMintOrBurn = one of these: 0,1,2,3,4, mint. 
-    else {
-      console.log(`operation nr: ${opCounter} is MINTING`);
-
-      const acc5MockUSDCBalanceOperationStart = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(accounts[5].address)) );
-      console.log(`acc5 has this many USDC before operation nr: ${opCounter} :`, acc5MockUSDCBalanceOperationStart);           
-
-      // local function to check minting amount repeatedly until it's okay
-      function checkMintingAmountOkay() {
-        if (mintAllowanceInUSDCCentsShouldBeNowGlobalV < 5000 || (mintAllowanceInUSDCCentsShouldBeNowGlobalV/100) > acc5MockUSDCBalanceOperationStart) {
-          if (mintAllowanceInUSDCCentsShouldBeNowGlobalV < 5000) {
-            console.log(`RERUN, mint call would be under $5`);  
-            randomAmountMinting = Math.floor (Math.random() * 100000); 
-          }
-          if ((mintAllowanceInUSDCCentsShouldBeNowGlobalV/100) > acc5MockUSDCBalanceOperationStart){
-            console.log(`RERUN, mint call would be too big for acc5's USDC balance`)  
-            randomAmountMinting = 1000; 
-          }          
-          
-          console.log('RERUN randomAmountMinting', randomAmountMinting);
-          calcMintVariables(tokensExistingNow, randomAmountMinting);  // this call will change mintAllowanceInUSDCCentsShouldBeNowGlobalV, so no endless loop
-          checkMintingAmountOkay();         
-        } 
-      }
-
-      // randomizing amount to mint
-      let randomAmountMinting = Math.floor (Math.random() * 100000);
-      console.log('randomAmountMinting', randomAmountMinting);         
-      
-      let tokensExistingNow = bigNumberToNumber( await ourTokenContract.totalSupply() );        
-      
-      //calcMintVariables(nrOfTokensExisting, amountToMint);
-      calcMintVariables(tokensExistingNow, randomAmountMinting);
-      
-      checkMintingAmountOkay(); // checking if amount is okay
-
-      console.log(`operation nr: ${opCounter} will MINT this many tokens:`, randomAmountMinting);
-
-      mintCounter++;
-
-      //testMinting(mintName, amountToMint, ammountToApproveInCents, callingAcc, nrOfFaucetCalls)
-      await testMinting(`operation nr: ${opCounter}, minting`, randomAmountMinting, mintAllowanceInUSDCCentsShouldBeNowGlobalV, accounts[5], 0);
-
-      totalSpent += mintPriceTotalInUSDCWasPaidNowGlobalV;
-
-      //confirmMint(nrOfTokensExisting, amountToMint)
-      confirmMint(tokensExistingNow, randomAmountMinting); 
-
-    } 
+    
 
 
     
   }
 
-  loopCounterTotal += (opCounter-1);
+  loopCounterTotal += loopCounter;
   mintCounterTotal += mintCounter;
   burnCounterTotal += burnCounter;
 
   
 
-  const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address)) );
+  const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(benjaminsContract.address)) );
   console.log('protocol our contract USDC balance at the end of all loops so far', protocolBalanceAfterTest);
   const protocolBalanceAfterTestJSExactness = Number(protocolBalanceAfterTest*100);
   //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
@@ -731,13 +744,13 @@ async function runMintOrBurnLoop(loopsToRun) {
   const jsExactnessResolved = inTotalUSDCExistafterTest / 100;
   console.log('in total USDC at the end of all loops so far', jsExactnessResolved);
 
-  const callingAccEndTokenBalance = bigNumberToNumber( await ourTokenContract.balanceOf(accounts[5].address) );
+  const callingAccEndTokenBalance = bigNumberToNumber( await benjaminsContract.balanceOf(accounts[5].address) );
   console.log('at the end of all loops so far, acc 5 has this many tokens:', callingAccEndTokenBalance);
 
   console.log(`test ran ${loopCounterTotal} loops so far, of which ${mintCounterTotal} were mints and ${burnCounterTotal} were burns`); 
   console.log(`so far, ${totalSpent} USDC were spent by acc5 and ${totalReturned} USDC were paid out by the contract in total`); 
 
-
+  */
 } 
 
 describe("Benjamins Test", function () {
@@ -928,17 +941,27 @@ describe("Benjamins Test", function () {
         value: ethers.utils.parseEther("10") // 10 Matic
       })
 
-      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (20000*scale6dec) );      
+      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (200000*scale6dec) );      
           
     } 
     
   })      
-  
-  
-  it("Large amount test:", async function () {    
-        
-    await checkTestAddresses(20000,10,0, true);
 
+  it("Preparation verification: each of the 10 test users has 200k USDC, 10 Matic and 0 BNJI", async function () {    
+        
+    await checkTestAddresses(200000,10,0, true);
+
+    /*
+    await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
+    expect(await balBNJI(testUser_1)).to.equal(10);*/
+    
+  });
+  
+  
+  it("Large amount test:", async function () { 
+    //async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray) {
+    let accOrderArray1 = [9,8,7,6,5,4,3,2,1,0];  
+    await runMintOrBurnLoop(34, true, accOrderArray1);
     /*
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);*/
