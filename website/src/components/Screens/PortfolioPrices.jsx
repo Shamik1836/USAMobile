@@ -9,10 +9,17 @@ import { Heading } from '../UW/Heading';
 export const PortfolioPrices = () => {
   const { setActionMode, setDialog } = useExperts();
 
+
+  useEffect(() => {
+    console.log('useEffect Called once...');
+  }, []);
+
   useEffect(() => {
     setActionMode("portfolio");
     setDialog("Select a currency to view transaction histories.");
   });
+
+  
 
   return (
     <Box sx={{textAlign: 'center', mt:1, mb:3}}>
