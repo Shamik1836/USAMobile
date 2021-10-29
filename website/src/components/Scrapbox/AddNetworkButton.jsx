@@ -1,8 +1,9 @@
-import { Button, Tooltip } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 
 import { useMoralis } from "react-moralis";
 import { useNetwork } from "../../contexts/networkContext";
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
+import { useExperts } from "../../contexts/expertsContext";
 
 
 const chainId = 137;
@@ -16,109 +17,41 @@ export const AddNetworkButton = (props) => {
   const ethereum = window.ethereum;
   const { Moralis } = useMoralis();
   const { networkId, setNetworkId } = useNetwork();
+  const { setDialog } = useExperts();
 
   const addPolygonNetwork = () => {
     Moralis.addNetwork(chainId,chainName,currencyName,currencySymbol,rpcUrl,blockExplorerUrl)
     .then((success)=>{
       if(typeof success == 'undefined'){
-        console.log('Success is undefined and network added already');
+        //TODO: 
+        // This can be change If I can get a proper solution, that give me list of all Networks
+        // And I can check Polygon already there or not.
+        // For Now I am just showing, If results is undefined we can show already added, 
+        // because it only returns undefined when already added.
+        console.log('AddPolygoneSuccess:', success);
+        console.log('Success is undefined means network added already, I am searching If I can get a better result for existing network.');
+        setDialog("Polygon Network added to Metamask successfully.");
       }
     },(error)=>{
       console.log('Error:', error);
+      setDialog("There is an error in adding Network, Please try again.");
     })
     .catch(error=>{
-      console.log('Error:', error);
+      console.log('CatchError:', error);
+      setDialog("There is an error in adding Network, Please try again.");
     });
   }
 
   return (
-    <Tooltip title='Add Polygon to MetaMask'>
-      <Button
+    <Tooltip title="Add Polygon Network to MetaMask">
+      <IconButton
+        aria-label="Add Polygon Network"
+        sx={{boxShadow: "var(--boxShadow)" }} 
         variant="uw"
-        sx={{ height: 40, alignSelf: 'center', boxShadow: "var(--boxShadow)" }}
-        startIcon={<AllInclusiveIcon />}
         onClick={addPolygonNetwork}>
-        Add Polygon
-      </Button>
+          <AllInclusiveIcon className="nav-bar-icon" />
+      </IconButton>
     </Tooltip>
 
   );
 };
-
-
-// Old Implementation
-// import { Button } from "@mui/material";
-// import { useMoralis } from "react-moralis";
-// import { useNetwork } from "../../contexts/networkContext";
-
-
-// export const AddNetworkButton = (props) => {
-//   const ethereum = window.ethereum;
-//   const { web3 } = useMoralis();
-//   const { networkId, setNetworkId } = useNetwork();
-//   const networkIDHex = web3.utils.toHex("137");
-
-//   async function addPolygonNetwork() {
-//     console.groupCollapsed("AddNetworkButton");
-//     console.log(
-//       "web3.utils.toHex(137) should be 13881: ",
-//       web3.utils.toHex(80001)
-//     );
-//     console.log("networkIDHex:", networkIDHex);
-
-//     if (networkId !== 137) {
-//       try {
-//         console.log("Attempting simple ethereum.request()...");
-//         await ethereum.request({
-//           method: "wallet_switchEthereumChain",
-//           params: [{ chainId: networkIDHex }], // Hexadecimal version of 80001, prefixed with 0x
-//         });
-//         setNetworkId(137);
-//       } catch (error) {
-//         if (error.code === 4902) {
-//           console.log("...failed.  attempting complex call...");
-//           try {
-//             await ethereum.request({
-//               method: "wallet_addEthereumChain",
-//               params: [
-//                 {
-//                   chainId: networkIDHex, // Hexadecimal version of 80001, prefixed with 0x
-//                   chainName: "POLYGON Mainnet",
-//                   nativeCurrency: {
-//                     name: "MATIC",
-//                     symbol: "MATIC",
-//                     decimals: 18,
-//                   },
-//                   rpcUrls: [
-//                     "https://speedy-nodes-nyc.moralis.io/b18bab00073ceeeeed714bf2/polygon/mainnet",
-//                   ],
-//                   blockExplorerUrls: ["https://explorer.matic.network//"],
-//                   iconUrls: [""],
-//                 },
-//               ],
-//             });
-//             setNetworkId(137);
-//           } catch (addError) {
-//             console.log("Did not add network");
-//           }
-//         }
-//       }
-//     }
-//     console.log("...process end.");
-//     console.groupEnd();
-//   }
-
-//   return (
-//     <Button
-//     	sx={{mr:2, mt:2, boxShadow:"var(--boxShadow)"}}
-//       	className="ExpertButton"
-//       	variant="contained"
-//       	onClick={addPolygonNetwork}
-//     >
-//       Add Polygon
-//     </Button>
-//   );
-// };
-
-//  // visible={window.ethereum.chainId === networkIDHex ? "hidden" : "visible"}
-

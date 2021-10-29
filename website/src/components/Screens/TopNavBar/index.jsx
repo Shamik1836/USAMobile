@@ -34,9 +34,9 @@ export const TopNavBar = (props) => {
 			{isAuthenticated && <ExpertButton />}
 			{/* <NetworkSelect /> */}
 			<LightSwitch />
+			<AddNetworkButton />
 			<AuthButton />
 			{isAuthenticated && <ProfileAvatar />}
-			{isAuthenticated && <AddNetworkButton />}
 		</Stack>
 
 	);
