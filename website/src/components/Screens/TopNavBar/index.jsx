@@ -6,38 +6,31 @@ import { ExpertButton } from "../../Bits/ExpertButton";
 import { LightSwitch } from "../../Bits/LightSwitch";
 import { AuthButton } from "../../Bits/AuthButton";
 import { ProfileAvatar } from "../../Bits/ProfileAvatar";
-import { AddNetworkButton } from '../../Scrapbox/AddNetworkButton';
-
-// import { useColorMode } from '../../contexts/colorModeContext';
+import { AddNetworkButton } from "../../Bits/AddNetworkButton";
 
 import "./styles.css";
 import USAWalletEagleLogo from "../../../media/logos/USAWalletLogo.svg";
 
 export const TopNavBar = (props) => {
-	const { isAuthenticated } = useMoralis();
-	// const { colorMode } = useColorMode();
-	return (
-		<Stack direction="row" sx={{ mt: 3, alignSelf:'center'}} spacing={1}>
-			<Box
-				component="img"
-				sx={{
-					mr: .5,
-					mt: 1,
-					width: 70,
-				}}
-				alt="USA Wallet Logo"
-				src={USAWalletEagleLogo}
-			/>
-			<Typography className="BrandName">
-				USA Wallet
-			</Typography>
-			{isAuthenticated && <ExpertButton />}
-			{/* <NetworkSelect /> */}
-			<LightSwitch />
-			<AddNetworkButton />
-			<AuthButton />
-			{isAuthenticated && <ProfileAvatar />}
-		</Stack>
-
-	);
+  const { isAuthenticated } = useMoralis();
+  return (
+    <Stack direction="row" sx={{ mt: 3, alignSelf: "center" }} spacing={1}>
+      <Box
+        component="img"
+        sx={{
+          mr: 0.5,
+          mt: 1,
+          width: 70,
+        }}
+        alt="USA Wallet Logo"
+        src={USAWalletEagleLogo}
+      />
+      <Typography className="BrandName">USA Wallet</Typography>
+      {isAuthenticated && <ExpertButton />}
+      <LightSwitch />
+      <AddNetworkButton />
+      <AuthButton />
+      {isAuthenticated && <ProfileAvatar />}
+    </Stack>
+  );
 };

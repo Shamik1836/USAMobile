@@ -23,13 +23,13 @@ ReactDOM.render(
     <ColorModeProvider>
       <MoralisProvider appId={appId} serverUrl={serverUrl}>
         <NetworkProvider>
-        <ExpertsProvider>
-          <ActionsProvider>
-            <QuoteProvider>
-              <App />
-            </QuoteProvider>
-          </ActionsProvider>
-        </ExpertsProvider>
+          <ExpertsProvider>
+            <ActionsProvider>
+              <QuoteProvider>
+                <App />
+              </QuoteProvider>
+            </ActionsProvider>
+          </ExpertsProvider>
         </NetworkProvider>
       </MoralisProvider>
     </ColorModeProvider>
