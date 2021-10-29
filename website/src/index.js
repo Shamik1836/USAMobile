@@ -22,6 +22,7 @@ ReactDOM.render(
   <React.StrictMode>
     <ColorModeProvider>
       <MoralisProvider appId={appId} serverUrl={serverUrl}>
+        <NetworkProvider>
         <ExpertsProvider>
           <ActionsProvider>
             <QuoteProvider>
@@ -31,6 +32,7 @@ ReactDOM.render(
             </QuoteProvider>
           </ActionsProvider>
         </ExpertsProvider>
+        </NetworkProvider>
       </MoralisProvider>
     </ColorModeProvider>
   </React.StrictMode>,

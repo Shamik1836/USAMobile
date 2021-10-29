@@ -6,6 +6,7 @@ import { ExpertButton } from "../../Bits/ExpertButton";
 import { LightSwitch } from "../../Bits/LightSwitch";
 import { AuthButton } from "../../Bits/AuthButton";
 import { ProfileAvatar } from "../../Bits/ProfileAvatar";
+import { AddNetworkButton } from '../../Scrapbox/AddNetworkButton';
 
 // import { useColorMode } from '../../contexts/colorModeContext';
 
@@ -33,6 +34,7 @@ export const TopNavBar = (props) => {
 			{isAuthenticated && <ExpertButton />}
 			{/* <NetworkSelect /> */}
 			<LightSwitch />
+			<AddNetworkButton />
 			<AuthButton />
 			{isAuthenticated && <ProfileAvatar />}
 		</Stack>
