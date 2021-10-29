@@ -22,6 +22,7 @@ export const BuySell = memo(() => {
         themeColor: "000000",
         fiatCurrency: "USD",
         email: emailAddress,
+        networks: "ethereum,polygon",
         defaultNetwork: "polygon",
         redirectURL: "",
         hostURL: window.location.origin,
