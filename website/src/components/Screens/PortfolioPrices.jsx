@@ -14,6 +14,8 @@ export const PortfolioPrices = () => {
     setDialog("Select a currency to view transaction histories.");
   });
 
+  
+
   return (
     <Box sx={{textAlign: 'center', mt:1, mb:3}}>
       <Heading variant='h4'>
