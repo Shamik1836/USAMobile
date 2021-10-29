@@ -676,7 +676,7 @@ describe("Benjamins Test", function () {
       }       
     } 
 
-    await benjaminsContract.connect(deployerSigner).updateBlocksPerDay(2);
+    //await benjaminsContract.connect(deployerSigner).updateBlocksPerDay(2);
 
     /*
     const testUser_1_MATICbalance = await getMaticBalance(testUser_1);
