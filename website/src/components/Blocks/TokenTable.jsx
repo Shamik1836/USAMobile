@@ -11,19 +11,22 @@ import { TransactionList } from "./TransactionList";
 
 
 import { getDataByCoinID } from "../../hooks/action";
+import { usePortfolio } from '../../contexts/portfolioContext'
 import Card from "../Research/card";
 import Loader from "../Research/load";
 
 
 export const TokenTable = () => {
 
-  const { positions, isLoading, totalValue } = usePositions();
+  const { isLoading, totalValue } = usePositions();
+  const { positions } = usePortfolio();
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedCoin, setSelectedCoin] = useState(null);
 
 
   const getDataApi = getDataByCoinID();
   const handleClickRow = async (p) => {
+    if (!p.id) return;
     setModalOpen(true);
     const data = await getDataApi(p.id);
     if (data.id) {
@@ -34,16 +37,15 @@ export const TokenTable = () => {
   };
 
   const onModalClose = () => {
-    console.log('onModalClose: called.');
     setModalOpen(false);
+    setSelectedCoin(null);
   }
-
   function Position(props) {
     const { position } = props;
     const [open, setOpen] = React.useState(false);
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} style={{cursor: 'pointer'}} onClick={()=>handleClickRow(position)}>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} style={{ cursor: 'pointer' }} onClick={() => handleClickRow(position)}>
           <TableCell component="th" scope="row">
             <Avatar
               sx={{ background: '#790d01' }}
@@ -52,30 +54,30 @@ export const TokenTable = () => {
               size="sm"
             />
           </TableCell>
-          <TableCell align="left" sx={{border:0}}>
+          <TableCell align="left" sx={{ border: 0 }}>
             <Typography ml={2}>
               {position.name}
             </Typography>
           </TableCell>
-          <TableCell align="left" sx={{border:0}}>
+          <TableCell align="left" sx={{ border: 0 }}>
             <Typography ml={2}>
               {position.tokens.toPrecision(3)}
             </Typography>
           </TableCell>
-          <TableCell align="left" sx={{border:0}}>
+          <TableCell align="left" sx={{ border: 0 }}>
             <Typography ml={2}>
               @ ${position.price && position.price.toFixed(2)}/
               {position.symbol && position.symbol.toUpperCase()}
             </Typography>
           </TableCell>
-          <TableCell align="left" sx={{border:0}}>
+          <TableCell align="left" sx={{ border: 0 }}>
             <Typography ml={2}>
               {" "}
               = ${position.value.toFixed(2)}
             </Typography>
 
           </TableCell>
-          <TableCell sx={{border:0}}>
+          <TableCell sx={{ border: 0 }}>
             <IconButton
               aria-label="expand row"
               size="small"
@@ -88,10 +90,12 @@ export const TokenTable = () => {
         <TableRow>
           <TableCell colSpan={6} style={{ paddingBottom: 0, paddingTop: 0 }}>
             <Collapse in={open} timeout="auto" unmountOnExit>
-              <Box sx={{m:1}}>
-                {position.name === "Ether" && (
-                  <TransactionList chain={position.symbol.toLowerCase()} decimals={position.decimals} />
-                )}
+              <Box sx={{ m: 1 }}>
+                <TransactionList
+                  tokenAddress={position.tokenAddress}
+                  chain={position.symbol.toLowerCase()}
+                  decimals={position.decimals}
+                />
               </Box>
             </Collapse>
           </TableCell>
@@ -103,20 +107,20 @@ export const TokenTable = () => {
 
   return (
     <Box sx={{ display: 'inline-flex', minWidth: 320, m: 'auto' }}>
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          p:2.5, 
-          borderRadius: '1.5rem', 
+      <TableContainer
+        component={Paper}
+        sx={{
+          p: 2.5,
+          borderRadius: '1.5rem',
           backgroundImage: 'var(--bg)',
-          border:4,
-          borderColor:'var(--borderColor)'
-        }} 
-       >
+          border: 4,
+          borderColor: 'var(--borderColor)'
+        }}
+      >
         <Table aria-label="collapsible table">
           <TableHead>
             <TableRow>
-              <TableCell align="center" colSpan={6} sx={{p:0, pb:1}}>
+              <TableCell align="center" colSpan={6} sx={{ p: 0, pb: 1 }}>
                 {!isLoading && (
                   <Typography>Total Value: ${parseFloat(totalValue).toFixed(2)}</Typography>
                 )}
@@ -136,10 +140,10 @@ export const TokenTable = () => {
         open={modalOpen}
         aria-labelledby="Transaction Details Modal"
         aria-describedby="We will display Row Details here."
-        sx={{maxWidth:'56rem', mx:'auto', my:'3.56rem', px:3, py:1}}
+        sx={{ maxWidth: '56rem', mx: 'auto', my: '3.56rem', px: 3, py: 1 }}
         onBackdropClick={onModalClose}
       >
-        <Box sx={{background:'white'}}>
+        <Box sx={{ background: 'white' }}>
           {selectedCoin ? <Card data={selectedCoin} onClose={onModalClose} /> : <Loader />}
         </Box>
       </Modal>

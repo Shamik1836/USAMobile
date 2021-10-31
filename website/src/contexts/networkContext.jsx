@@ -5,8 +5,8 @@ const NetworkContext = React.createContext();
 export const useNetwork = () => useContext(NetworkContext);
 
 export const NetworkProvider = (props) => {
-  const [networkId, setNetworkId] = useState(1);
-  const [networkName, setNetworkName] = useState("eth");
+  const [networkId, setNetworkId] = useState(137);
+  const [networkName, setNetworkName] = useState("matic");
 
   return (
     <NetworkContext.Provider
