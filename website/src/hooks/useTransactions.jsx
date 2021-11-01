@@ -6,18 +6,15 @@ const emptyList = [];
 export const useTransactions = (props) => {
   const { isAuthenticated, Moralis, user } = useMoralis();
   // const { networkName } = useNetwork();
-  const address = user.attributes[props.chain + "Address"];
+  const address = user.attributes["ethAddress"];
   const [Txs, setTxs] = useState(emptyList);
   const [isLoading, setIsLoading] = useState(1);
 
   useEffect(() => {
     if (isAuthenticated) {
-      
-      Moralis.Web3API.account
-        .getTransactions({ address, chain: props.chain })
+      Moralis.Web3API.account.getTokenTransfers({ chain: 'polygon', address })
         .then((userTrans) => {
-          console.log("userTrans:", userTrans, address);
-          let newTxs = userTrans.result.map((Tx) => {
+          let newTxs = userTrans.result.filter(t => t.address === props.tokenAddress).map((Tx) => {
             const output = { ...Tx };
             switch (address) {
               case Tx.from_address:

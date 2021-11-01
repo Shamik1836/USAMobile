@@ -6,6 +6,7 @@
 }
 .card .header-title{
     align-self: center;
+    margin-left: 20px;
 }
 .card .price {
     font-size: 23px;

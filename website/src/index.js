@@ -7,9 +7,10 @@ import { MoralisProvider } from "react-moralis";
 import { ExpertsProvider } from "./contexts/expertsContext";
 import { ActionsProvider } from "./contexts/actionsContext";
 import { QuoteProvider } from "./contexts/quoteContext";
-import { NetworkProvider } from "./contexts/networkContext";
 
 import { ColorModeProvider } from "./contexts/colorModeContext";
+import { PortfolioProvider } from "./contexts/portfolioContext";
+import { NetworkProvider } from './contexts/networkContext'
 
 console.groupCollapsed("index.js");
 console.log(`Executing against ${process.env.NODE_ENV} mode!`);
@@ -22,15 +23,17 @@ ReactDOM.render(
   <React.StrictMode>
     <ColorModeProvider>
       <MoralisProvider appId={appId} serverUrl={serverUrl}>
-        <NetworkProvider>
-          <ExpertsProvider>
-            <ActionsProvider>
-              <QuoteProvider>
-                <App />
-              </QuoteProvider>
-            </ActionsProvider>
-          </ExpertsProvider>
-        </NetworkProvider>
+        <ExpertsProvider>
+          <ActionsProvider>
+            <QuoteProvider>
+              <NetworkProvider>
+                <PortfolioProvider>
+                  <App />
+                </PortfolioProvider>
+              </NetworkProvider>
+            </QuoteProvider>
+          </ActionsProvider>
+        </ExpertsProvider>
       </MoralisProvider>
     </ColorModeProvider>
   </React.StrictMode>,
