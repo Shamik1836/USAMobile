@@ -18,6 +18,7 @@ body {
     --boxShadow: #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px,
       #00000066 0px 15px 40px 0px;
     --borderColor: #E2E8F0;
+    --color: #000;
   }
 
   &.dark {
@@ -32,12 +33,14 @@ body {
     --boxShadow: #0000001a 0px 0px 0px 1px, #00000033 0px 5px 10px 0px,
       #00000066 0px 15px 40px 0px;
     --borderColor: #ffffff29;
+    --color: #fff;
   }
 
   margin: 0;
   min-height: 100vh;
   background-attachment: fixed;
   background-image: var(--bg);
+  color: var(--color);
   font-family: LogoFont;
 }
 
