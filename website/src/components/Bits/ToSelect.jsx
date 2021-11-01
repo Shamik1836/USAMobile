@@ -1,39 +1,32 @@
-import { useState } from "react";
-import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { useEffect } from "react";
+import { Autocomplete, TextField, Box } from "@mui/material";
 
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
-
-
 import { use1InchTokenList } from "../../hooks/use1InchTokenList";
 
 export const ToSelect = () => {
-  const [ value, setValue ] =  useState('');
-
-
-  const { tokens } = use1InchTokenList();
+  const tokenList = use1InchTokenList();
   const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
 
-  const handleChange = async (e) => {
+  useEffect(() => {
+    return () => {
+      setToToken();
+    };
+  }, [setToToken]);
 
-    let selectedToken = e.target.value;
-
-    setValue(selectedToken)
-    if (selectedToken) {
-      let selectedSymbol =selectedToken.symbol;
-      let token = tokens.find(
-        (token) => token.symbol === selectedSymbol
-      );
-      setToToken(token);
+  const handleChange = async (e, value) => {
+    if (value) {
+      setToToken(value);
       setDialog(
         "Press the 'Get Swap Quote' " +
           "to get a quote to swap " +
           fromSymbol +
           " to " +
-          selectedSymbol +
+          value.symbol +
           "."
       );
     } else {
@@ -43,30 +36,33 @@ export const ToSelect = () => {
     setQuoteValid("false");
   };
 
+  const filterOptions = (options, { inputValue }) => {
+    const str = inputValue.toLowerCase();
+    return options.filter(
+      (o) =>
+        o.symbol.toLowerCase().includes(str) ||
+        o.name.toLowerCase().includes(str)
+    );
+  };
+
   return (
-    <Box sx={{width:'100%'}}>
-      <FormControl id="swapto" fullWidth>
-        <InputLabel id="to-select-label">Select a token to receive.</InputLabel>
-        <Select
-          id="toToken"
-          label="Select a token to receive."
-          sx={{ 
-            // boxShadow: 'var(--boxShadow)', 
-          }}
-          onChange={handleChange}
-          value = {value}
-        >
-          {tokens.filter(
-            (token) => token.symbol !== fromSymbol
-          ).map((token) => {
-            return (
-              <MenuItem key={token.networkId + token.name} value={token}>
-                {token.name}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      </FormControl>
+    <Box sx={{ width: "100%" }}>
+      <Autocomplete
+        options={tokenList}
+        getOptionLabel={(option) => `${option.symbol} (${option.name})`}
+        filterOptions={filterOptions}
+        renderOption={(props, option) => (
+          <Box component="li" {...props}>
+            <img width="30" src={option.logoURI} alt="" />
+            <span style={{ flex: 1, margin: "0 8px" }}>{option.symbol}</span>
+            <span style={{ opacity: 0.5 }}>{option.name}</span>
+          </Box>
+        )}
+        renderInput={(params) => (
+          <TextField {...params} label="Select a token to receive." />
+        )}
+        onChange={handleChange}
+      />
     </Box>
   );
 };
