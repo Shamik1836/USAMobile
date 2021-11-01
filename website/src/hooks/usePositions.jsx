@@ -10,7 +10,7 @@ const geckoHead =
 const geckoTail = "&order=market_cap_desc&per_page=100&page=1&sparkline=false";
 
 export const usePositions = () => {
-  const { isAuthenticated, Moralis, user } = useMoralis();
+  const { isAuthenticated, Moralis } = useMoralis();
   const { networkId } = useNetwork();
   const [positions, setPositions] = useState(emptyList);
   const [totalValue, setTotalValue] = useState(0);
@@ -22,7 +22,7 @@ export const usePositions = () => {
     if (isAuthenticated) {
       // Bring back a list of all tokens the user has
       //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
-      let chain = `0X${networkId.toString(16)}`
+      let chain = `0X${networkId.toString(16)}`;
       Moralis.Web3.getAllERC20({ chain }).then((allPositions) => {
         const ids = allPositions
           .map((token) =>
@@ -50,7 +50,7 @@ export const usePositions = () => {
               const output = { ...token };
               const tokenData = data[symbol];
               output.image = tokenData?.image;
-              output.id = tokenData?.id
+              output.id = tokenData?.id;
               output.price = tokenData?.current_price;
               output.tokens = token.balance
                 ? token.balance / 10 ** token.decimals
@@ -59,14 +59,16 @@ export const usePositions = () => {
               runningTotal += output.value;
               output.valueString = [
                 parseFloat(output?.tokens).toPrecision(3) +
-                " @ $" +
-                parseFloat(tokenData?.current_price).toFixed(2) +
-                "/" +
-                symbol +
-                " = $" +
-                parseFloat(output?.value).toFixed(2),
+                  " @ $" +
+                  parseFloat(tokenData?.current_price).toFixed(2) +
+                  "/" +
+                  symbol +
+                  " = $" +
+                  parseFloat(output?.value).toFixed(2),
               ];
-              const tokenInfo = tokenList.find(item => item.symbol === symbol);
+              const tokenInfo = tokenList.find(
+                (item) => item.symbol === symbol
+              );
               output.address = tokenInfo?.address;
               return output;
             });
