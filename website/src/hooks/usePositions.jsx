@@ -16,7 +16,7 @@ export const usePositions = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
   // const [allPositions, setAllPositions] = useState(emptyList);
-  const { tokenList } = use1InchTokenList();
+  const tokenList = use1InchTokenList();
 
   useEffect(() => {
     if (isAuthenticated) {
