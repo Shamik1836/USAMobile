@@ -27,7 +27,7 @@ export const SendPanel = () => {
         <FromSelect />
         {!!fromSymbol && (
           <>
-            <AmountSelect />
+            <AmountSelect type='send'/>
             <ToAddress />
             <Stack sx={{alignSelf: 'center'}} direction='row' spacing={1}>
               <StartSend />
