@@ -696,66 +696,32 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray) {
 
     } 
     
-
   
     // BURNING
     // if runMint == false, burn.
-    // acc5 must have 20k tokens to be able to trigger burning // TODO fix
     else {
       console.log(`operation nr: ${loopCounter} is BURNING`);        
-
-
-
-      // local function to check burning amount repeatedly until it's okay
-      async function checkBurningAmountOkay() {
-
-        let rerunCounter = 0;
-        if (rerunCounter < 10 && burnReturnTotalInUSDCShouldBeNowGlobalV < 5 || randomAmountBurning > balBNJIsAtStart) {
-
-          if (burnReturnTotalInUSDCShouldBeNowGlobalV < 5) {
-            console.log(`RERUN, burn call would be under $5`);
-            randomAmountBurning = randomAmountBurning + 300;
-            console.log(`RERUN tried to burn few tokens, now trying to burn: `, randomAmountBurning);
-          }
-          if (randomAmountBurning > balBNJIsAtStart){
-            console.log(`RERUN, call would be too big for ${accNowName}'s token balance of ${balBNJIsAtStart}`)  
-            // creating a number lower than 1, multiplying it with tokens user has, i.e. never more than he has. then rounding down to full token
-            randomAmountBurning = ( Math.floor (Math.random() * balBNJIsAtStart) ) ;
-            console.log(`RERUN tried to burn more tokens than he has, now trying to burn: `, randomAmountBurning);
-          }            
-                      
-          //args: async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
-          await calcBurnVariables(randomAmountBurning, accNow, false);  // this call will change burnReturnTotalInUSDCShouldBeNowGlobalV, so no endless loop
-          checkBurningAmountOkay();
-          rerunCounter++;
-        } 
-      } 
-
-      // randomizing amount to burn
-      randomAmountBurning = Math.floor (Math.random() * 10000);         
       
-      //calcBurnVariables(nrOfTokensExisting, amountToBurn);         
-
-      calcBurnVariables(randomAmountBurning, accNow);
+      let burnHalf = Math.floor (balBNJIsAtStart * 0.5);
+      console.log(burnHalf, "this is burnHalf");
       
-      checkBurningAmountOkay(); // checking if amount is okay
+      //calcBurnVariables(amountToBurn, accountBurning, isTransfer);  
+      calcBurnVariables(burnHalf, accNow, false);
 
-      console.log(`operation nr: ${loopCounter} will BURN this many tokens:`, randomAmountBurning);
+      if(burnReturnTotalInUSDCShouldBeNowGlobalV >= 6) {
+        console.log(`operation nr: ${loopCounter} will BURN this many tokens:`, burnHalf);
+        burnCounter++;
 
-      burnCounter++;
+        //testBurning(burnName, amountToBurn, callingAcc)
+        await testBurning(`operation nr: ${loopCounter}, burning`, burnHalf, accNow, accNow);
 
-      //testBurning(burnName, amountToBurn, callingAcc)
-      await testBurning(`operation nr: ${loopCounter}, burning`, randomAmountBurning, accNow, accNow);
+        totalReturned += burnReturnTotalInUSDCWasPaidNowGlobalV;
 
-      totalReturned += burnReturnTotalInUSDCWasPaidNowGlobalV;
-
-      // confirmBurn()
-      confirmBurn(); 
+      }
+            
     }
 
     
-
-
     
   }
 
@@ -764,7 +730,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray) {
   burnCounterTotal += burnCounter;
 
   console.log(`test ran ${loopCounterTotal} loops so far, of which ${mintCounterTotal} were mints and ${burnCounterTotal} were burns`); 
-  console.log(`so far, ${totalSpent} USDC were spent by and ${totalReturned} USDC were paid out by the contract in total`);   
+  console.log(`so far, ${totalSpent} USDC were spent by the testusers (plus deployer) and ${totalReturned} USDC were paid out by the contract in total`);   
 
   const protocolBalanceAfterTestInCents = dividefrom6decToUSDCcents( bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)) );
   //console.log(`our contract's amUSDC balance at the end of all loops so far`, protocolBalanceAfterTestInCents);
