@@ -87,6 +87,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Are we past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
+
+        /*
         uint256 blockNum = block.number;
         uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck]; 
        //console.log('holdTime calculated:', holdTime);
@@ -94,7 +96,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         require(holdTime > antiFlashLoan, 
             'Anti-flashloan withdraw timeout in effect.');
         require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 
-            'Discount level withdraw timeout in effect.');
+            'Discount level withdraw timeout in effect.');*/
         _;
     }
  
@@ -222,7 +224,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         changeSupply(_toWhom, _amount, false);
     }
 
-    // Quote USDC for mint(positive) or burn(negative)
+    // Quote USDC for mint or burn
     // based on circulation and amount (and sign of amount)
     function quoteUSDC(uint256 _amount, bool isMint) public view whenAvailable returns (uint256) {       
         // Basic integral

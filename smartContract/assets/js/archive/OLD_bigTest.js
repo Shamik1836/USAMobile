@@ -452,7 +452,7 @@ async function runMintOrBurnLoop(loopsToRun) {
   
 
   const protocolBalanceAfterTest = fromWEItoUSDC( bigNumberToNumber (await mockUSDCTokenContract.balanceOf(ourTokenContract.address)) );
-  console.log('protocol our contract USDC balance at the end of all loops so far', protocolBalanceAfterTest);
+  console.log('protocol / our contract USDC balance at the end of all loops so far', protocolBalanceAfterTest);
   const protocolBalanceAfterTestJSExactness = Number(protocolBalanceAfterTest*100);
   //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
   
