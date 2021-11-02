@@ -30,7 +30,7 @@ export const DoItButton = (props) => {
     await fetch(
       oneInchApprove +
       "?tokenAddress=" +
-      fromToken?.address +
+      fromToken?.tokenAddress +
       "&amount=" +
       txAmount
     )
@@ -38,7 +38,7 @@ export const DoItButton = (props) => {
       .then((response) => {
         setDialog("1Inch approval code received.");
         console.groupCollapsed("DoItButton::preApprove");
-        console.log("fromToken?.address:", fromToken?.address);
+        console.log("fromToken?.tokenAddress:", fromToken?.tokenAddress);
         console.log("amount:", txAmount);
         console.log("Response:", response);
         console.groupEnd();
@@ -87,7 +87,7 @@ export const DoItButton = (props) => {
       await fetch(
         oneInchSwap +
         "fromTokenAddress=" +
-        fromToken.address +
+        fromToken.tokenAddress +
         "&toTokenAddress=" +
         toToken.address +
         "&amount=" +
