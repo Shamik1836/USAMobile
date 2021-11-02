@@ -62,10 +62,6 @@ export const usePolygonNetwork = () => {
   }, [isWeb3Enabled, enableWeb3, Moralis, setNetworkId, setDialog]);
 
 
-
-
-
-
   return { isPolygon };
 };
 
