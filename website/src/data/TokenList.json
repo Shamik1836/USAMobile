@@ -162,6 +162,15 @@
   },
   {
     "networkId": "137",
+    "name": "ETHA Lend",
+    "symbol": "etha",
+    "address": "0x59e9261255644c411afdd00bd89162d09d862e38",
+    "description": "Governance Token",
+    "type": "erc20",
+    "image": "https://assets.coingecko.com/coins/images/14141/thumb/etha_logo200x200.png?1614646986"
+  },
+  {
+    "networkId": "137",
     "name": "EasyFi",
     "symbol": "ez",
     "address": "0x34c1b299a74588d6abdc1b85a53345a48428a521",
@@ -183,6 +192,15 @@
     "name": "SuperFarm",
     "symbol": "super",
     "address": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55",
+    "description": "cross-chain DeFi protocol that allows users to deploy crypto and NFT farms with no code",
+    "type": "erc20",
+    "image": "https://assets.coingecko.com/coins/images/14040/thumb/6YPdWn6.png?1613975899"
+  },
+  {
+    "networkId": "137",
+    "name": "SuperFarm",
+    "symbol": "super",
+    "address": "0xa1428174f516f527fafdd146b883bb4428682737",
     "description": "cross-chain DeFi protocol that allows users to deploy crypto and NFT farms with no code",
     "type": "erc20",
     "image": "https://assets.coingecko.com/coins/images/14040/thumb/6YPdWn6.png?1613975899"
@@ -215,10 +233,27 @@
     "image": "https://assets.coingecko.com/coins/images/12504/thumb/uniswap-uni.png?1600306604"
   },
   {
+    "networkId": "137",
+    "name": "Uniswap",
+    "symbol": "uni",
+    "address": "0xb33eaad8d922b1083446dc23f610c2567fb5180f",
+    "description": "Governance token for Uniswap, an Automated Market Market DEX on the Ethereum blockchain.",
+    "image": "https://assets.coingecko.com/coins/images/12504/thumb/uniswap-uni.png?1600306604"
+  },
+  {
     "networkId": "1",
     "name": "ChainLink",
     "symbol": "link",
     "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+    "description": "Chainlink is a decentralized oracle service, the first of its kind.",
+    "type": "erc20",
+    "image": "https://assets.coingecko.com/coins/images/877/thumb/chainlink-new-logo.png?1547034700"
+  },
+  {
+    "networkId": "137",
+    "name": "ChainLink",
+    "symbol": "link",
+    "address": "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39",
     "description": "Chainlink is a decentralized oracle service, the first of its kind.",
     "type": "erc20",
     "image": "https://assets.coingecko.com/coins/images/877/thumb/chainlink-new-logo.png?1547034700"
