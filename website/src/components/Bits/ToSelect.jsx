@@ -1,16 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Autocomplete, TextField, Box } from "@mui/material";
 
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useQuote } from "../../contexts/quoteContext";
-import { use1InchTokenList } from "../../hooks/use1InchTokenList";
+import { useNetwork } from "../../contexts/networkContext";
+import tokenList from "../../data/TokenList.json";
 
 export const ToSelect = () => {
-  const tokenList = use1InchTokenList();
   const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuoteValid } = useQuote();
+  const { networkId } = useNetwork();
+  const tokens = useMemo(
+    () =>
+      tokenList.filter(
+        (item) =>
+          item.networkId == networkId &&
+          item.symbol.toLowerCase() !== fromSymbol.toLowerCase()
+      ),
+    [networkId, fromSymbol]
+  );
 
   useEffect(() => {
     return () => {
@@ -48,13 +58,13 @@ export const ToSelect = () => {
   return (
     <Box sx={{ width: "100%" }}>
       <Autocomplete
-        options={tokenList}
-        getOptionLabel={(option) => `${option.symbol} (${option.name})`}
+        options={tokens}
+        getOptionLabel={(option) => `${option.symbol.toUpperCase()} (${option.name})`}
         filterOptions={filterOptions}
         renderOption={(props, option) => (
           <Box component="li" {...props}>
-            <img width="30" src={option.logoURI} alt="" />
-            <span style={{ flex: 1, margin: "0 8px" }}>{option.symbol}</span>
+            <img width="30" src={option.image} alt="" style={{borderRadius: '50%'}} />
+            <span style={{ flex: 1, margin: "0 8px" }}>{option.symbol.toUpperCase()}</span>
             <span style={{ opacity: 0.5 }}>{option.name}</span>
           </Box>
         )}

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useMoralis } from "react-moralis";
 import { useNetwork } from "../contexts/networkContext";
 import coinGeckoList from "../data/coinGeckoTokenList.json";
-import { use1InchTokenList } from "./use1InchTokenList";
 
 const emptyList = [];
 const geckoHead =
@@ -16,7 +15,6 @@ export const usePositions = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
   // const [allPositions, setAllPositions] = useState(emptyList);
-  const tokenList = use1InchTokenList();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -66,10 +64,9 @@ export const usePositions = () => {
                   " = $" +
                   parseFloat(output?.value).toFixed(2),
               ];
-              const tokenInfo = tokenList.find(
-                (item) => item.symbol === symbol
-              );
-              output.address = tokenInfo?.address;
+              if (!output.tokenAddress) {
+                output.tokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+              }
               return output;
             });
             // Done.  Report back to states.
@@ -84,7 +81,7 @@ export const usePositions = () => {
       setIsLoading(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Moralis.Web3, isAuthenticated, tokenList]);
+  }, [Moralis.Web3, isAuthenticated]);
 
   return { positions, isLoading, totalValue };
 };
