@@ -16,7 +16,8 @@ export const ToSelect = () => {
     () =>
       tokenList.filter(
         (item) =>
-          item.networkId === networkId &&
+          // eslint-disable-next-line eqeqeq
+          item.networkId == networkId &&
           item.symbol.toLowerCase() !== fromSymbol.toLowerCase()
       ),
     [networkId, fromSymbol]
