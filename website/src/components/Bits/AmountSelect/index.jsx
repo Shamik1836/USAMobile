@@ -80,6 +80,11 @@ export const AmountSelect = ({ type }) => {
 
   const toggleMode = () => {
     if (price) {
+      if (isUSDMode) {
+        setValue((value / price).toPrecision(3));
+      } else {
+        setValue((value * price).toFixed(2));
+      }
       setIsUSDMode(!isUSDMode);
     }
     inputRef.current.focus();
@@ -102,7 +107,7 @@ export const AmountSelect = ({ type }) => {
               step={
                 isUSDMode
                   ? ((price * tokens) / 10).toFixed(2)
-                  : (tokens / 10).toFixed(2)
+                  : (tokens / 10).toPrecision(3)
               }
               max={isUSDMode ? price * tokens : tokens}
               min="0"
@@ -117,11 +122,11 @@ export const AmountSelect = ({ type }) => {
           <span>
             {price
               ? isUSDMode
-                ? `≈ ${amount.toFixed(2)} ${fromSymbol}`
-                : `≈ $${usdAmount.toLocaleString("en-US", {
+                ? `≈ ${amount.toPrecision(3)} ${fromSymbol}`
+                : `≈ $ ${usdAmount.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  })}`
+                  })} USD`
               : "No Conversion Rate Available"}
           </span>
         </label>
