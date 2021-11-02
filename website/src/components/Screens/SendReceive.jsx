@@ -4,8 +4,8 @@ import { Box, Button, Stack } from '@mui/material';
 import { SendPanel } from "../Blocks/SendPanel";
 import { AddressPanel } from "../Blocks/AddressPanel";
 import { Heading } from '../UW/Heading';
-import { useMoralis } from "react-moralis";
 
+import { usePolygonNetwork } from '../../hooks/usePolygonNetwork';
 
 import { useExperts } from "../../contexts/expertsContext";
 
@@ -13,20 +13,30 @@ import { useExperts } from "../../contexts/expertsContext";
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
-  const { Moralis } = useMoralis();
+  const { isPolygon } = usePolygonNetwork();
 
   useEffect(() => {
     setActionMode("send");
     setDialog("Would you like to send or receive cryptocurrency?");
+
   }, [setActionMode, setDialog]);
 
+  useEffect(() => {
+    if(!isPolygon){
+      setDialog('Switch to Polygon.')
+
+    }else{
+      setDialog("Would you like to send or receive cryptocurrency?");
+    }
+  }, [isPolygon]);
+
+
   const handleSendMode = async () => {
-    await Moralis.enable();
-    const id = await Moralis.getChainId();
-    if (id !== 137) {
+    if (!isPolygon) {
       setDialog('Switch network to Polygon');
       return;
     }
+
     setLocalMode("send");
     setActionMode("send");
     setDialog("Select a currency to send.");
@@ -40,6 +50,7 @@ export const SendReceive = () => {
       "select amount to request to generate a QR code."
     );
   };
+
 
   return (
     <Box sx={{ textAlign: 'center', mt: 1, mb: 3 }}>

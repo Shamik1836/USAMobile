@@ -2,13 +2,21 @@ import { useEffect } from "react";
 import { Box } from '@mui/material';
 
 import { SwapPanel } from "../Blocks/SwapPanel";
-
-import { useExperts } from "../../contexts/expertsContext";
 import { Heading } from '../UW/Heading';
 
+import { usePolygonNetwork } from '../../hooks/usePolygonNetwork';
+
+import { useExperts } from "../../contexts/expertsContext";
 
 export const SwapTrade = () => {
   const { setActionMode, setDialog } = useExperts();
+  const { isPolygon } = usePolygonNetwork();
+  useEffect(() => {
+    if(!isPolygon){
+      setDialog('Switch to Polygon.')
+    }
+  }, [isPolygon]);
+
 
   useEffect(() => {
     setActionMode("swap");

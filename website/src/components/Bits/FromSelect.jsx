@@ -4,7 +4,9 @@ import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { usePositions } from "../../hooks/usePositions";
 import { useActions } from "../../contexts/actionsContext";
 import { useExperts } from "../../contexts/expertsContext";
-import { useMoralis } from "react-moralis";
+import { useNetwork } from "../../contexts/networkContext";
+
+// import { useMoralis } from "react-moralis";
 
 
 export const FromSelect = () => {
@@ -13,9 +15,7 @@ export const FromSelect = () => {
   const { positions, waiting } = usePositions();
   const { setFromToken, setToToken } = useActions();
   const { setDialog } = useExperts();
-  const { Moralis } = useMoralis();
-
-
+  const { networkId }  = useNetwork();
 
   useEffect(() => {
     return () => {
@@ -24,16 +24,16 @@ export const FromSelect = () => {
   }, [setFromToken]);
 
   const handleChange = async (e) => {
-    await Moralis.enable();
-    const id = await Moralis.getChainId();
-    if (id !== 137) {
+    const position = e.target.value;
+    setValue(position);
+
+    if (networkId !== 137) {
       setFromToken();
       setToToken();
       setDialog('Switch network to Polygon');
       return;
     }
-    const position = e.target.value;
-    setValue(position);
+
     if (position) {
       setFromToken(position);
       setDialog(
