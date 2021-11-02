@@ -733,14 +733,14 @@ describe("Benjamins Test", function () {
   });
   
   
-  it("1.: Large amount test: 100 mints", async function () {     
+  it("1.: Large amounts test: 100 mints", async function () {     
     let accOrderArray1 = [9,8,7,6,5,4,3,2,1,0];  
     await runMintOrBurnLoop(100, true, accOrderArray1, 'Test 1');
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("2.: Large amount test: 100 burns", async function () {     
+  it("2.: Large amounts test: 100 burns", async function () {     
     let accOrderArray2 = [0,8,3,6,5,1,7,2,4,9];  
     await runMintOrBurnLoop(100, false, accOrderArray2, 'Test 2');
     await countAllCents();
@@ -748,63 +748,63 @@ describe("Benjamins Test", function () {
 
   });
 
-  it("3.: Large amount test: 100 mints", async function () {     
+  it("3.: Large amounts test: 100 mints", async function () {     
     let accOrderArray3 = [5,8,3,6,8,1,7,2,4,0];  
     await runMintOrBurnLoop(100, true, accOrderArray3, 'Test 3');
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("4.: Large amount test: 100 burns", async function () {     
+  it("4.: Large amounts test: 100 burns", async function () {     
     let accOrderArray4 = [0,8,9,6,7,5,1,4,2,3];  
     await runMintOrBurnLoop(100, false, accOrderArray4, 'Test 4');
     await countAllCents();
     waitFor(4000);
   });
   
-  it("5.: Large amount test: 100 mints", async function () {     
+  it("5.: Large amounts test: 100 mints", async function () {     
     let accOrderArray5 = [1,8,3,6,7,5,0,4,2,9];    
     await runMintOrBurnLoop(100, true, accOrderArray5, 'Test 5');
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("6.: Large amount test: 100 burns", async function () { 
+  it("6.: Large amounts test: 100 burns", async function () { 
     let accOrderArray6 = [0,9,3,6,5,7,1,2,4,8];  
     await runMintOrBurnLoop(100, false, accOrderArray6, 'Test 6');
     await countAllCents();
     waitFor(4000);
   });
 
-  it("7.: Large amount test: 100 mints", async function () {     
+  it("7.: Large amounts test: 100 mints", async function () {     
     let accOrderArray7 = [6,8,1,4,5,9,3,2,7,0];  
     await runMintOrBurnLoop(100, true, accOrderArray7, 'Test 7');
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("8.: Large amount test: 100 burns", async function () {     
+  it("8.: Large amounts test: 100 burns", async function () {     
     let accOrderArray8 = [0,8,1,7,2,9,3,5,4,6];  
     await runMintOrBurnLoop(100, false, accOrderArray8, 'Test 8');
     await countAllCents();
     waitFor(4000);
   });
 
-  it("9.: Large amount test: 100 mints", async function () {     
+  it("9.: Large amounts test: 100 mints", async function () {     
     let accOrderArray9 = [9,8,1,6,3,0,2,5,4,7];    
     await runMintOrBurnLoop(100, true, accOrderArray9, 'Test 9');
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("10.: Large amount test: 100 burns", async function () {     
+  it("10.: Large amounts test: 100 burns", async function () {     
     let accOrderArray10 = [3,2,0,6,4,9,7,8,5,1];  
     await runMintOrBurnLoop(100, false, accOrderArray10, 'Test 10');
     await countAllCents();
     waitFor(4000);
   });
 
-  it("11.: Large amount test: 100 mints", async function () {     
+  it("11.: Large amounts test: 100 mints", async function () {     
     let accOrderArray9 = [4,8,2,6,3,7,0,5,9,1];    
     await runMintOrBurnLoop(100, true, accOrderArray9, 'Test 11');
     await countAllCents();    
