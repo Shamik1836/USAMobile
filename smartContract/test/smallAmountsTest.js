@@ -31,14 +31,13 @@ let totalReturnedInCents = 0;
 let totalUSDCcentsInTestAccs = 0;
 let startTotalUSDCcents = 0;
 
-
 let totalUSDCcentsEntriesArr = [];
 
 const scale6dec = 1000000;
 
 const baseFee = 1;
-const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];      // TODO: check if can/should be used
-const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75];  // TODO: check if can/should be used
+const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];    
+const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75]; 
 
 let benjaminsContract;
 
@@ -53,9 +52,6 @@ const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
 let polygonAmUSDC;
 const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
-let quickswapFactory;
-const quickswapFactoryAddress = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
-
 let polygonETH;
 const polygonWETHaddress = '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619';
 
@@ -69,17 +65,6 @@ let whaleSignerAddress;
 
 let testUserAddressesArray = [];
 
-let testUser_0_Signer;
-let testUser_1_Signer;
-let testUser_2_Signer;
-let testUser_3_Signer;
-let testUser_4_Signer;
-let testUser_5_Signer;
-let testUser_6_Signer;
-let testUser_7_Signer;
-let testUser_8_Signer;
-let testUser_9_Signer;
-
 let user1LevelDataArray = [];
 let user1DiscountDataArray = [];
 let user2LevelDataArray = [];
@@ -87,18 +72,18 @@ let user2DiscountDataArray = [];
 
 // helper function to console log for testing/debugging: looking up the accounts[] variable for an address 
 function findUsernameForAddress(addressToLookup){
-    for (let findInd = 0; findInd < testUserAddressesArray.length; findInd++) {
-      if (testUserAddressesArray[findInd] == addressToLookup) {
-        return "testUser_" +`${findInd}`;
-      } else if (addressToLookup == '0x0000000000000000000000000000000000000000' ) {
-        return "Zero address: 0x0000000000000000000000000000000000000000"      
-      }  else if (addressToLookup == '0xE51c8401fe1E70f78BBD3AC660692597D33dbaFF' ) {
-        return "feeReceiver"      
-      }  else if (addressToLookup == '0xCE74Ae6D4C53E1cC118Bd2549295Bc4e27923DA0' ) {
-        return "deployer"      
-      }   
-    }  
-  }; 
+  for (let findInd = 0; findInd < testUserAddressesArray.length; findInd++) {
+    if (testUserAddressesArray[findInd] == addressToLookup) {
+      return "testUser_" +`${findInd}`;
+    } else if (addressToLookup == '0x0000000000000000000000000000000000000000' ) {
+      return "Zero address: 0x0000000000000000000000000000000000000000"      
+    }  else if (addressToLookup == '0xE51c8401fe1E70f78BBD3AC660692597D33dbaFF' ) {
+      return "feeReceiver"      
+    }  else if (addressToLookup == '0xCE74Ae6D4C53E1cC118Bd2549295Bc4e27923DA0' ) {
+      return "deployer"      
+    }   
+  }  
+}; 
 
 // querrying and saving account level and account discount info for userToCheck, and saving them to an array for later confirmation
 async function addUserAccDataPoints(userToCheck){
@@ -112,38 +97,7 @@ async function addUserAccDataPoints(userToCheck){
     user2LevelDataArray.push(userLevelNow);
     user2DiscountDataArray.push(userDiscountNow);
 
-  } else {
-   //console.log("addUserAccDataPoints: user account not set up for data points!")
-  }
-}
-
-// confirms account level and account discount as recorded via add addUserAccDataPoints function
-function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
-  if  (userToCheck == testUser_1){
-    for (let index = 0; index < user1LevelDataArray.length; index++) {
-     //console.log("userToCheck", userToCheck);
-     //console.log("index", index);
-     //console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
-     //console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
-
-     //console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
-     //console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
-      expect(user1LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
-      expect(user1DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
-    }
-  } else if (userToCheck == testUser_2) {
-
-    for (let index = 0; index < user2LevelDataArray.length; index++) {
-      expect(user2LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
-      expect(user2DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
-    }
-  }
-  // resetting for next test
-  user1LevelDataArray = [];
-  user1DiscountDataArray = [];
-  user2LevelDataArray = [];
-  user2DiscountDataArray = [];
-  
+  } 
 }
 
 // simulate the passing of blocks
@@ -219,11 +173,6 @@ async function getMaticBalance(adress) {
   return balanceInMATIC;
 }
 
-function decipherBlockFeedback(blockResponseObject) {
- //console.log("User is holding his BNJI this many blocks so far:", bigNumberToNumber( blockResponseObject.blocksHoldingSoFar));
- //console.log("This many blocks are needed for user to unlock:", bigNumberToNumber( blockResponseObject.blocksNecessaryTotal));
-}
-
 function getRoundedFee(userLevel, principalInUSDCcents){    
   const feeModifier = (100 * baseFee * (100-levelDiscountsArray[userLevel])) /10000;
   const feeStarterInCents = ((principalInUSDCcents * feeModifier ) /100);   
@@ -231,26 +180,10 @@ function getRoundedFee(userLevel, principalInUSDCcents){
   return feeInCentsRoundedDown  
 }
 
-async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingAddress){
-  //console.log(callingAccAddress, 'callingAccAddress in testTransfer');
-  //console.log(amountBNJIsToTransfer, 'amountBNJIsToTransfer in testTransfer');
-  //console.log(receivingAddress, 'receivingAddress in testTransfer');
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(callingAccAddress)); 
-  //console.log(userLevel, 'userLevel in testTransfer');
-
-  // allowing benjaminsContract to handle USDC for ${callingAcc}   
-  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-  const feeInCentsRoundedDown = await calcBurnVariables(amountBNJIsToTransfer, callingAccAddress, true);  
-  //console.log(feeInCentsRoundedDown, 'feeInCentsRoundedDown to be approved in testTransfer');    
-  await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
-  // calling transfer function on benjaminscontract  
-  await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJIsToTransfer);
-}
-
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
   const callingAccountName = findUsernameForAddress(callingAccAddress);  
-  //console.log('calling address in testMinting is now:', callingAccountName, callingAccAddress);  
+   
   const receivingAccountName = findUsernameForAddress(receivingAddress);  
   
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply()); 
@@ -270,21 +203,16 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   expect(await restAllowanceToBNJIcontractIn6dec).to.equal(0);
   
   const amountToApproveIn6dec = await calcMintApprovalAndPrep(amountToMint, callingAccAddress); 
-  //console.log(bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in testMinting', );  
+  
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
   
   const givenAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
-  //console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
-
+  
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
-  
-  //console.log(`${callingAccountName} is minting this many tokens:`, amountToMint, 'for:', receivingAccountName );
-  
-  // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
+    
   await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
 
-  //console.log("MINTING HAPPENED ======= == = = == = = = = = = == = = =" );
-
+  
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const receivingAddressBNJIbalAfterMint = await balBNJI(receivingAddress);
   const contractBNJIbalAfter = await balBNJI(benjaminsContract.address); 
@@ -301,56 +229,22 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   // since amUSDC amounts change due to interest accrued, transfer amount WITHOUT fees are saved globally for comparison
   // here, transfer amount refers to USDC cents amounts of funds received by the protocol, from the user
   const againstInterestDistortionInCents = callingAccMintPricePaidInCents - feeReceiverUSDCdiffMintInCents;
-  protocolUSDCbalWithoutInteresInCentsGlobalV += againstInterestDistortionInCents;
+  protocolUSDCbalWithoutInteresInCentsGlobalV += againstInterestDistortionInCents;  
   
-  //console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
-  //console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
-
-  //console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${receivingAccountName} USDC balance before ${mintName}`);
-  //console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${receivingAccountName} USDC balance after ${mintName}`);    
-
-  //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before ${mintName}`);
-  //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
   const shouldbeCostPlusFeeInCents = againstInterestDistortionInCents + feeReceiverUSDCdiffMintInCents;
-
-  //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${receivingAccountName} mint price paid in USDC <==========================`);
-  //console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `approx. of what benjaminsContract received in amUSDC (incl. interest already accrued)`);
-  //console.log(shouldbeCostPlusFeeInCents/100, 'should be equal to line above, callingAccMintPricePaidInCents')
-
-  //console.log(againstInterestDistortionInCents, 'saved this as mint cost without fee <======')
-  //console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
-  //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `approx. of what should be the fee received, in USDC (difference between paid by user and received by protocol, changed by interest already accrued)`); 
-
-  
  
-
-
-  //console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
-  //console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
-
-  //console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
-  //console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after ${mintName}`);
-
-  //console.log(receivingAddressBNJIbalBeforeMint, `receivingAddress owns/manages this many benjamins before ${mintName}`);
-  //console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
-
-  
   mintPriceTotalInUSDCcentsWasPaidNowGlobalV = callingAccMintPricePaidInCents;
   mintFeeInUSDCcentsWasPaidNowGlobalV = feeReceiverUSDCdiffMintInCents;
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
   mintAllowanceInUSDCCentsWasNowGlobalV = dividefrom6decToUSDCcents(givenAllowanceToBNJIcontractIn6dec);
 
   confirmMint();
-
-  //console.log(`==============================================================================`);
-  //console.log(`==============================================================================`);
-
 };
 
 async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
 
   const callingAccountName = findUsernameForAddress(callingAccAddress);
-  //console.log('calling address in testBurning is now:', callingAccountName, callingAccAddress);
+  
   const receivingAccountName = findUsernameForAddress(receivingAddress);  
 
   const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
@@ -366,16 +260,12 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
 
   await calcBurnVariables(amountToBurn, callingAccAddress);
-
-  // descr: function burnTo(uint256 _amount, address _toWhom)
-  await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);  
   
-  //console.log(`${callingAccountName} is burning this many tokens:`, amountToBurn, 'for:', receivingAccountName );
-
+  await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);  
+ 
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress); 
-  
-  
+    
   const callingAccBNJIbalAfter = await balBNJI(callingAccAddress); 
   const feeReceiverUSDCBalanceAfterBurnInCents = await balUSDCinCents(feeReceiver); 
   
@@ -392,49 +282,11 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   const againstInterestDistortionInCents = receivingAccBurnReturnReceivedInCents + feeReceiverUSDCdiffBurnInCents;
   protocolUSDCbalWithoutInteresInCentsGlobalV -= againstInterestDistortionInCents;
 
-  //console.log(fromCentsToUSDC(receivingAccBurnReturnReceivedInCents), `${receivingAccountName} burn return received in USDC <==========================`);
-  
-  //console.log(againstInterestDistortionInCents/100, 'fee + burn return, total paid by protocol, in USDC: <======');
-
- 
-
-
-
-
-  //const burningAccBNJIdifference = callingAddressBNJIbalBeforeBurn - callingAccBNJIbalAfter;
-  
- //console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeBurnInCents), `benjaminsContract amUSDC balance before ${burnName}`);
- //console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterBurnInCents), `benjaminsContract amUSDC balance after ${burnName}`);
-
- //console.log(fromCentsToUSDC(callingAddressBNJIbalBeforeBurn), `${callingAccountName} BNJI balance before ${burnName}`);
- //console.log(fromCentsToUSDC(callingAccBNJIbalAfter), `${callingAccountName} BNJI balance after ${burnName}`);    
-
- //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeBurnInCents), `feeReceiver USDC balance before ${burnName}`);
- //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterBurnInCents), `feeReceiver USDC balance after ${burnName}`);
-  
- //console.log(fromCentsToUSDC(receivingAccBurnReturnReceivedInCents), `${callingAccountName} burn return received in USDC`);
- //console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents), `approx. of what benjaminsContract paid out in amUSDC (incl. interest already accrued) `);
-
- //console.log(fromCentsToUSDC(feeReceiverUSDCdiffBurnInCents), `feeReceiver burn fee received in USDC:`);  
- //console.log(fromCentsToUSDC(contractAMUSDCdiffBurnInCents - receivingAccBurnReturnReceivedInCents), `approx. of what should be the fee received, in USDC (difference between received by user and paid by protocol, changed by interest already accrued)`); 
-
- //console.log(totalSupplyBeforeBurn, `Benjamins total supply before burning ${amountToBurn} Benjamins`); 
- //console.log(totalSupplyAfterBurn, `Benjamins total supply after burning ${amountToBurn} Benjamins`); 
-
- //console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${burnName}`);
- //console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after ${burnName}`);
-  
- //console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
-
   burnReturnTotalInUSDCcentsWasPaidNowGlobalV = receivingAccBurnReturnReceivedInCents;
   burnFeeInUSDCcentsWasPaidNowGlobalV = feeReceiverUSDCdiffBurnInCents;
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
   confirmBurn();
-
- //console.log(`==============================================================================`);
- //console.log(`==============================================================================`);
-
 };
 
 function resetTrackers(){
@@ -456,18 +308,7 @@ function resetTrackers(){
 } 
 
 function confirmMint(){  
-  //console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmMint');
-  //console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
   
-  //console.log(mintPriceTotalInUSDCcentsShouldBeNowGlobalV, 'mintPriceTotalInUSDCcentsShouldBeNowGlobalV, confirmMint');
-  //console.log(mintPriceTotalInUSDCcentsWasPaidNowGlobalV, 'mintPriceTotalInUSDCcentsWasPaidNowGlobalV, confirmMint');
-
-  //console.log(mintFeeInUSDCcentsShouldBeNowGlobalV, 'mintFeeInUSDCcentsShouldBeNowGlobalV, confirmMint');
-  //console.log(mintFeeInUSDCcentsWasPaidNowGlobalV, 'mintFeeInUSDCcentsWasPaidNowGlobalV, confirmMint');
-
-  //console.log(mintAllowanceInUSDCCentsShouldBeNowGlobalV, 'mintAllowanceInUSDCCentsShouldBeNowGlobalV, confirmMint');
-  //console.log(mintAllowanceInUSDCCentsWasNowGlobalV, 'mintAllowanceInUSDCCentsWasNowGlobalV, confirmMint');
-
   expect(tokensShouldExistNowGlobalV).to.equal( Number (tokensExistQueriedGlobalV));
   expect(mintPriceTotalInUSDCcentsShouldBeNowGlobalV).to.equal(Number (mintPriceTotalInUSDCcentsWasPaidNowGlobalV));
   expect(mintFeeInUSDCcentsShouldBeNowGlobalV).to.equal(Number (mintFeeInUSDCcentsWasPaidNowGlobalV));
@@ -476,15 +317,7 @@ function confirmMint(){
 };
 
 function confirmBurn(){  
-  //console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmBurn');
-  //console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmBurn');
   
-  //console.log(burnReturnTotalInUSDCcentsShouldBeNowGlobalV, 'burnReturnTotalInUSDCcentsShouldBeNowGlobalV, confirmBurn');
-  //console.log(burnReturnTotalInUSDCcentsWasPaidNowGlobalV, 'burnReturnTotalInUSDCcentsWasPaidNowGlobalV, confirmBurn');
-  
-  //console.log(burnFeeInUSDCcentsShouldBeNowGlobalV, 'burnFeeInUSDCcentsShouldBeNowGlobalV, confirmBurn');
-  //console.log(burnFeeInUSDCcentsWasPaidNowGlobalV, 'burnFeeInUSDCcentsWasPaidNowGlobalV, confirmBurn');
-
   expect(tokensShouldExistNowGlobalV).to.equal(Number(tokensExistQueriedGlobalV));
   expect(burnReturnTotalInUSDCcentsShouldBeNowGlobalV).to.equal(Number(burnReturnTotalInUSDCcentsWasPaidNowGlobalV));
   expect(burnFeeInUSDCcentsShouldBeNowGlobalV).to.equal(Number(burnFeeInUSDCcentsWasPaidNowGlobalV));
@@ -498,16 +331,14 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const usersTokenAtStart = await balBNJI(accountMinting);
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting));
   const accName = findUsernameForAddress(accountMinting);
-  //console.log(accName, 'has account level:', userLevel, 'calcMintApprovalAndPrep <======================'); 
-  
+ 
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
   const mintFeeInCentsRoundedDown = getRoundedFee(userLevel, mintingCostRoundedDownInCents);  
-  //console.log(mintFeeInCentsRoundedDown, "mintFeeInCentsRoundedDown, calcMintApprovalAndPrep"); 
-
+  
   // results, toPayTotalInUSDC can be displayed to user
   const toPayTotalInCents = mintingCostRoundedDownInCents + mintFeeInCentsRoundedDown;
   const toPayTotalInUSDC = toPayTotalInCents / 100;
@@ -517,10 +348,6 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   mintPriceTotalInUSDCcentsShouldBeNowGlobalV = toPayTotalInCents;
   mintFeeInUSDCcentsShouldBeNowGlobalV = mintFeeInCentsRoundedDown;
   mintAllowanceInUSDCCentsShouldBeNowGlobalV = toPayTotalInCents;  
-
- //console.log(usersTokenAtStart, "this was the users token balance at start, calcMintApprovalAndPrep");  
- //console.log(userLevel, "this was the users applied account level, calcMintApprovalAndPrep");
- //console.log(feeModifier, "this was the fee modifier in percent, calcMintApprovalAndPrep");
 
   return toPayTotalIn6dec;
 }
@@ -551,28 +378,10 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   } else {
     return burnFeeInCentsRoundedDown;
   }
-  //console.log("tokensShouldExistNowGlobalV:", tokensShouldExistNowGlobalV );
-  //console.log("burnReturnTotalInUSDCcentsShouldBeNowGlobalV:", burnReturnTotalInUSDCcentsShouldBeNowGlobalV );
-
-  //console.log(usersTokenAtStart, "this is the burning users token balance found at start, calcBurnVariables");  
-  //console.log(userLevel, "this is the burning users account level found at start, calcBurnVariables");
-  //console.log(feeModifier/100, "this is the applicable fee modifier in percent found at start, calcBurnVariables");  
+  
 }
 
-async function getSignersAndStoreAddr(){
-  /*
-  testUser_0_Signer = await ethers.provider.getSigner(testUser_0);
-  testUser_1_Signer = await ethers.provider.getSigner(testUser_1); 
-  testUser_2_Signer = await ethers.provider.getSigner(testUser_2); 
-  testUser_3_Signer = await ethers.provider.getSigner(testUser_3); 
-  testUser_4_Signer = await ethers.provider.getSigner(testUser_4); 
-  testUser_5_Signer = await ethers.provider.getSigner(testUser_5); 
-  testUser_6_Signer = await ethers.provider.getSigner(testUser_6); 
-  testUser_7_Signer = await ethers.provider.getSigner(testUser_7); 
-  testUser_8_Signer = await ethers.provider.getSigner(testUser_8); 
-  testUser_9_Signer = await ethers.provider.getSigner(testUser_9);
-  */
-
+async function storeAddr(){ 
   testUserAddressesArray.push(testUser_0); 
   testUserAddressesArray.push(testUser_1);   
   testUserAddressesArray.push(testUser_2); 
@@ -595,12 +404,7 @@ async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBoo
     const testAccBNJIbal = await balBNJI(testUserAddress);
 
     // if arg 'expectBool' was sent in as true, verify preparation did work as expected
-    if (expectBool == true){
-      //console.log(`testUserAddressesArray[${index}] is:`, testUserAddress);
-      //console.log(`and it's name is:`, callingAccountName);
-      //console.log(`${callingAccountName} has this many USDC after preparation:`, testAccUSDCcentsbal);
-      //console.log(`${callingAccountName} has this many Matic after preparation:`, testAccMATICbal); 
-      //console.log(`${callingAccountName} has this many Matic after preparation:`, testAccBNJIbal);   
+    if (expectBool == true){       
       expect(testAccUSDCcentsbal).to.equal(amountUSDC*100);
       expect(testAccMATICbal).to.equal(amountMatic);
       expect(testAccBNJIbal).to.equal(amountBNJI);
@@ -666,23 +470,20 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
     if (accPosCounter>=10){
       accPosCounter = accPosCounter%10;
     }
-    //console.log("accPosCounter is:", accPosCounter)
+    
     const accNrNow = accOrderArray[accPosCounter];
     const accNow = testUserAddressesArray[accNrNow];    
     const signerNow = await ethers.provider.getSigner(accNow);
     const accNowName = findUsernameForAddress(accNow);     
 
     const balUSDCcentsAtStart = await balUSDCinCents(accNow);
-    //console.log(balUSDCcentsAtStart, `before operation nr: ${loopCounter}, ${accNowName} has this many USDC CENTS`);          
     
     const balBNJIsAtStart = await balBNJI(accNow);
-    //console.log(balBNJIsAtStart, `before operation nr: ${loopCounter}, ${accNowName} has this many BNJIs`);           
-
+    
     // MINTING
     // if runMint == true, mint. 
     if (runMint == true) {
-      //console.log(`operation nr: ${loopCounter} is MINTING`);      
-
+     
       // local function to check minting amount repeatedly until it's okay
       async function checkMintingAmountOkay() {
         if (mintAllowanceInUSDCCentsShouldBeNowGlobalV < 1000 || mintAllowanceInUSDCCentsShouldBeNowGlobalV > balUSDCcentsAtStart) {
@@ -703,8 +504,8 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
       }
 
       // randomizing amount to mint
-      let randomAmountMinting = await randomizedMint(accNow); //Math.floor (Math.random() * 100000);
-      //console.log('randomAmountMinting', randomAmountMinting);         
+      let randomAmountMinting = await randomizedMint(accNow); 
+      
             
       await calcMintApprovalAndPrep(randomAmountMinting, accNow);
       
@@ -713,8 +514,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
       console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} MINTS this many tokens:`, randomAmountMinting);
 
       mintCounter++;
-      //testMinting(mintName, amountToMint, callingAccAddress, receivingAddress)
-      //testMinting(mintName, amountToMint, ammountToApproveInCents, callingAcc, nrOfFaucetCalls)
+      
       await testMinting(`operation nr: ${loopCounter}, minting`, randomAmountMinting, accNow, accNow);
 
       totalSpentInCents += mintAllowanceInUSDCCentsShouldBeNowGlobalV;  
@@ -724,18 +524,15 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
   
     // BURNING
     // if runMint == false, burn.
-    else {
-      //console.log(`operation nr: ${loopCounter} is BURNING`);        
+    else {     
       
       let burnNow = Math.floor (balBNJIsAtStart * 0.2); // this means burning 20% of their tokens per call      
-      
-      //calcBurnVariables(amountToBurn, accountBurning, isTransfer);  
+             
       calcBurnVariables(burnNow, accNow, false); // this returns fee not value
 
       if(burnReturnTotalInUSDCcentsShouldBeNowGlobalV >= 1000) {
         console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} BURNS this many tokens:`, burnNow);        
-
-        //testBurning(burnName, amountToBurn, callingAcc)
+       
         await testBurning(`operation nr: ${loopCounter}, burning`, burnNow, accNow, accNow);
         
         totalReturnedInCents += burnReturnTotalInUSDCcentsWasPaidNowGlobalV + burnFeeInUSDCcentsWasPaidNowGlobalV;
@@ -754,44 +551,18 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
   console.log(`so far, roughly ${totalSpentInCents/100} USDC were spent by the testusers (excl. deployer) and ${totalReturnedInCents/100} USDC were paid out by the contract in total`);   
 
   const protocolBalanceAfterTestInCents = dividefrom6decToUSDCcents( bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)) );
-  //console.log(`our contract's amUSDC balance at the end of all loops so far`, protocolBalanceAfterTestInCents);
-  //const protocolBalanceAfterTestJSExactness = Number(protocolBalanceAfterTest*100);
-  //console.log('protocolBalanceAfterTestJSExactness', protocolBalanceAfterTestJSExactness);
-
-
   
- 
   const feeReceiverUSDCbalAfterTestsInCents = dividefrom6decToUSDCcents( bigNumberToNumber (await polygonUSDC.balanceOf(feeReceiver)) );
-  //const mintFee100kMintInCents = dividefrom6decToUSDCcents(999980000);
-  //const feeReceiverWOUT100kMintFee = feeReceiverUSDCbalAfterTestsInCents - mintFee100kMintInCents;
   
-  //const testAccountsBalInCents = await checkTestAddresses();
-  //const protocolBalwithoutInterestInCents = protocolUSDCbalWithoutInteresInCentsGlobalV;
-  //const deployer100kMintInCents = dividefrom6decToUSDCcents(100998060000);
-
-  //OLD const inTotalUSDCExistafterTestInCents = (protocolBalwithoutInterestInCents - deployer100kMintInCents) + testAccountsBalInCents + mintFee100kMintInCents; 
- 
-  //const inTotalUSDCExistafterTestInCents = protocolBalwithoutInterestInCents + testAccountsBalInCents; 
-  //console.log('JS * 100 check', inTotalUSDCExistafterTest);
-
-
-  //const jsExactnessResolved = inTotalUSDCExistafterTestInCents / 100;
-  //console.log('in total USDC at the end of all loops so far', jsExactnessResolved);
-
-
   const endTokenBalance = bigNumberToNumber(await benjaminsContract.totalSupply() );
-  const valueBNJIsExistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false) /*- deployer100kMintInCents*/);
+  const valueBNJIsExistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
 
   console.log('at the end of all loops so far, this many tokens exist:', endTokenBalance);  
   console.log(valueBNJIsExistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
   console.log(protocolUSDCbalWithoutInteresInCentsGlobalV/100, 'protocol should have this many (am)USDC, without interest so far');
   console.log(protocolBalanceAfterTestInCents/100, 'protocol has this many funds in amUSDC, incl interest so far');  
   console.log(feeReceiverUSDCbalAfterTestsInCents/100, `feeReceiver's USDC balance at the end of all loops so far`);
-
   
-  //console.log(startTotalUSDCcents, 'this was the startTotalUSDCcents');
- // const difference = inTotalUSDCExistafterTestInCents - startTotalUSDCcents;
-  //console.log(difference, `The difference between total USDC Cents at start and end is this much`); 
 } 
 
 describe("Benjamins Test", function () {
@@ -816,8 +587,7 @@ describe("Benjamins Test", function () {
     
     deployerSigner = await ethers.provider.getSigner(deployer); 
 
-    await getSignersAndStoreAddr();
-    //console.log('testUserAddressesArray:', testUserAddressesArray);
+    await storeAddr();   
     
     // Deploy contract
     await fixture(["Benjamins"]);
@@ -853,26 +623,6 @@ describe("Benjamins Test", function () {
       deployerSigner
     );  
     
-    // after deployment, querying benjamins balance of deployer, logging as number and from WEI to ETH
-    //const startingBalanceInbenjamins = await balBNJI(deployer);    
-    //console.log("deployer owns/controls this many benjamins after deployment: ", startingBalanceInbenjamins);
-
-    // after deployment, querying benjamins total supply
-    //const totalSupplyAfterDeploy = bigNumberToNumber(await benjaminsContract.totalSupply()) ;
-    //console.log("benjamins total supply after deployment: ", totalSupplyAfterDeploy);   
-
-    /*
-    // after deployment, checking allowance between BenjaminsContract and LendingPool
-    const contractAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(benjaminsContract.address, polygonLendingPool.address)) ;
-    const deployerAllowanceAfterDeploy = bigNumberToNumber(await polygonUSDC.allowance(deployer, polygonLendingPool.address)) ;
-   //console.log("contractAllowanceAfterDeploy: ", contractAllowanceAfterDeploy);   
-   //console.log("deployerAllowanceAfterDeploy: ", deployerAllowanceAfterDeploy);
-    */   
-
-    //console.log("polygonUSDC address: ", polygonUSDC.address);   
-    //console.log("polygonLendingPool address: ", polygonLendingPool.address);  
-    //console.log("polygonAmUSDC address: ", polygonAmUSDC.address);      
-
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: ["0x986a2fCa9eDa0e06fBf7839B89BfC006eE2a23Dd"],
@@ -892,14 +642,7 @@ describe("Benjamins Test", function () {
     );    
 
     whaleSignerAddress = whaleSigner.address;
-    //console.log('whaleSignerAddress:', whaleSignerAddress);  
-
-    //const whaleMaticBefore = await getMaticBalance(whaleSignerAddress);
-    //console.log('whale has this many MATIC before sending whale transfer:', whaleMaticBefore);   
-
-    //const deployerMaticBefore = await getMaticBalance(deployer);
-    //console.log('deployer has this many MATIC before getting whale transfer:', deployerMaticBefore);   
-      
+          
     await whaleSigner.sendTransaction({
       to: deployer,
       value: ethers.utils.parseEther("5000000") // 5,000,000 Matic
@@ -909,13 +652,7 @@ describe("Benjamins Test", function () {
       method: "hardhat_stopImpersonatingAccount",
       params: ["0x986a2fCa9eDa0e06fBf7839B89BfC006eE2a23Dd"],
     });    
-
-    //const whaleMaticAfter = await getMaticBalance(whaleSignerAddress);
-    //console.log('whale has this many MATIC after sending whale transfer:', whaleMaticAfter); 
-
-    //const deployerMaticAfter = await getMaticBalance(deployer);
-    //console.log('deployer has this many MATIC after getting whale transfer:', deployerMaticAfter);     
-       
+           
     polygonWMATIC = new ethers.Contract(
       polygonWMATICaddress,
       [
@@ -924,15 +661,9 @@ describe("Benjamins Test", function () {
         'function deposit() public payable',            
       ], 
       deployerSigner
-    );
-
-    //const deployerMaticBeforeWrapping = await getMaticBalance(deployer);
-    //console.log('deployer has this many MATIC before wrapping:', deployerMaticBeforeWrapping);     
+    );      
     
     await polygonWMATIC.deposit( {value: ethers.utils.parseEther("4000000")} );
-
-    //const deployerMaticAfterWrapping = await getMaticBalance(deployer);
-    //console.log('deployer has this many MATIC after wrapping:', deployerMaticAfterWrapping);
 
     polygonQuickswapRouter = new ethers.Contract(
       polygonQuickswapRouterAddress,
@@ -965,15 +696,13 @@ describe("Benjamins Test", function () {
     const amountInMaxInWEI = ethers.utils.parseEther("4000000"); //4000000 * (10**18);   
     await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
    
-    //const deployerUSDCbalEnd2 = await balUSDCinCents(deployer);
-    //console.log('deployer has this many USDC after using DEX:', deployerUSDCbalEnd2);                   
   
     await benjaminsContract.connect(deployerSigner).unpause(); 
 
     resetTrackers();
     
-    //await countAllCents();
-    //waitFor(4000);
+    await countAllCents();
+    waitFor(4000);
 
     await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);    
         
@@ -997,13 +726,9 @@ describe("Benjamins Test", function () {
     waitFor(4000);
     await checkTestAddresses(200000,10,0, true);
 
-    console.log(await balUSDC(deployer), 'deployer USDC at start');
-    console.log(divideFrom6decToUSDC(bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address))), 'benjaminsContract amUSDC at start');
-    console.log(await balUSDC(feeReceiver), 'feeReceiver USDC at start');
-
-    /*
-    await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
-    expect(await balBNJI(testUser_1)).to.equal(10);*/
+    //console.log(await balUSDC(deployer), 'deployer USDC at start');
+    //console.log(divideFrom6decToUSDC(bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address))), 'benjaminsContract amUSDC at start');
+    //console.log(await balUSDC(feeReceiver), 'feeReceiver USDC at start');    
     
   });
   
