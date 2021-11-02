@@ -16,7 +16,7 @@ export const ToSelect = () => {
     () =>
       tokenList.filter(
         (item) =>
-          item.networkId == networkId &&
+          item.networkId === networkId &&
           item.symbol.toLowerCase() !== fromSymbol.toLowerCase()
       ),
     [networkId, fromSymbol]
@@ -59,12 +59,21 @@ export const ToSelect = () => {
     <Box sx={{ width: "100%" }}>
       <Autocomplete
         options={tokens}
-        getOptionLabel={(option) => `${option.symbol.toUpperCase()} (${option.name})`}
+        getOptionLabel={(option) =>
+          `${option.symbol.toUpperCase()} (${option.name})`
+        }
         filterOptions={filterOptions}
         renderOption={(props, option) => (
           <Box component="li" {...props}>
-            <img width="30" src={option.image} alt="" style={{borderRadius: '50%'}} />
-            <span style={{ flex: 1, margin: "0 8px" }}>{option.symbol.toUpperCase()}</span>
+            <img
+              width="30"
+              src={option.image}
+              alt=""
+              style={{ borderRadius: "50%" }}
+            />
+            <span style={{ flex: 1, margin: "0 8px" }}>
+              {option.symbol.toUpperCase()}
+            </span>
             <span style={{ opacity: 0.5 }}>{option.name}</span>
           </Box>
         )}
