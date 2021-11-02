@@ -4,27 +4,63 @@ import { Box, Button, Stack } from '@mui/material';
 import { SendPanel } from "../Blocks/SendPanel";
 import { AddressPanel } from "../Blocks/AddressPanel";
 import { Heading } from '../UW/Heading';
-import { useMoralis } from "react-moralis";
 
+import { usePolygonNetwork } from '../../hooks/usePolygonNetwork';
 
 import { useExperts } from "../../contexts/expertsContext";
-import { useNetwork } from "../../contexts/networkContext";
+
+// import { useMoralis } from "react-moralis";
+// import { useNetwork } from "../../contexts/networkContext";
+
 
 
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
-  const { Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
-  const { networkId, setNetworkId } = useNetwork();
+  const { isPolygon } = usePolygonNetwork();
 
-  useEffect(() => {
-    if (!isWeb3Enabled) {
-      enableWeb3();
-    }
-    if (isWeb3Enabled) {
-      getSelectedNetwork();  
-    }   
-  }, [isWeb3Enabled, enableWeb3]);
+  // const { networkId, setNetworkId } = useNetwork();
+  // const { Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
+  // const { networkId, setNetworkId } = useNetwork();
+
+  // useEffect(() => {
+  //   if (!isWeb3Enabled) {
+  //     enableWeb3();
+  //   }
+  // }, [isWeb3Enabled, enableWeb3]);
+
+  // const getSelectedNetwork = async() => {
+  //    Moralis.getChainId()
+  //    .then((chainId)=>{
+  //      console.log('ChainId:', chainId);
+  //      setNetworkId(chainId);
+
+  //      // If we want to switch network here on Send/Receive.
+  //      if(chainId!=137){
+  //        switchNetworkToPolygon(137);
+  //      }
+  //    },(error)=>{
+  //      console.log('ChainIdError:', error);
+  //    })
+  //    .catch(error=>{
+  //      console.log('ChainIdCatch:', error);
+  //    })
+  // }
+
+  // const switchNetworkToPolygon = (chainId) =>{
+  //   Moralis.switchNetwork(chainId)
+  //   .then((success)=>{
+  //     console.log('Success:', success);
+  //   },(error)=>{
+  //     console.log('SwitchError:', error);
+  //     setDialog(error.message);
+  //   })
+  //   .catch((error)=>{
+  //     console.log('SwitchCatch:', error);
+  //     setDialog(error.message);
+  //   })
+  // }
+
 
   useEffect(() => {
     setActionMode("send");
@@ -32,10 +68,18 @@ export const SendReceive = () => {
 
   }, [setActionMode, setDialog]);
 
+  useEffect(() => {
+    if(!isPolygon){
+      setDialog('Switch to Polygon.')
+
+    }else{
+      setDialog("Would you like to send or receive cryptocurrency?");
+    }
+  }, [isPolygon]);
+
 
   const handleSendMode = async () => {
-
-    if (networkId !== 137) {
+    if (!isPolygon) {
       setDialog('Switch network to Polygon');
       return;
     }
@@ -54,37 +98,6 @@ export const SendReceive = () => {
     );
   };
 
-  const getSelectedNetwork = async() => {
-     Moralis.getChainId()
-     .then((chainId)=>{
-       console.log('ChainId:', chainId);
-       setNetworkId(chainId);
-
-       // If we want to switch network here on Send/Receive.
-       if(chainId!=137){
-         switchNetworkToPolygon(137);
-       }
-     },(error)=>{
-       console.log('ChainIdError:', error);
-     })
-     .catch(error=>{
-       console.log('ChainIdCatch:', error);
-     })
-  }
-
-  const switchNetworkToPolygon = (chainId) =>{
-    Moralis.switchNetwork(chainId)
-    .then((success)=>{
-      console.log('Success:', success);
-    },(error)=>{
-      console.log('SwitchError:', error);
-      setDialog(error.message);
-    })
-    .catch((error)=>{
-      console.log('SwitchCatch:', error);
-      setDialog(error.message);
-    })
-  }
 
   return (
     <Box sx={{ textAlign: 'center', mt: 1, mb: 3 }}>
