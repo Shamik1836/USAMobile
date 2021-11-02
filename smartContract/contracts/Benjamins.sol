@@ -123,10 +123,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     function calcTransportFee(uint256 amountOfBNJI) internal view returns (uint256) {
         uint256 beforeFeeInUSDCin6dec = quoteUSDC(amountOfBNJI, false);                
-        console.log(beforeFeeInUSDCin6dec, 'beforeFeeInUSDCin6dec, calcTransportFee, BNJ');
+        //console.log(beforeFeeInUSDCin6dec, 'beforeFeeInUSDCin6dec, calcTransportFee, BNJ');
         uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
         uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
-        console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec, calcTransportFee, BNJ'); 
+        //console.log(feeRoundedDownIn6dec, 'feeRoundedDownIn6dec, calcTransportFee, BNJ'); 
         return feeRoundedDownIn6dec;
     }
     
@@ -285,10 +285,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         } else {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, false); 
         } 
-        console.log(beforeFeeInUSDCin6dec, 'BNJ, beforeFeeInUSDCin6dec');
+        //console.log(beforeFeeInUSDCin6dec, 'BNJ, beforeFeeInUSDCin6dec');
         uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
         uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
-        console.log(feeRoundedDownIn6dec, 'BNJ, feeRoundedDownIn6dec');      
+        //console.log(feeRoundedDownIn6dec, 'BNJ, feeRoundedDownIn6dec');      
         // Execute exchange
         if (isMint == true) {
             // moving funds for minting
@@ -320,7 +320,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         if (isMint == true) {     
             // on minting, fee is added to price
             uint256 _afterFeeUSDCin6dec = _beforeFeeInUSDCin6dec + _feeRoundedDownIn6dec;
-            console.log(_afterFeeUSDCin6dec, 'BNJ, _afterFeeUSDCin6dec');    
+            //console.log(_afterFeeUSDCin6dec, 'BNJ, _afterFeeUSDCin6dec');    
             // pull USDC from user (_payer), push to this contract           
             polygonUSDC.transferFrom(_payer, address(this), _afterFeeUSDCin6dec);            
             // pushing fee from this contract to feeReceiver address
@@ -333,7 +333,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         } else {
             // on burning, fee is substracted from return   
             uint256 _afterFeeUSDCin6dec = _beforeFeeInUSDCin6dec - _feeRoundedDownIn6dec; 
-            console.log(_afterFeeUSDCin6dec, 'BNJ, _afterFeeUSDCin6dec');                 
+            //console.log(_afterFeeUSDCin6dec, 'BNJ, _afterFeeUSDCin6dec');                 
             // lending pool is queried to push USDC (in 6 decimals unit) including fee back to this contract
             polygonLendingPool.withdraw(address(polygonUSDC), _beforeFeeInUSDCin6dec, address(this)); 
             emit LendingPoolWithdrawal(_beforeFeeInUSDCin6dec, _payee);
