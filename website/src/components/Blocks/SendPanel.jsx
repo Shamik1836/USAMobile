@@ -1,18 +1,16 @@
 import { Box, Stack } from '@mui/material';
+
 import { useActions } from "../../contexts/actionsContext";
-
-
 import { FromSelect } from "../Bits/FromSelect";
 import { AmountSelect } from "../Bits/AmountSelect";
 import { StartSend } from "../Bits/StartSend";
-
 // Send mode.
 import { ToAddress } from "../Bits/ToAddress";
-
 
 export const SendPanel = () => {
   const { fromSymbol } = useActions();
 
+  
   return (
     <Box
       sx={{

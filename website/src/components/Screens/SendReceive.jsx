@@ -8,25 +8,38 @@ import { useMoralis } from "react-moralis";
 
 
 import { useExperts } from "../../contexts/expertsContext";
+import { useNetwork } from "../../contexts/networkContext";
 
 
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
-  const { Moralis } = useMoralis();
+  const { Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
+  const { networkId, setNetworkId } = useNetwork();
+
+  useEffect(() => {
+    if (!isWeb3Enabled) {
+      enableWeb3();
+    }
+    if (isWeb3Enabled) {
+      getSelectedNetwork();  
+    }   
+  }, [isWeb3Enabled, enableWeb3]);
 
   useEffect(() => {
     setActionMode("send");
     setDialog("Would you like to send or receive cryptocurrency?");
+
   }, [setActionMode, setDialog]);
 
+
   const handleSendMode = async () => {
-    await Moralis.enable();
-    const id = await Moralis.getChainId();
-    if (id !== 137) {
+
+    if (networkId !== 137) {
       setDialog('Switch network to Polygon');
       return;
     }
+
     setLocalMode("send");
     setActionMode("send");
     setDialog("Select a currency to send.");
@@ -40,6 +53,38 @@ export const SendReceive = () => {
       "select amount to request to generate a QR code."
     );
   };
+
+  const getSelectedNetwork = async() => {
+     Moralis.getChainId()
+     .then((chainId)=>{
+       console.log('ChainId:', chainId);
+       setNetworkId(chainId);
+
+       // If we want to switch network here on Send/Receive.
+       if(chainId!=137){
+         switchNetworkToPolygon(137);
+       }
+     },(error)=>{
+       console.log('ChainIdError:', error);
+     })
+     .catch(error=>{
+       console.log('ChainIdCatch:', error);
+     })
+  }
+
+  const switchNetworkToPolygon = (chainId) =>{
+    Moralis.switchNetwork(chainId)
+    .then((success)=>{
+      console.log('Success:', success);
+    },(error)=>{
+      console.log('SwitchError:', error);
+      setDialog(error.message);
+    })
+    .catch((error)=>{
+      console.log('SwitchCatch:', error);
+      setDialog(error.message);
+    })
+  }
 
   return (
     <Box sx={{ textAlign: 'center', mt: 1, mb: 3 }}>
