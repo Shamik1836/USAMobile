@@ -99,7 +99,13 @@ export const AmountSelect = ({ type }) => {
               onChange={onChange}
               onBlur={onBlur}
               type="number"
-              step="0.01"
+              step={
+                isUSDMode
+                  ? ((price * tokens) / 10).toFixed(2)
+                  : (tokens / 10).toFixed(2)
+              }
+              max={isUSDMode ? price * tokens : tokens}
+              min="0"
             />
           </div>
           <label htmlFor="amount-input">{isUSDMode ? "USD" : fromSymbol}</label>
@@ -111,7 +117,7 @@ export const AmountSelect = ({ type }) => {
           <span>
             {price
               ? isUSDMode
-                ? `≈ ${amount.toFixed(6)} ${fromSymbol}`
+                ? `≈ ${amount.toFixed(2)} ${fromSymbol}`
                 : `≈ $${usdAmount.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
