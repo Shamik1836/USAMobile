@@ -12,60 +12,58 @@ export const BuySell = memo(() => {
   const emailAddress = user?.attributes.emailAddress;
 
   useEffect(() => {
-    if (ethAddress) {
-      const transak = new transakSDK({
-        apiKey: process.env.REACT_APP_TRANSAK_API_KEY,
-        environment:
-          process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING",
-        defaultCryptoCurrency: "USDC",
-        walletAddress: ethAddress,
-        themeColor: "000000",
-        fiatCurrency: "USD",
-        email: emailAddress,
-        networks: "ethereum,polygon",
-        defaultNetwork: "polygon",
-        redirectURL: "",
-        hostURL: window.location.origin,
-        widgetWidth: "450px",
-        widgetHeight: "635px",
-      });
+    const transak = new transakSDK({
+      apiKey: process.env.REACT_APP_TRANSAK_API_KEY,
+      environment:
+        process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING",
+      defaultCryptoCurrency: "USDC",
+      walletAddress: ethAddress,
+      themeColor: "000000",
+      fiatCurrency: "USD",
+      email: emailAddress,
+      networks: "ethereum,polygon",
+      defaultNetwork: "polygon",
+      redirectURL: "",
+      hostURL: window.location.origin,
+      widgetWidth: "450px",
+      widgetHeight: "635px",
+    });
 
-      transak.init();
+    transak.init();
 
-      transak.on(transak.ALL_EVENTS, (data) => {
-        console.log(data);
-      });
+    transak.on(transak.ALL_EVENTS, (data) => {
+      console.log(data);
+    });
 
-      transak.on(transak.EVENTS.TRANSAK_WIDGET_OPEN, (data) => {
-        setDialog("Place an order to buy cryptocurrency.");
-      });
+    transak.on(transak.EVENTS.TRANSAK_WIDGET_OPEN, (data) => {
+      setDialog("Place an order to buy cryptocurrency.");
+    });
 
-      transak.on(transak.EVENTS.TRANSAK_ORDER_CREATED, (data) => {
-        console.log(data);
-        setDialog("Transak order created");
-      });
+    transak.on(transak.EVENTS.TRANSAK_ORDER_CREATED, (data) => {
+      console.log(data);
+      setDialog("Transak order created");
+    });
 
-      transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data) => {
-        console.log(data);
-        setDialog("Transak order successful");
-      });
+    transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data) => {
+      console.log(data);
+      setDialog("Transak order successful");
+    });
 
-      transak.on(transak.EVENTS.TRANSAK_ORDER_FAILED, (data) => {
-        console.log(data);
-        setDialog("Transak order failed");
-      });
+    transak.on(transak.EVENTS.TRANSAK_ORDER_FAILED, (data) => {
+      console.log(data);
+      setDialog("Transak order failed");
+    });
 
-      transak.on(transak.EVENTS.TRANSAK_ORDER_CANCELLED, (data) => {
-        console.log(data);
-        setDialog("Transak order cancelled");
-      });
+    transak.on(transak.EVENTS.TRANSAK_ORDER_CANCELLED, (data) => {
+      console.log(data);
+      setDialog("Transak order cancelled");
+    });
 
-      setActionMode("buy");
+    setActionMode("buy");
 
-      return () => {
-        transak.close();
-      };
-    }
+    return () => {
+      transak.close();
+    };
   }, [ethAddress, emailAddress, setActionMode, setDialog]);
 
   return null;
