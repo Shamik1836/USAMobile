@@ -472,7 +472,7 @@ async function minimizedBurn() {
   const tokensToBurnNow = totalSupplyExisting - totalSupplyAfterBurning;
 
   const roundedToInteger = Math.ceil(tokensToBurnNow);
-  console.log(roundedToInteger,'trying to burn this amount of BNJIs, minimizedBurn');
+  
   return roundedToInteger;
 
 }
@@ -531,10 +531,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
       let minAmountBurning = await minimizedBurn(); // this means burning an amount of tokens, in an value as close as possible to $5        
       
       await calcBurnVariables(minAmountBurning, accNow, false); // this returns fee not value
-      
-      console.log(burnReturnTotalInUSDCcentsShouldBeNowGlobalV, 'this is burnReturnTotalInUSDCcentsShouldBeNowGlobalV');
-      console.log(minAmountBurning, 'this is minAmountBurning');
-      console.log(accNow, 'this is accNow');
+            
       if(burnReturnTotalInUSDCcentsShouldBeNowGlobalV >= 500) {
         console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} BURNS this many tokens:`, minAmountBurning);        
        
@@ -817,6 +814,6 @@ describe("Benjamins Test", function () {
     await runMintOrBurnLoop(100, false, accOrderArray10, 'Test 10');
     await countAllCents();
     waitFor(4000);
-  });  
+  }); 
   
 }); 

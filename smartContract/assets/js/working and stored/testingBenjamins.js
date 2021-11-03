@@ -706,7 +706,7 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(10);    
     
   });
-  /*
+  
   it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () { 
         
     await addUserAccDataPoints(testUser_1);        
@@ -1219,7 +1219,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Levels = [0,4];
     const expectedUser2Discounts = [0,40];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
-  });*//*
+  });*/
 
   
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
@@ -1358,7 +1358,7 @@ describe("Benjamins Test", function () {
     await benjaminsContract.connect(deployerSigner).unpause();
     expect(await  benjaminsContract.paused()).to.equal(false);
     
-  });//*/
+  });
 
   
 }); 

@@ -245,10 +245,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;
         uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
         uint256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents
-        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;
-        console.log(stubble, 'this is stubble');
-        console.log(amountInUSDCin6dec, 'this is amountInUSDCin6dec');
-        console.log(endAmountUSDCin6dec, 'this is endAmountUSDCin6dec');        
+        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;              
         require (endAmountUSDCin6dec >= 5000000, "BNJ, quoteUSDC: Minimum BNJI value to move is $5 USDC" );
         return endAmountUSDCin6dec;
     }
