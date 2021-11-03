@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useMoralis } from "react-moralis";
 
-const emptyList = [];
+const emptyList = [
+  { timestamp: null, counterparty: "No transactions found.", amount: null },
+];
 
 export const useTransactions = (props) => {
   const { isAuthenticated, Moralis, user } = useMoralis();
-  // const { networkName } = useNetwork();
   const address = user.attributes["ethAddress"];
-  const [Txs, setTxs] = useState(emptyList);
-  const [isLoading, setIsLoading] = useState(1);
+  const [NativeTxs, setNativeTxs] = useState(emptyList);
+  const [NativeIsLoading, setNativeIsLoading] = useState(1);
 
   useEffect(() => {
     if (isAuthenticated) {
-      Moralis.Web3API.account.getTokenTransfers({ chain: 'polygon', address })
+      Moralis.Web3API.account
+        .getTransactions({ chain: props.chain, address })
         .then((userTrans) => {
-          let newTxs = userTrans.result.filter(t => t.address === props.tokenAddress).map((Tx) => {
+          let newTxs = userTrans.result.map((Tx) => {
             const output = { ...Tx };
             switch (address) {
               case Tx.from_address:
@@ -39,15 +41,15 @@ export const useTransactions = (props) => {
             }
             return output;
           });
-          setTxs(newTxs);
-          setIsLoading(0);
+          setNativeTxs(newTxs);
+          setNativeIsLoading(0);
         });
     } else {
-      setTxs(emptyList);
-      setIsLoading(1);
+      setNativeTxs(emptyList);
+      setNativeIsLoading(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Moralis.Web3, isAuthenticated]);
 
-  return { Txs, isLoading };
+  return { NativeTxs, NativeIsLoading };
 };
