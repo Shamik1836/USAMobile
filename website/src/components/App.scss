@@ -80,4 +80,13 @@ body {
 
 .NavBar{
   text-decoration: none;
+
+  &.NavBar {
+    padding-left: 10px;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 }

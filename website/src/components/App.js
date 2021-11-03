@@ -1,7 +1,7 @@
 import { useMoralis } from "react-moralis";
 import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Button, Stack, CircularProgress } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LoopIcon from '@mui/icons-material/Loop';
 import LinkIcon from '@mui/icons-material/Link';
@@ -14,16 +14,40 @@ import { SwapTrade } from "./Screens/SwapTrade";
 import { BuySell } from "./Screens/BuySell";
 import { SendReceive } from "./Screens/SendReceive";
 import { BottomFooter } from "./Screens/BottomFooter";
+import { usePositions } from "../hooks/usePositions";
 
 
 import "./App.scss";
 
+const CryptoRoute = ({ component: Component, address, ...rest }) => {
+  return (
+    <Route
+      {...rest}
+      render={() => (address ? <Component /> : <Redirect to="/BuySell" />)}
+    />
+  );
+};
 
 function App() {
-  const { isAuthenticated } = useMoralis();
-  
-  var paddingLeft = { paddingLeft: "10px" };
+  const { isAuthenticated, user } = useMoralis();
+  const { positions, isLoading } = usePositions();
+  const address = user?.attributes?.ethAddress;
 
+  if (isLoading) {
+    return (
+      <CircularProgress
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+    );
+  }
+
+  const isOnlyMatic = positions.length === 1 && positions[0].symbol === 'MATIC';
+  
   return (
     <Box>
       <Stack>
@@ -32,7 +56,10 @@ function App() {
         {isAuthenticated ? (
           <BrowserRouter>
             <Stack direction="row" sx={{alignSelf:'center', justifyContent:'center', mb:2}} spacing={1}>
-              <Link to="/PortfolioPrices" className="NavBar">
+              <Link
+                to="/PortfolioPrices"
+                className={`NavBar${address ? "" : " disabled"}`}
+              >
                 <Button variant="uw" 
                   sx={{ 
                     boxShadow: "var(--boxShadow)",
@@ -42,7 +69,10 @@ function App() {
                   Portfolio
                 </Button>
               </Link>
-              <Link to="/SwapTrade" className="NavBar" style={paddingLeft}>
+              <Link
+                to="/SwapTrade"
+                className={`NavBar${address ? "" : " disabled"}`}
+              >
                 <Button variant="uw"
                   sx={{ 
                     boxShadow: "var(--boxShadow)",
@@ -53,7 +83,7 @@ function App() {
                   Trade
                 </Button>
               </Link>
-             <Link to="/BuySell" className="NavBar" style={paddingLeft}>
+             <Link to="/BuySell" className="NavBar">
                 <Button variant="uw"
                   sx={{ 
                     boxShadow: "var(--boxShadow)",
@@ -64,7 +94,10 @@ function App() {
                 </Button>
               </Link>
 
-              <Link to="/SendRecieve" className="NavBar" style={paddingLeft}>
+              <Link
+                to="/SendRecieve"
+                className={`NavBar${address ? "" : " disabled"}`}
+              >
                 <Button variant="uw"
                  sx={{ 
                     boxShadow: "var(--boxShadow)",
@@ -76,19 +109,28 @@ function App() {
               </Link>
             </Stack>
             <Switch>
-              <Route exact path="/PortfolioPrices">
-                <PortfolioPrices />
-              </Route>
-              <Route exact path="/SwapTrade">
-                <SwapTrade />
-              </Route>
+              <CryptoRoute
+                exact
+                path="/PortfolioPrices"
+                component={PortfolioPrices}
+                address={address}
+              />
+              <CryptoRoute
+                exact
+                path="/SwapTrade"
+                component={SwapTrade}
+                address={address}
+              />
               <Route exact path="/BuySell">
                 <BuySell />
               </Route>
-              <Route exact path="/SendRecieve">
-                <SendReceive />
-              </Route>
-              <Redirect to="/PortfolioPrices" />
+              <CryptoRoute
+                exact
+                path="/SendRecieve"
+                component={SendReceive}
+                address={address}
+              />
+              <Redirect to={isOnlyMatic ? "/SwapTrade" : "/PortfolioPrices"} />
             </Switch>
           </BrowserRouter>
         ) : (
