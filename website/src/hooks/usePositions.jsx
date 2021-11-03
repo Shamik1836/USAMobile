@@ -9,7 +9,7 @@ const geckoHead =
 const geckoTail = "&order=market_cap_desc&per_page=100&page=1&sparkline=false";
 
 export const usePositions = () => {
-  const { isAuthenticated, Moralis } = useMoralis();
+  const { isInitialized, isAuthenticated, Moralis } = useMoralis();
   const { networkId } = useNetwork();
   const [positions, setPositions] = useState(emptyList);
   const [totalValue, setTotalValue] = useState(0);
@@ -17,6 +17,7 @@ export const usePositions = () => {
   // const [allPositions, setAllPositions] = useState(emptyList);
 
   useEffect(() => {
+    if (!isInitialized) return;
     if (isAuthenticated) {
       // Bring back a list of all tokens the user has
       //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
@@ -74,14 +75,17 @@ export const usePositions = () => {
             setTotalValue(runningTotal);
             setIsLoading(0);
           });
+      }).catch(e => {
+        setPositions(emptyList);
+        setIsLoading(0);
       });
     } else {
       // No authentication.  Report blanks.
       setPositions(emptyList);
-      setIsLoading(1);
+      setIsLoading(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Moralis.Web3, isAuthenticated]);
+  }, [Moralis.Web3, isAuthenticated, isInitialized]);
 
   return { positions, isLoading, totalValue };
 };
