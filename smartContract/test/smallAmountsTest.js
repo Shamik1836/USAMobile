@@ -19,6 +19,7 @@ let mintAllowanceInUSDCCentsWasNowGlobalV = 0;
 let burnReturnTotalInUSDCcentsWasPaidNowGlobalV = 0;
 let burnFeeInUSDCcentsWasPaidNowGlobalV = 0;
 
+let burnReturnStillInclFeesInUSDCcentsGlobalV = 0;
 let protocolUSDCbalWithoutInteresInCentsGlobalV = 0;
 let loopCounterTotal = 0;
 let mintCounterTotal = 0;
@@ -37,7 +38,7 @@ let totalUSDCcentsEntriesArr = [];
 
 const scale6dec = 1000000;
 
-const baseFee = 1;
+const baseFee = 2;
 const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];    
 const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75]; 
 
@@ -377,6 +378,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
     tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
     burnReturnTotalInUSDCcentsShouldBeNowGlobalV = toReceiveTotalInCents;
     burnFeeInUSDCcentsShouldBeNowGlobalV = burnFeeInCentsRoundedDown;
+    burnReturnStillInclFeesInUSDCcentsGlobalV = burnReturnRoundedDownInCents;
   } else {
     return burnFeeInCentsRoundedDown;
   }
@@ -452,7 +454,7 @@ async function minimizedMint(){
   const tokensMintingNow = totalSupplyAfterMinting - totalSupplyExisting;
 
   const roundedToInteger = Math.ceil(tokensMintingNow);
-  console.log(roundedToInteger,'trying to mint this amount of BNJIs');
+  //console.log(roundedToInteger,'trying to mint this amount of BNJIs');
   return roundedToInteger;
 
 }
@@ -467,35 +469,24 @@ async function minimizedBurn() {
 
   if (totalSupplyExisting < 2000) {not5USDCworthCounter += 1};
 
-  const totalSupplyAfterBurning = Math.sqrt( (totalSupplyExisting * totalSupplyExisting) - (currencyToBePaidOutNow * 800000) );
+    const totalSupplyAfterBurning = Math.sqrt( (totalSupplyExisting * totalSupplyExisting) - (currencyToBePaidOutNow * 800000) );
 
-  const tokensToBurnNow = totalSupplyExisting - totalSupplyAfterBurning;
+    const tokensToBurnNow = totalSupplyExisting - totalSupplyAfterBurning;
 
-  const roundedToInteger = Math.ceil(tokensToBurnNow);
+    const roundedToInteger = Math.ceil(tokensToBurnNow);
   
   return roundedToInteger;
 
 }
 
-async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
+async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr) {
   
   let mintCounter = 0;
-  let burnCounter = 0;
-
-  let accPosCounter;
+  let burnCounter = 0;  
 
   // running either minting or burning, this many loops: loopsToRun
   for (loopCounter = 1; loopCounter <= loopsToRun; loopCounter++) {
-    
-    // accounts are up next in the order they are sent in via accOrderArray
-    // when all 10 test accounts acted, array starts over, until loopsToRun are all done
-    accPosCounter = loopCounter-1;
-    if (accPosCounter>=10){
-      accPosCounter = accPosCounter%10;
-    }
-    
-    const accNrNow = accOrderArray[accPosCounter];
-    const accNow = testUserAddressesArray[accNrNow];    
+         
     const signerNow = await ethers.provider.getSigner(accNow);
     const accNowName = findUsernameForAddress(accNow);     
 
@@ -528,11 +519,15 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
     // if runMint == false, burn.
     else {     
       
+      //console.log(`In ${testNr}, operation nr: ${loopCounter} this many tokens exist:`, bigNumberToNumber(await benjaminsContract.totalSupply() )); 
+
       let minAmountBurning = await minimizedBurn(); // this means burning an amount of tokens, in an value as close as possible to $5        
       
       await calcBurnVariables(minAmountBurning, accNow, false); // this returns fee not value
             
-      if(burnReturnTotalInUSDCcentsShouldBeNowGlobalV >= 500) {
+      //console.log(`burnReturnTotalInUSDCcentsShouldBeNowGlobalV:`, burnReturnTotalInUSDCcentsShouldBeNowGlobalV); 
+
+      if (burnReturnStillInclFeesInUSDCcentsGlobalV >= 500) {
         console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} BURNS this many tokens:`, minAmountBurning);        
        
         await testBurning(`operation nr: ${loopCounter}, burning`, minAmountBurning, accNow, accNow);
@@ -733,9 +728,9 @@ describe("Benjamins Test", function () {
     await countAllCents();
     waitFor(4000);
     await checkTestAddresses(200000,10,0, true);
-
+    
     // Preparation: testUser1 buys to highest level, from there on will interact in smallest way possible
-    await testMinting("Preparation mint by testUser_1 to get to account level 5", 5000, testUser_1, testUser_1); 
+    //await testMinting("Preparation mint by testUser_1 to get to account level 5", 5000, testUser_1, testUser_1); 
 
     //console.log(await balUSDC(deployer), 'deployer USDC at start');
     //console.log(divideFrom6decToUSDC(bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address))), 'benjaminsContract amUSDC at start');
@@ -745,21 +740,20 @@ describe("Benjamins Test", function () {
   
   
   it("1.: Small amount test: 100 mints", async function () {  
-
-    let accOrderArray1 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, true, accOrderArray1, 'Test 1');
+      
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 1');
     await countAllCents();    
     waitFor(4000);
   });
   
   it("2.: Small amount test: 100 burns", async function () {     
-    let accOrderArray2 = [1,1,1,1,1,1,1,1,1,1]; 
-    await runMintOrBurnLoop(100, false, accOrderArray2, 'Test 2');
+    
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 2');
     await countAllCents();
     waitFor(4000);
 
   });
-  
+  /*
   it("3.: Small amount test: 100 mints", async function () {     
     let accOrderArray3  = [1,1,1,1,1,1,1,1,1,1];  
     await runMintOrBurnLoop(100, true, accOrderArray3, 'Test 3');
@@ -814,6 +808,6 @@ describe("Benjamins Test", function () {
     await runMintOrBurnLoop(100, false, accOrderArray10, 'Test 10');
     await countAllCents();
     waitFor(4000);
-  }); 
+  });// */
   
 }); 
