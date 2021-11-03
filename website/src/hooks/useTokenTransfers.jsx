@@ -9,10 +9,6 @@ export const useTokenTransfers = (props) => {
   const [ERC20Txs, setERC20Txs] = useState(emptyList);
   const [ERC20IsLoading, setERC20IsLoading] = useState(1);
 
-  console.groupCollapsed("useTokenTransfers");
-  console.log("props:", props);
-  console.groupEnd();
-
   useEffect(() => {
     if (isAuthenticated) {
       Moralis.Web3API.account

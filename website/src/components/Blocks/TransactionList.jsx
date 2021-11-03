@@ -27,10 +27,6 @@ export const TransactionList = (props) => {
   const [Txs, setTxs] = useState(emptyList);
   const [isLoading, setIsLoading] = useState(1);
 
-  console.groupCollapsed("TransactionList");
-  console.log("props:", props);
-  console.groupEnd();
-
   useEffect(() => {
     if (props.tokenAddress !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
       setTxs(ERC20Txs);
