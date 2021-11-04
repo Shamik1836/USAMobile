@@ -37,6 +37,6 @@ export const MainStage = () => {
           </>
         )}
       </Stack>
-    </Flex>
+    </Box>
   );
 };
