@@ -42,7 +42,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8 antiFlashLoan = 10;     // number of blocks hold to defend vs. flash loans.
     uint blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
     uint256 curveFactor = 800000; // Inverse slope of the bonding curve.
-    uint8 baseFee = 1;            // in percent as an integer  // TODO: change to real value, this is for testing
+    uint16 baseFee = 2;            // in percent as an integer  // TODO: change to real value, this is for testing
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
@@ -225,7 +225,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Quote USDC for mint or burn
-    // based on circulation and amount (and sign of amount)
+    // based on circulation and amount
     function quoteUSDC(uint256 _amount, bool isMint) public view whenAvailable returns (uint256) {       
         // Basic integral
         uint256 supply = totalSupply();
@@ -245,7 +245,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;
         uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;
         uint256 stubble = amountInUSDCin6dec % 10000; // shave to USDC cents
-        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;
+        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;              
         require (endAmountUSDCin6dec >= 5000000, "BNJ, quoteUSDC: Minimum BNJI value to move is $5 USDC" );
         return endAmountUSDCin6dec;
     }
@@ -256,7 +256,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         //console.log('userBalance:', userBalance);     
         //console.log('levelAntes.length:', levelAntes.length);  
         uint8 currentLevel = 0;
-        for (uint8 index = 0; index < levelAntes.length ; index++){ // TODO: fix, last level is wrong
+        for (uint8 index = 0; index < levelAntes.length ; index++){ 
             if (userBalance >= levelAntes[index]) {
                 currentLevel++;
             }          
@@ -272,8 +272,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         view
         whenAvailable
         returns (uint16)
-    {          
-        return uint16(100*baseFee)*uint16(uint8(100)-levelDiscounts[discountLevel(forWhom)]); // 10,000x % // 
+    {                  
+        return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x % 
     }
 
     // Execute mint (positive amount) or burn (negative amount).
@@ -286,7 +286,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, false); 
         } 
         //console.log(beforeFeeInUSDCin6dec, 'BNJ, beforeFeeInUSDCin6dec');
-        uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ 1000000; 
+        uint256 fee = (beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender)))/ 1000000; 
         uint256 feeRoundedDownIn6dec = fee - (fee % 10000);
         //console.log(feeRoundedDownIn6dec, 'BNJ, feeRoundedDownIn6dec');      
         // Execute exchange
@@ -363,6 +363,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 accumulatedTokens = USDCcontractIF.balanceOf(address(this));
         USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
     }
+
+    function showReserveIn6dec() public view returns (uint256) { 
+        return reserveInUSDCin6dec; 
+    }   
 
     /* TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
     // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
