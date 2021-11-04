@@ -1,4 +1,5 @@
-.LoginButton, .LogoutButton{
+.LoginButton,
+.LogoutButton {
   min-width: 2.5rem;
 }
 .AuthDrawer {
@@ -6,13 +7,13 @@
   background-attachment: fixed;
   background-clip: border-box;
   border-width: 5px;
-  border-style: "dashed";
+  border-style: 'dashed';
 }
 
 .AuthDrawer.lightBG {
-  background-image: url("../../../media/wallpapers/light3.svg");
+  background-image: url('../../../media/wallpapers/light3.svg');
 }
 .authDrawer.darkBG {
-  background-image: url("../../../media/wallpapers/dark3.svg");
+  background-image: url('../../../media/wallpapers/dark3.svg');
   background-position: -50vw;
 }

@@ -1,5 +1,5 @@
-import { Box } from "@mui/material";
-import BadgeIcon from "../../media/characters/Benicorn.svg";
+import { Box } from '@mui/material';
+import BadgeIcon from '../../media/characters/Benicorn.svg';
 
 export const Benicorn = (props) => {
   return (
@@ -8,7 +8,7 @@ export const Benicorn = (props) => {
       sx={{
         height: 180,
         width: 180,
-        transform: "scale(1.5,1.5) translate(0px,22px)",
+        transform: 'scale(1.5,1.5) translate(0px,22px)',
       }}
       src={BadgeIcon}
       alt="Benicorn"

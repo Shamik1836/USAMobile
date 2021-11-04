@@ -1,19 +1,19 @@
-import React from "react";
-import { Box, Stack, Typography } from "@mui/material";
+import React from 'react';
+import { Box, Stack, Typography } from '@mui/material';
 
-import { CopyAddress } from "../Bits/CopyAddress";
-import { ActionPanel } from "../Blocks/ActionPanel";
-import { useMoralis } from "react-moralis";
-import { TokenTable } from "../Blocks/TokenTable";
+import { CopyAddress } from '../Bits/CopyAddress';
+import { ActionPanel } from '../Blocks/ActionPanel';
+import { useMoralis } from 'react-moralis';
+import { TokenTable } from '../Blocks/TokenTable';
 
-import WheatField from "../../media/Padding/wheatField.jpeg";
+import WheatField from '../../media/Padding/wheatField.jpeg';
 
 export const MainStage = () => {
   const { isAuthenticated, user } = useMoralis();
 
   return (
-    <Box sx={{display:'flex', justifyContent:'center'}}>
-      <Stack spacing={9}  sx={{overflow:'hidden'}}>
+    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+      <Stack spacing={9} sx={{ overflow: 'hidden' }}>
         <Typography>
           ----------<i>Main Stage</i>----------
         </Typography>
@@ -21,7 +21,9 @@ export const MainStage = () => {
           <>
             <Stack direction="row">
               {user !== null && (
-                <Typography>Ethereum address: {user?.attributes["ethAddress"]}</Typography>
+                <Typography>
+                  Ethereum address: {user?.attributes['ethAddress']}
+                </Typography>
               )}
               <CopyAddress mode="copy" />
             </Stack>
@@ -30,8 +32,8 @@ export const MainStage = () => {
           </>
         ) : (
           <>
-            <Box  sx={{ height:10}}/>
-            <Box sx={{ borderRadius:3, m:2.5, overflow:'hidden'}}>
+            <Box sx={{ height: 10 }} />
+            <Box sx={{ borderRadius: 3, m: 2.5, overflow: 'hidden' }}>
               <img src={WheatField} alt="Amber Waves of Grain" />
             </Box>
           </>

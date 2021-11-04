@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from 'react';
 
-import { ReactComponent as SortSvg } from "../../../media/icons/sort.svg";
-import { useActions } from "../../../contexts/actionsContext";
-import { useExperts } from "../../../contexts/expertsContext";
-import "./styles.scss";
+import { ReactComponent as SortSvg } from '../../../media/icons/sort.svg';
+import { useActions } from '../../../contexts/actionsContext';
+import { useExperts } from '../../../contexts/expertsContext';
+import './styles.scss';
 
 export const AmountSelect = ({ type }) => {
   const inputRef = useRef();
@@ -34,7 +34,7 @@ export const AmountSelect = ({ type }) => {
 
   useEffect(() => {
     if (amount <= tokens) {
-      if (type === "send") {
+      if (type === 'send') {
         setTxAmount(amount);
       } else {
         setTxAmount(amount * 10 ** decimals);
@@ -45,22 +45,22 @@ export const AmountSelect = ({ type }) => {
 
     if (amount > 0) {
       setDialog(
-        "Now using " +
+        'Now using ' +
           ((100 * amount) / tokens).toFixed(0) +
-          "% of your " +
+          '% of your ' +
           symbol +
-          " in this action.  " +
-          "Press one of the action buttons " +
-          "when you are ready " +
-          "to choose what to do with these tokens."
+          ' in this action.  ' +
+          'Press one of the action buttons ' +
+          'when you are ready ' +
+          'to choose what to do with these tokens.'
       );
     } else {
       setDialog(
-        "Use the up and down arrows " +
-          "to select how much " +
+        'Use the up and down arrows ' +
+          'to select how much ' +
           symbol +
-          " to use in this action.  " +
-          "Arrows step in 10% increments of your balance."
+          ' to use in this action.  ' +
+          'Arrows step in 10% increments of your balance.'
       );
     }
   }, [amount, decimals, symbol, setDialog, setTxAmount, tokens, type]);
@@ -73,7 +73,7 @@ export const AmountSelect = ({ type }) => {
   };
 
   const onBlur = () => {
-    if (value === "" || value === ".") {
+    if (value === '' || value === '.') {
       setValue(0);
     }
   };
@@ -113,7 +113,7 @@ export const AmountSelect = ({ type }) => {
               min="0"
             />
           </div>
-          <label htmlFor="amount-input">{isUSDMode ? "USD" : fromSymbol}</label>
+          <label htmlFor="amount-input">{isUSDMode ? 'USD' : fromSymbol}</label>
         </div>
         <label
           htmlFor="amount-input"
@@ -123,11 +123,11 @@ export const AmountSelect = ({ type }) => {
             {price
               ? isUSDMode
                 ? `≈ ${amount.toPrecision(3)} ${fromSymbol}`
-                : `≈ $ ${usdAmount.toLocaleString("en-US", {
+                : `≈ $ ${usdAmount.toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })} USD`
-              : "No Conversion Rate Available"}
+              : 'No Conversion Rate Available'}
           </span>
         </label>
         <div className="amount-select-swap-btn" onClick={toggleMode}>

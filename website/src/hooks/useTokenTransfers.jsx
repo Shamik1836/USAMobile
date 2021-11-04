@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { useMoralis } from "react-moralis";
+import { useEffect, useState } from 'react';
+import { useMoralis } from 'react-moralis';
 
 const emptyList = [];
 
 export const useTokenTransfers = (props) => {
   const { isAuthenticated, user, Moralis } = useMoralis();
-  const address = user.attributes["ethAddress"];
+  const address = user.attributes['ethAddress'];
   const [ERC20Txs, setERC20Txs] = useState(emptyList);
   const [ERC20IsLoading, setERC20IsLoading] = useState(1);
 
@@ -32,9 +32,9 @@ export const useTokenTransfers = (props) => {
                   output.amount = undefined;
                   break;
                 default:
-                  console.debug("Failed address: ", address);
-                  console.debug("Failed Tx.from_address:", Tx.from_address);
-                  console.debug("Failed Tx.to_address:", Tx.to_address);
+                  console.debug('Failed address: ', address);
+                  console.debug('Failed Tx.from_address:', Tx.from_address);
+                  console.debug('Failed Tx.to_address:', Tx.to_address);
                   output.counterparty = null;
                   output.amount = null;
                   break;

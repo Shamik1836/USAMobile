@@ -1,12 +1,12 @@
-export const n6 = new Intl.NumberFormat("en-us", {
-  style: "decimal",
+export const n6 = new Intl.NumberFormat('en-us', {
+  style: 'decimal',
   minimumFractionDigits: 0,
   maximumFractionDigits: 6,
 });
 
-export const c2 = new Intl.NumberFormat("en-us", {
-  style: "currency",
-  currency: "USD",
+export const c2 = new Intl.NumberFormat('en-us', {
+  style: 'currency',
+  currency: 'USD',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });

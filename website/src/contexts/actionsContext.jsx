@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext } from 'react';
 
 const ActionsContext = React.createContext();
 
@@ -7,7 +7,7 @@ export const useActions = () => useContext(ActionsContext);
 export const ActionsProvider = (props) => {
   const [fromToken, setFromToken] = useState();
   const [toToken, setToToken] = useState();
-  const [txAmount, setTxAmount] = useState("");
+  const [txAmount, setTxAmount] = useState('');
 
   return (
     <ActionsContext.Provider

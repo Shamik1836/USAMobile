@@ -1,13 +1,11 @@
-import { Button, Stack, Tooltip, Typography } from "@mui/material";
+import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import LoopIcon from '@mui/icons-material/Loop';
 import RestoreIcon from '@mui/icons-material/Restore';
 
+import { useExperts } from '../../contexts/expertsContext';
 
-import { useExperts } from "../../contexts/expertsContext";
-
-import { CopyAddress } from "../Bits/CopyAddress";
-
+import { CopyAddress } from '../Bits/CopyAddress';
 
 export const ModeSelect = () => {
   const { setActionMode, setDialog } = useExperts();
@@ -20,37 +18,37 @@ export const ModeSelect = () => {
           <Button
             endIcon={<LoopIcon />}
             variant="contained"
-        	sx={{ boxShadow:"var(--boxShadow)"}}
+            sx={{ boxShadow: 'var(--boxShadow)' }}
             boxShadow="dark-lg"
             onClick={() => {
-              setActionMode("swap");
+              setActionMode('swap');
               setDialog('"Select a token to receive from the pull-down menu."');
             }}
           >
             Swap
           </Button>
         </Tooltip>
-        <Tooltip  title="Send some of this token to an address.">
+        <Tooltip title="Send some of this token to an address.">
           <Button
             endIcon={<EmailIcon />}
             variant="contained"
-        	sx={{ boxShadow:"var(--boxShadow)"}}
+            sx={{ boxShadow: 'var(--boxShadow)' }}
             onClick={() => {
-              setActionMode("send");
+              setActionMode('send');
               setDialog('"Enter the destination Ethereum address."');
             }}
           >
             Send
           </Button>
         </Tooltip>
-        <Tooltip  title="Ask about our Crypto Patriot program.">
+        <Tooltip title="Ask about our Crypto Patriot program.">
           <Button
             endIcon={<RestoreIcon />}
             variant="contained"
-        	sx={{ boxShadow:"var(--boxShadow)"}}
+            sx={{ boxShadow: 'var(--boxShadow)' }}
             onClick={() => {
-              setActionMode("invest");
-              setDialog("Ask about our CRYPTO PATRIOTS program, coming soon!");
+              setActionMode('invest');
+              setDialog('Ask about our CRYPTO PATRIOTS program, coming soon!');
             }}
           >
             Invest

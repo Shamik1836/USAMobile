@@ -1,18 +1,18 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import App from "./components/App";
-import reportWebVitals from "./components/Support/reportWebVitals";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/App';
+import reportWebVitals from './components/Support/reportWebVitals';
 
-import { MoralisProvider } from "react-moralis";
-import { ExpertsProvider } from "./contexts/expertsContext";
-import { ActionsProvider } from "./contexts/actionsContext";
-import { QuoteProvider } from "./contexts/quoteContext";
+import { MoralisProvider } from 'react-moralis';
+import { ExpertsProvider } from './contexts/expertsContext';
+import { ActionsProvider } from './contexts/actionsContext';
+import { QuoteProvider } from './contexts/quoteContext';
 
-import { ColorModeProvider } from "./contexts/colorModeContext";
-import { PortfolioProvider } from "./contexts/portfolioContext";
-import { NetworkProvider } from './contexts/networkContext'
+import { ColorModeProvider } from './contexts/colorModeContext';
+import { PortfolioProvider } from './contexts/portfolioContext';
+import { NetworkProvider } from './contexts/networkContext';
 
-console.groupCollapsed("index.js");
+console.groupCollapsed('index.js');
 console.log(`Executing against ${process.env.NODE_ENV} mode!`);
 console.groupEnd();
 
@@ -37,7 +37,7 @@ ReactDOM.render(
       </MoralisProvider>
     </ColorModeProvider>
   </React.StrictMode>,
-  document.getElementById("root")
+  document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -1,11 +1,11 @@
-import { COINGECKO } from "./types";
+import { COINGECKO } from './types';
 export function useApi() {
   async function GET(url) {
     const result = await fetch(`${COINGECKO}${url}`, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
     });
     const data = await result.json();
@@ -15,10 +15,10 @@ export function useApi() {
   // eslint-disable-next-line no-unused-vars
   async function POST(url, params) {
     const result = await fetch(`${COINGECKO}${url}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
     });
@@ -28,7 +28,7 @@ export function useApi() {
 
   return {
     async getCoinData(id) {
-      const { data } = await GET("coins/" + id);
+      const { data } = await GET('coins/' + id);
       return data;
     },
   };

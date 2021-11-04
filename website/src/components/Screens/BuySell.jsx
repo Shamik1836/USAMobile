@@ -1,9 +1,9 @@
-import { useEffect, memo } from "react";
-import { useMoralis } from "react-moralis";
-import transakSDK from "@transak/transak-sdk";
+import { useEffect, memo } from 'react';
+import { useMoralis } from 'react-moralis';
+import transakSDK from '@transak/transak-sdk';
 
-import { useExperts } from "../../contexts/expertsContext";
-import { useColorMode } from "../../contexts/colorModeContext";
+import { useExperts } from '../../contexts/expertsContext';
+import { useColorMode } from '../../contexts/colorModeContext';
 
 export const BuySell = memo(() => {
   const { setActionMode, setDialog } = useExperts();
@@ -16,22 +16,22 @@ export const BuySell = memo(() => {
   useEffect(() => {
     const transak = new transakSDK({
       apiKey:
-        process.env.NODE_ENV === "production"
+        process.env.NODE_ENV === 'production'
           ? process.env.REACT_APP_TRANSAK_PRODUCTION_API_KEY
           : process.env.REACT_APP_TRANSAK_STAGING_API_KEY,
       environment:
-        process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING",
-      defaultCryptoCurrency: "USDC",
+        process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'STAGING',
+      defaultCryptoCurrency: 'USDC',
       walletAddress: ethAddress,
-      themeColor: colorMode === "light" ? "D37277" : "5865C9",
-      fiatCurrency: "USD",
+      themeColor: colorMode === 'light' ? 'D37277' : '5865C9',
+      fiatCurrency: 'USD',
       email: emailAddress,
-      networks: "ethereum,polygon",
-      defaultNetwork: "polygon",
-      redirectURL: "",
+      networks: 'ethereum,polygon',
+      defaultNetwork: 'polygon',
+      redirectURL: '',
       hostURL: window.location.origin,
-      widgetWidth: "450px",
-      widgetHeight: "635px",
+      widgetWidth: '450px',
+      widgetHeight: '635px',
     });
 
     transak.init();
@@ -41,30 +41,30 @@ export const BuySell = memo(() => {
     });
 
     transak.on(transak.EVENTS.TRANSAK_WIDGET_OPEN, (data) => {
-      setDialog("Place an order to buy cryptocurrency.");
+      setDialog('Place an order to buy cryptocurrency.');
     });
 
     transak.on(transak.EVENTS.TRANSAK_ORDER_CREATED, (data) => {
       console.log(data);
-      setDialog("Transak order created");
+      setDialog('Transak order created');
     });
 
     transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (data) => {
       console.log(data);
-      setDialog("Transak order successful");
+      setDialog('Transak order successful');
     });
 
     transak.on(transak.EVENTS.TRANSAK_ORDER_FAILED, (data) => {
       console.log(data);
-      setDialog("Transak order failed");
+      setDialog('Transak order failed');
     });
 
     transak.on(transak.EVENTS.TRANSAK_ORDER_CANCELLED, (data) => {
       console.log(data);
-      setDialog("Transak order cancelled");
+      setDialog('Transak order cancelled');
     });
 
-    setActionMode("buy");
+    setActionMode('buy');
 
     return () => {
       transak.close();

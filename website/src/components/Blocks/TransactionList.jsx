@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
-import { Skeleton } from "@mui/material";
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@mui/material';
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-} from "@mui/material";
-import { useTransactions } from "../../hooks/useTransactions";
-import { useTokenTransfers } from "../../hooks/useTokenTransfers";
+} from '@mui/material';
+import { useTransactions } from '../../hooks/useTransactions';
+import { useTokenTransfers } from '../../hooks/useTokenTransfers';
 
-import "./styles.css";
+import './styles.css';
 
 const emptyList = [
-  { timestamp: null, counterparty: "No transactions found.", amount: null },
+  { timestamp: null, counterparty: 'No transactions found.', amount: null },
 ];
 
 export const TransactionList = (props) => {
@@ -28,7 +28,7 @@ export const TransactionList = (props) => {
   const [isLoading, setIsLoading] = useState(1);
 
   useEffect(() => {
-    if (props.tokenAddress !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+    if (props.tokenAddress !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
       setTxs(ERC20Txs);
       setIsLoading(ERC20IsLoading);
     } else {

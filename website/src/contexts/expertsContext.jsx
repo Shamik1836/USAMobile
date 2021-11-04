@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext } from 'react';
 
 const ExpertsContext = React.createContext();
 
@@ -6,9 +6,9 @@ export const useExperts = () => useContext(ExpertsContext);
 
 export const ExpertsProvider = (props) => {
   const [expertsOn, toggleExperts] = useState(true);
-  const [actionMode, setActionMode] = useState("idle");
+  const [actionMode, setActionMode] = useState('idle');
   const [dialog, setDialog] = useState(
-    "Welcome to USA Wallet.  Simple, Safe, Secure."
+    'Welcome to USA Wallet.  Simple, Safe, Secure.'
   );
 
   return (

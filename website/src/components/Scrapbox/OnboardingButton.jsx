@@ -1,9 +1,9 @@
-import MetaMaskOnboarding from "@metamask/onboarding";
-import React from "react";
+import MetaMaskOnboarding from '@metamask/onboarding';
+import React from 'react';
 
-const ONBOARD_TEXT = "Click here to install MetaMask!";
-const CONNECT_TEXT = "Connect";
-const CONNECTED_TEXT = "Connected";
+const ONBOARD_TEXT = 'Click here to install MetaMask!';
+const CONNECT_TEXT = 'Connect';
+const CONNECTED_TEXT = 'Connected';
 
 export function OnboardingButton() {
   const [buttonText, setButtonText] = React.useState(ONBOARD_TEXT);
@@ -36,11 +36,11 @@ export function OnboardingButton() {
     }
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum
-        .request({ method: "eth_requestAccounts" })
+        .request({ method: 'eth_requestAccounts' })
         .then(handleNewAccounts);
-      window.ethereum.on("accountsChanged", handleNewAccounts);
+      window.ethereum.on('accountsChanged', handleNewAccounts);
       return () => {
-        window.ethereum.on("accountsChanged", handleNewAccounts);
+        window.ethereum.on('accountsChanged', handleNewAccounts);
       };
     }
   }, []);
@@ -48,7 +48,7 @@ export function OnboardingButton() {
   const onClick = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum
-        .request({ method: "eth_requestAccounts" })
+        .request({ method: 'eth_requestAccounts' })
         .then((newAccounts) => setAccounts(newAccounts));
     } else {
       onboarding.current.startOnboarding();

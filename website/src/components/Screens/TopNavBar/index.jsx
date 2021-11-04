@@ -1,21 +1,21 @@
-import { useMoralis } from "react-moralis";
+import { useMoralis } from 'react-moralis';
 
-import { Box, Stack, Typography } from "@mui/material";
-import { ExpertButton } from "../../Bits/ExpertButton";
+import { Box, Stack, Typography } from '@mui/material';
+import { ExpertButton } from '../../Bits/ExpertButton';
 
-import { LightSwitch } from "../../Bits/LightSwitch";
-import { AuthButton } from "../../Bits/AuthButton";
-import { ProfileAvatar } from "../../Bits/ProfileAvatar";
-import { AddNetworkButton } from "../../Bits/AddNetworkButton";
-import { OnBoardingButton } from "../../Bits/OnBoardingButton";
+import { LightSwitch } from '../../Bits/LightSwitch';
+import { AuthButton } from '../../Bits/AuthButton';
+import { ProfileAvatar } from '../../Bits/ProfileAvatar';
+import { AddNetworkButton } from '../../Bits/AddNetworkButton';
+import { OnBoardingButton } from '../../Bits/OnBoardingButton';
 
-import "./styles.css";
-import USAWalletEagleLogo from "../../../media/logos/USAWalletLogo.svg";
+import './styles.css';
+import USAWalletEagleLogo from '../../../media/logos/USAWalletLogo.svg';
 
 export const TopNavBar = (props) => {
   const { isAuthenticated } = useMoralis();
   return (
-    <Stack direction="row" sx={{ mt: 3, alignSelf: "center" }} spacing={1}>
+    <Stack direction="row" sx={{ mt: 3, alignSelf: 'center' }} spacing={1}>
       <Box
         component="img"
         sx={{
@@ -31,7 +31,7 @@ export const TopNavBar = (props) => {
       <LightSwitch />
       {isAuthenticated && <AddNetworkButton />}
       <AuthButton />
-      {isAuthenticated && <OnBoardingButton/>}
+      {isAuthenticated && <OnBoardingButton />}
       {isAuthenticated && <ProfileAvatar />}
     </Stack>
   );

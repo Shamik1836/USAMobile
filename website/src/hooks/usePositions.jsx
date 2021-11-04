@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { useMoralis } from "react-moralis";
-import { useNetwork } from "../contexts/networkContext";
-import coinGeckoList from "../data/coinGeckoTokenList.json";
+import { useEffect, useState } from 'react';
+import { useMoralis } from 'react-moralis';
+import { useNetwork } from '../contexts/networkContext';
+import coinGeckoList from '../data/coinGeckoTokenList.json';
 
 const emptyList = [];
 const geckoHead =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=";
-const geckoTail = "&order=market_cap_desc&per_page=100&page=1&sparkline=false";
+  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=';
+const geckoTail = '&order=market_cap_desc&per_page=100&page=1&sparkline=false';
 
 export const usePositions = () => {
   const { isInitialized, isAuthenticated, Moralis } = useMoralis();
@@ -19,18 +19,19 @@ export const usePositions = () => {
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-        // Bring back a list of all tokens the user has
-        //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
-        let chain = `0X${networkId.toString(16)}`;
-        Moralis.Web3.getAllERC20({ chain }).then((allPositions) => {
+      // Bring back a list of all tokens the user has
+      //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
+      let chain = `0X${networkId.toString(16)}`;
+      Moralis.Web3.getAllERC20({ chain })
+        .then((allPositions) => {
           const ids = allPositions
             .map((token) =>
-              token.name.toLowerCase() === "ether"
-                ? coinGeckoList["ethereum"].id
+              token.name.toLowerCase() === 'ether'
+                ? coinGeckoList['ethereum'].id
                 : coinGeckoList[token.name.toLowerCase()]?.id
             )
             .filter((id) => Boolean(id))
-            .join(",");
+            .join(',');
           const url = `${geckoHead}?vs_currency=usd&ids=${ids}` + geckoTail;
           // Call CoinGecko API:
           fetch(url)
@@ -58,15 +59,16 @@ export const usePositions = () => {
                 runningTotal += output.value;
                 output.valueString = [
                   parseFloat(output?.tokens).toPrecision(3) +
-                  " @ $" +
-                  parseFloat(tokenData?.current_price).toFixed(2) +
-                  "/" +
-                  symbol +
-                  " = $" +
-                  parseFloat(output?.value).toFixed(2),
+                    ' @ $' +
+                    parseFloat(tokenData?.current_price).toFixed(2) +
+                    '/' +
+                    symbol +
+                    ' = $' +
+                    parseFloat(output?.value).toFixed(2),
                 ];
                 if (!output.tokenAddress) {
-                  output.tokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                  output.tokenAddress =
+                    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
                 }
                 return output;
               });
@@ -75,12 +77,11 @@ export const usePositions = () => {
               setTotalValue(runningTotal);
               setIsLoading(0);
             });
-        }).catch(e => {
+        })
+        .catch((e) => {
           setPositions(emptyList);
           setIsLoading(0);
         });
-
-      
     } else {
       // No authentication.  Report blanks.
       setPositions(emptyList);
