@@ -105,7 +105,7 @@
     "address": "0x9c2c5fd7b07e95ee044ddeba0e97a665f142394f",
     "description": "Crypto VR platform.",
     "type": "erc20",
-    "image": "https://assets.coingecko.com/coins/images/878/thumb/decentraland-mana.png?1550108745"
+    "image": "https://assets.coingecko.com/coins/images/13469/thumb/1inch-token.png?1608803028"
   },
   {
     "networkId": "137",
@@ -169,5 +169,24 @@
     "description": "Unlocking capital from other chains",
     "type": "erc20",
     "image": "https://assets.coingecko.com/coins/images/12837/thumb/RAMP-Logo-v2-1000pxsq.png?1617952606"
+  },
+  {
+    "networkId": "137",
+    "name": "ExceedMe",
+    "symbol": "XED",
+    "address": "0x2fe8733dcb25bfbba79292294347415417510067",
+    "description": "(Competitive) gaming, esports and NFTs",
+    "type": "erc20",
+    "image": "https://assets.coingecko.com/coins/images/13518/thumb/exeedme.png?1610669597"
+  },
+  {
+    "networkId": "137",
+    "name": "Telcoin",
+    "symbol": "TEL",
+    "address": "0xdf7837de1f2fa4631d716cf2502f8b230f1dcc32",
+    "description": "Payment service, transform cellular onto blockchain",
+    "type": "erc20",
+    "image": "https://assets.coingecko.com/coins/images/1899/thumb/tel.png?1547036203"
   }
+
 ]
