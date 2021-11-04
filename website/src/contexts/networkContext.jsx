@@ -5,8 +5,11 @@ const NetworkContext = React.createContext();
 export const useNetwork = () => useContext(NetworkContext);
 
 export const NetworkProvider = (props) => {
-  const [networkId, setNetworkId] = useState(137);
+  
+  const [networkId, setNetworkId] = useState(1);
   const [networkName, setNetworkName] = useState("matic");
+  const [accounts, setAccounts] = useState([]);
+  const [isPolygon, setIsPolygon] = useState(false);
 
   return (
     <NetworkContext.Provider
@@ -15,6 +18,10 @@ export const NetworkProvider = (props) => {
         setNetworkId,
         networkName,
         setNetworkName,
+        accounts,
+        setAccounts,
+        isPolygon, 
+        setIsPolygon
       }}
     >
       {props.children}

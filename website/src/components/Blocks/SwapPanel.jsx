@@ -13,12 +13,9 @@ import { ToSelect } from "../Bits/ToSelect";
 import { RequestQuote } from "../Bits/RequestQuote";
 import { QuotePanel } from "../Scrapbox/QuotePanel";
 
-
-
 export const SwapPanel = () => {
   const { fromSymbol } = useActions();
   const { quoteValid } = useQuote();
-
 
   return (
     <Box

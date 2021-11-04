@@ -7,6 +7,7 @@ import { LightSwitch } from "../../Bits/LightSwitch";
 import { AuthButton } from "../../Bits/AuthButton";
 import { ProfileAvatar } from "../../Bits/ProfileAvatar";
 import { AddNetworkButton } from "../../Bits/AddNetworkButton";
+import { OnBoardingButton } from "../../Bits/OnBoardingButton";
 
 import "./styles.css";
 import USAWalletEagleLogo from "../../../media/logos/USAWalletLogo.svg";
@@ -30,6 +31,7 @@ export const TopNavBar = (props) => {
       <LightSwitch />
       <AddNetworkButton />
       <AuthButton />
+      {isAuthenticated && <OnBoardingButton/>}
       {isAuthenticated && <ProfileAvatar />}
     </Stack>
   );

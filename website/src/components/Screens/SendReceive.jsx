@@ -1,32 +1,41 @@
 import { useState, useEffect } from "react";
+import { useMoralis } from "react-moralis";
+
 import { Box, Button, Stack } from "@mui/material";
 
 import { SendPanel } from "../Blocks/SendPanel";
 import { AddressPanel } from "../Blocks/AddressPanel";
 import { Heading } from "../UW/Heading";
 
+import { useExperts } from "../../contexts/expertsContext";
+import { useNetwork } from "../../contexts/networkContext";
 import { usePolygonNetwork } from "../../hooks/usePolygonNetwork";
 
-import { useExperts } from "../../contexts/expertsContext";
 
 export const SendReceive = () => {
   const { setActionMode, setDialog } = useExperts();
   const [localMode, setLocalMode] = useState("none");
-  const { isPolygon } = usePolygonNetwork();
+
+  const { isAuthenticated } = useMoralis();
+  const { switchNetworkToPolygon } = usePolygonNetwork();
+  const { isPolygon } = useNetwork();
+
+   useEffect(() => {
+     if (isAuthenticated) {
+        if (!isPolygon) {
+          setDialog("Check your Metamast and Accept Polygon Switch.")
+          switchNetworkToPolygon();
+        }
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isPolygon]);
 
   useEffect(() => {
     setActionMode("send");
     setDialog("Would you like to send or receive cryptocurrency?");
-  }, [setActionMode, setDialog]);
-
-  useEffect(() => {
-    if (!isPolygon) {
-      setDialog("Switch to Polygon.");
-    } else {
-      setDialog("Would you like to send or receive cryptocurrency?");
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPolygon]);
+  }, []);
+
 
   const handleSendMode = async () => {
     if (!isPolygon) {
@@ -44,7 +53,7 @@ export const SendReceive = () => {
     setActionMode("receive");
     setDialog(
       "Copy your address for pasting or " +
-        "select amount to request to generate a QR code."
+      "select amount to request to generate a QR code."
     );
   };
 
