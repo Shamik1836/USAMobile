@@ -12,8 +12,8 @@ export function OnBoardingButton() {
 	const [buttonText, setButtonText] = React.useState(ONBOARD_TEXT);
 	const [isDisabled, setDisabled] = React.useState(false);
 	const onboarding = React.useRef();
-	const { accounts, setAccounts }= useNetwork();
-	
+	const { accounts, setAccounts } = useNetwork();
+
 	React.useEffect(() => {
 		if (!onboarding.current) {
 			onboarding.current = new MetaMaskOnboarding();
@@ -42,15 +42,15 @@ export function OnBoardingButton() {
 		}
 	};
 
-	if(isDisabled){
+	if (isDisabled) {
 		return null;
 	}
 	return (
 		<Button
 			variant="uw"
-			sx={{ alignSelf:"center", border:1, boxShadow: "var(--boxShadow)", borderColor:"var(--borderColor)", color:"var(--color)", height:40}}
+			sx={{ alignSelf: "center", border: 1, boxShadow: "var(--boxShadow)", borderColor: "var(--borderColor)", color: "var(--color)", height: 40 }}
 			onClick={onClick}
-			startIcon={<MetaMask/>}>
+			startIcon={<MetaMask />}>
 			{buttonText}
 		</Button>
 	);

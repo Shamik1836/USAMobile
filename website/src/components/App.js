@@ -21,6 +21,9 @@ import { usePositions } from "../hooks/usePositions";
 
 import { useNetwork } from '../contexts/networkContext';
 
+import { usePolygonNetwork } from "../hooks/usePolygonNetwork";
+
+
 import "./App.scss";
 
 const CryptoRoute = ({ component: Component, address, ...rest }) => {
@@ -36,10 +39,50 @@ function App() {
 
   const { isAuthenticated, Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
   const { user, setUserData, isUserUpdating } = useMoralis();
-
   const { positions, isLoading } = usePositions();
-  const { setAccounts, setNetworkId } = useNetwork();
+  const { setAccounts, setNetworkId, setIsPolygon } = useNetwork();
   const address = user?.attributes?.ethAddress;
+
+  const { getSelectedNetwork } = usePolygonNetwork();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // We are calling this on each render 
+      // to update context from metamask.
+      // It will also update checkes, We are using Polygon or not.
+      if (isWeb3Enabled) {
+        getSelectedNetwork();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isWeb3Enabled])
+
+  useEffect(() => {
+    const initMoralisEvents = () => {
+      Moralis.onAccountsChanged((accounts) => {
+        console.log('Account Changed Called.', accounts);
+        setAccounts(accounts);
+        if (isAuthenticated && !isUserUpdating) {
+          setUserData({
+            accounts: accounts,
+            ethAddress: accounts?.length > 0 ? accounts[0] : null
+          })
+        }
+      });
+      Moralis.onChainChanged((chainId) => {
+        console.log('ChainId:', chainId);
+        setNetworkId(parseInt(chainId));
+        if (parseInt(chainId) !== 137) {
+          setIsPolygon(false);
+        }
+      });
+    }
+
+    if (isAuthenticated) {
+      initMoralisEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Moralis, isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -50,32 +93,19 @@ function App() {
         if (MetaMaskOnboarding.isMetaMaskInstalled()) {
           if (window?.ethereum?.selectedAddress) {
             setAccounts([window.ethereum?.selectedAddress]);
+            if (isAuthenticated && !isUserUpdating) {
+              setUserData({
+                accounts: [window.ethereum?.selectedAddress],
+                ethAddress: window.ethereum?.selectedAddress
+              })
+            }
           }
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isWeb3Enabled, enableWeb3]);
 
-  }, [isAuthenticated, isWeb3Enabled, enableWeb3, setAccounts]);
-
-  useEffect(() => {
-    const initMoralisEvents = () => {
-      Moralis.onAccountsChanged((accounts) => {
-        setAccounts(accounts);
-        if(isAuthenticated){
-          if (!isUserUpdating){
-            setUserData({
-              accounts: accounts,
-              ethAddress: accounts?.length > 0 ? accounts[0] : null
-            })
-          }
-        } 
-      });
-      Moralis.onChainChanged((chainId) => {
-        setNetworkId(parseInt(chainId));
-      });
-    }
-    initMoralisEvents();
-  }, [Moralis, isAuthenticated, setUserData, setNetworkId, setAccounts]);
 
   const isOnlyMatic = positions.length === 1 && positions[0].symbol === 'MATIC';
 
