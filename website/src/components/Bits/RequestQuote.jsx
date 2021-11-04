@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState } from 'react';
 import { Box, FormControl, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import { useActions } from "../../contexts/actionsContext";
-import { useExperts } from "../../contexts/expertsContext";
-import { useQuote } from "../../contexts/quoteContext";
+import { useActions } from '../../contexts/actionsContext';
+import { useExperts } from '../../contexts/expertsContext';
+import { useQuote } from '../../contexts/quoteContext';
 
-import { useColorMode } from "../../contexts/colorModeContext";
-import { useNetwork } from "../../contexts/networkContext";
+import { useColorMode } from '../../contexts/colorModeContext';
+import { useNetwork } from '../../contexts/networkContext';
 
 export const RequestQuote = () => {
   const { networkId } = useNetwork();
@@ -29,34 +29,34 @@ export const RequestQuote = () => {
   const { colorMode } = useColorMode();
 
   const handlePress = async () => {
-    console.groupCollapsed("GetQuote::inputs");
-    console.debug("Received fromSymbol: ", fromSymbol);
-    console.debug("Received fromAddress: ", fromAddress);
-    console.debug("Received toSymbol: ", toSymbol);
-    console.debug("Received toAddress ", toAddress);
-    console.debug("Received txAmount: ", txAmount);
+    console.groupCollapsed('GetQuote::inputs');
+    console.debug('Received fromSymbol: ', fromSymbol);
+    console.debug('Received fromAddress: ', fromAddress);
+    console.debug('Received toSymbol: ', toSymbol);
+    console.debug('Received toAddress ', toAddress);
+    console.debug('Received txAmount: ', txAmount);
     console.groupEnd();
 
     setDialog(
-      "Estimating costs to swap " + fromSymbol + " to " + toSymbol + " ... "
+      'Estimating costs to swap ' + fromSymbol + ' to ' + toSymbol + ' ... '
     );
     setLoading(true);
     await fetch(
-      "https://api.1inch.exchange/v3.0/" +
+      'https://api.1inch.exchange/v3.0/' +
         networkId +
-        "/quote?" +
-        "fromTokenAddress=" +
+        '/quote?' +
+        'fromTokenAddress=' +
         fromAddress +
-        "&toTokenAddress=" +
+        '&toTokenAddress=' +
         toAddress +
-        "&amount=" +
+        '&amount=' +
         txAmount
     )
       .then((response) => response.json())
       .then((oneInchQuote) => {
-        console.groupCollapsed("RequestQuote::response.");
-        console.log("Recieved Quote:", oneInchQuote);
-        setLoading(false)
+        console.groupCollapsed('RequestQuote::response.');
+        console.log('Recieved Quote:', oneInchQuote);
+        setLoading(false);
         if (oneInchQuote.protocols !== undefined) {
           setFromToken(oneInchQuote.fromToken);
           setFromTokenAmount(oneInchQuote.fromTokenAmount);
@@ -64,18 +64,18 @@ export const RequestQuote = () => {
           setToToken(oneInchQuote.toToken);
           setToTokenAmount(oneInchQuote.toTokenAmount);
           setEstimatedGas(oneInchQuote.estimatedGas);
-          setQuoteValid("true");
+          setQuoteValid('true');
           setDialog(
             "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
           );
         } else {
           setDialog(
-            "Something went wrong: " +
-            oneInchQuote.error +
-            " re: " +
-            oneInchQuote.message
+            'Something went wrong: ' +
+              oneInchQuote.error +
+              ' re: ' +
+              oneInchQuote.message
           );
-          setQuoteValid("false");
+          setQuoteValid('false');
           // toast({
           //   description: oneInchQuote.message,
           //   status: "error",
@@ -84,8 +84,7 @@ export const RequestQuote = () => {
           return;
         }
         console.groupEnd();
-      })
-
+      });
   };
 
   return (
@@ -95,8 +94,8 @@ export const RequestQuote = () => {
           <span>
             <LoadingButton
               disabled={!txAmount || !toSymbol}
-              variant={colorMode === "light" ? "outlined" : "contained"}
-              sx={{ boxShadow: "var(--boxShadow)" }}
+              variant={colorMode === 'light' ? 'outlined' : 'contained'}
+              sx={{ boxShadow: 'var(--boxShadow)' }}
               loading={loading}
               onClick={handlePress}
             >

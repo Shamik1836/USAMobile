@@ -1,4 +1,6 @@
-*{ font-family: 'P22-Typewriter' !important; }
+* {
+  font-family: 'P22-Typewriter' !important;
+}
 .amount-select {
   width: 100%;
   text-align: left;
@@ -26,7 +28,7 @@
 
       &::after {
         padding-left: 16px;
-        content: attr(data-value) "";
+        content: attr(data-value) '';
         visibility: hidden;
       }
 

@@ -5,16 +5,16 @@ export const getCustomTheme = (colorMode = 'light') => ({
   palette: {
     mode: colorMode,
     uwprimary: {
-      contrastText: "#FFFFFF",
+      contrastText: '#FFFFFF',
       main: uwDarkText,
-      dark: "#000000",
-      light: "#414755"
+      dark: '#000000',
+      light: '#414755',
     },
     text: {
       ...(colorMode === 'light'
         ? { primary: uwDarkText }
-        : { primary: uwLightText })
-    }
+        : { primary: uwLightText }),
+    },
   },
   components: {
     MuiButton: {
@@ -27,16 +27,16 @@ export const getCustomTheme = (colorMode = 'light') => ({
             lineHeight: 2,
             ...(colorMode === 'light'
               ? {
-                border: '1px solid #E2E8F0',
-                color: uwDarkText
-              }
+                  border: '1px solid #E2E8F0',
+                  color: uwDarkText,
+                }
               : {
-                borderWidth: 0,
-                color: uwLightText
-              })
+                  borderWidth: 0,
+                  color: uwLightText,
+                }),
           },
-        }
-      ]
+        },
+      ],
     },
     MuiIconButton: {
       variants: [
@@ -44,21 +44,21 @@ export const getCustomTheme = (colorMode = 'light') => ({
           props: { variant: 'uw' },
           style: {
             background: 'transparent',
-            width:'2.5rem',
+            width: '2.5rem',
             height: '2.5rem',
             alignSelf: 'center',
             border: '1px solid #E2E8F0',
             borderRadius: '.3rem',
             ...(colorMode === 'light'
               ? {
-                color: uwDarkText
-              }
+                  color: uwDarkText,
+                }
               : {
-                color: uwLightText
-              })
+                  color: uwLightText,
+                }),
           },
-        }
-      ]
+        },
+      ],
     },
     MuiTableCell: {
       styleOverrides: {
@@ -67,7 +67,6 @@ export const getCustomTheme = (colorMode = 'light') => ({
           padding: '8px 16px',
         },
       },
-    }
+    },
   },
-
 });

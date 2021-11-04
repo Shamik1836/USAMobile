@@ -1,13 +1,12 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext } from 'react';
 
 const NetworkContext = React.createContext();
 
 export const useNetwork = () => useContext(NetworkContext);
 
 export const NetworkProvider = (props) => {
-  
   const [networkId, setNetworkId] = useState(1);
-  const [networkName, setNetworkName] = useState("matic");
+  const [networkName, setNetworkName] = useState('matic');
   const [accounts, setAccounts] = useState([]);
   const [isPolygon, setIsPolygon] = useState(false);
 
@@ -20,8 +19,8 @@ export const NetworkProvider = (props) => {
         setNetworkName,
         accounts,
         setAccounts,
-        isPolygon, 
-        setIsPolygon
+        isPolygon,
+        setIsPolygon,
       }}
     >
       {props.children}

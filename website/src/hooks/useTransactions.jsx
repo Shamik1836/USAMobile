@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { useMoralis } from "react-moralis";
+import { useEffect, useState } from 'react';
+import { useMoralis } from 'react-moralis';
 
 const emptyList = [
-  { timestamp: null, counterparty: "No transactions found.", amount: null },
+  { timestamp: null, counterparty: 'No transactions found.', amount: null },
 ];
 
 export const useTransactions = (props) => {
   const { isAuthenticated, Moralis, user } = useMoralis();
-  const address = user.attributes["ethAddress"];
+  const address = user.attributes['ethAddress'];
   const [NativeTxs, setNativeTxs] = useState(emptyList);
   const [NativeIsLoading, setNativeIsLoading] = useState(1);
 
@@ -32,9 +32,9 @@ export const useTransactions = (props) => {
                 output.amount = undefined;
                 break;
               default:
-                console.debug("Failed address: ", address);
-                console.debug("Failed Tx.from_address:", Tx.from_address);
-                console.debug("Failed Tx.to_address:", Tx.to_address);
+                console.debug('Failed address: ', address);
+                console.debug('Failed Tx.from_address:', Tx.from_address);
+                console.debug('Failed Tx.to_address:', Tx.to_address);
                 output.counterparty = null;
                 output.amount = null;
                 break;

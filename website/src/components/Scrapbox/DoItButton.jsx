@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useMoralis } from "react-moralis";
-import { Tooltip } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
+import { useState } from 'react';
+import { useMoralis } from 'react-moralis';
+import { Tooltip } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
 
-import { useQuote } from "../../contexts/quoteContext";
-import { useExperts } from "../../contexts/expertsContext";
-import { useActions } from "../../contexts/actionsContext";
-import { useNetwork } from "../../contexts/networkContext";
+import { useQuote } from '../../contexts/quoteContext';
+import { useExperts } from '../../contexts/expertsContext';
+import { useActions } from '../../contexts/actionsContext';
+import { useNetwork } from '../../contexts/networkContext';
 
 export const DoItButton = (props) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,17 +18,17 @@ export const DoItButton = (props) => {
 
   const sendTransaction = (config) => {
     setDialog(
-      "Transmitting pre-approval code to the send token.  " +
-        "Please sign this transaction in your wallet."
+      'Transmitting pre-approval code to the send token.  ' +
+        'Please sign this transaction in your wallet.'
     );
     return new Promise((resolve, reject) => {
       Moralis.Web3.enable().then((web3) => {
         web3.eth.sendTransaction(config, (err, hash) => {
           if (err) {
-            setDialog("Swap was not pre-approved.");
+            setDialog('Swap was not pre-approved.');
             reject(err);
           } else {
-            setDialog("Swap is now pre-approved.");
+            setDialog('Swap is now pre-approved.');
             resolve(hash);
           }
         });
@@ -41,17 +41,17 @@ export const DoItButton = (props) => {
 
     try {
       setDialog(
-        "Retrieving pre-approval codes to swap " + txAmount + " of your ",
+        'Retrieving pre-approval codes to swap ' + txAmount + ' of your ',
         fromToken?.symbol.toUpperCase()
       );
 
       const res = await fetch(
-        "https://api.1inch.exchange/v3.0/" +
+        'https://api.1inch.exchange/v3.0/' +
           networkId +
-          "/approve/calldata?" +
-          "tokenAddress=" +
+          '/approve/calldata?' +
+          'tokenAddress=' +
           fromToken?.tokenAddress +
-          "&amount=" +
+          '&amount=' +
           txAmount
       ).then((response) => response.json());
 
@@ -61,25 +61,25 @@ export const DoItButton = (props) => {
       });
 
       setDialog(
-        "Submitting swap transaction.  Please review and sign in MetaMask."
+        'Submitting swap transaction.  Please review and sign in MetaMask.'
       );
 
       await fetch(
-        "https://api.1inch.exchange/v3.0/" +
+        'https://api.1inch.exchange/v3.0/' +
           networkId +
-          "/swap?" +
-          "fromTokenAddress=" +
+          '/swap?' +
+          'fromTokenAddress=' +
           fromToken.tokenAddress +
-          "&toTokenAddress=" +
+          '&toTokenAddress=' +
           toToken.address +
-          "&amount=" +
+          '&amount=' +
           txAmount +
-          "&fromAddress=" +
+          '&fromAddress=' +
           user?.attributes.ethAddress +
-          "&slippage=3"
+          '&slippage=3'
       ).then((response) => response.json());
 
-      setDialog("Recieved.  Check console log.");
+      setDialog('Recieved.  Check console log.');
       setQuoteValid(0);
     } catch (e) {
       setIsLoading(false);
@@ -92,7 +92,7 @@ export const DoItButton = (props) => {
       <LoadingButton
         className="ExpertButton"
         variant="contained"
-        sx={{ boxShadow: "var(--boxShadow)", mr: 2 }}
+        sx={{ boxShadow: 'var(--boxShadow)', mr: 2 }}
         onClick={handlePress}
         loading={isLoading}
       >

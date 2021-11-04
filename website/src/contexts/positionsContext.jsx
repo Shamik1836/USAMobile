@@ -1,6 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState } from 'react';
 // import { usePositionArray } from "../hooks/usePositionArray";
-import getPositions from '../hooks/usePositions'
+import getPositions from '../hooks/usePositions';
 
 const PositionsContext = React.createContext();
 
@@ -11,8 +11,8 @@ export function usePositions() {
 export const PositionsProvider = (props) => {
   const [positions, setPostions] = useState([]);
 
-  console.groupCollapsed("PositionsProvider");
-  console.log("Providing positions array: ", positions);
+  console.groupCollapsed('PositionsProvider');
+  console.log('Providing positions array: ', positions);
   // console.log("Providing total value: $" + totalValue);
   console.groupEnd();
 

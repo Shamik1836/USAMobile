@@ -1,13 +1,13 @@
-import { useMoralis } from "react-moralis";
-import { Button, Tooltip } from "@mui/material";
+import { useMoralis } from 'react-moralis';
+import { Button, Tooltip } from '@mui/material';
 
-import { useQuote } from "../../contexts/quoteContext";
-import { useExperts } from "../../contexts/expertsContext";
-import { useActions } from "../../contexts/actionsContext";
+import { useQuote } from '../../contexts/quoteContext';
+import { useExperts } from '../../contexts/expertsContext';
+import { useActions } from '../../contexts/actionsContext';
 
-import { useSendTransaction } from "../../hooks/useSendTransaction";
+import { useSendTransaction } from '../../hooks/useSendTransaction';
 
-const oneInchApprove = "https://api.1inch.exchange/v3.0/1/approve/calldata";
+const oneInchApprove = 'https://api.1inch.exchange/v3.0/1/approve/calldata';
 
 export const ApproveButton = (props) => {
   const { setQuoteValid, fromToken, toToken } = useQuote();
@@ -15,26 +15,25 @@ export const ApproveButton = (props) => {
   const { user } = useMoralis();
   const { setDialog } = useExperts();
 
-
   const preApprove = async () => {
     setDialog(
-      "Pre-approving 1Inch to transact " + txAmount + " of your ",
+      'Pre-approving 1Inch to transact ' + txAmount + ' of your ',
       fromToken?.symbol.toUpperCase()
     );
     await fetch(
       oneInchApprove +
-        "?tokenAddress=" +
+        '?tokenAddress=' +
         fromToken?.tokenAddress +
-        "&amount=" +
+        '&amount=' +
         txAmount
     )
       .then((response) => response.json())
       .then((response) => {
-        setDialog("1Inch approval submitted.");
-        console.groupCollapsed("DoItButton::preApprove");
-        console.log("fromToken?.tokenAddress:", fromToken?.tokenAddress);
-        console.log("amount:", txAmount);
-        console.log("Response:", response);
+        setDialog('1Inch approval submitted.');
+        console.groupCollapsed('DoItButton::preApprove');
+        console.log('fromToken?.tokenAddress:', fromToken?.tokenAddress);
+        console.log('amount:', txAmount);
+        console.log('Response:', response);
         console.groupEnd();
         const {
           isLoading,
@@ -42,7 +41,7 @@ export const ApproveButton = (props) => {
           transactionReceipt,
           confirmationNumber,
         } = useSendTransactions({
-          description: "Pre-approve",
+          description: 'Pre-approve',
           data: response.data,
           gasPrice: response.gasPrice,
           to: response.to,
@@ -56,41 +55,41 @@ export const ApproveButton = (props) => {
 
     if (1) {
       setDialog(
-        "Submitting swap transaction.  Please review and sign in MetaMask."
+        'Submitting swap transaction.  Please review and sign in MetaMask.'
       );
       await fetch(
         oneInchSwap +
-          "fromTokenAddress=" +
+          'fromTokenAddress=' +
           fromToken.tokenAddress +
-          "&toTokenAddress=" +
+          '&toTokenAddress=' +
           toToken.address +
-          "&amount=" +
+          '&amount=' +
           txAmount +
-          "&fromAddress=" +
-          user?.attributes["ethAddress"] +
-          "&slippage=3"
+          '&fromAddress=' +
+          user?.attributes['ethAddress'] +
+          '&slippage=3'
       )
         .then((response) => response.json())
         .then((response) => {
-          setDialog("Recieved.  Check console log.");
-          console.groupCollapsed("DoItButton::handlePress");
-          console.log("fromTokenAddress=", fromToken.tokenAddress);
-          console.log("toTokenAddress=", toToken.address);
-          console.log("amount=", txAmount);
-          console.log("fromAddress=", user?.attributes["ethAddress"]);
-          console.log("response:", response);
+          setDialog('Recieved.  Check console log.');
+          console.groupCollapsed('DoItButton::handlePress');
+          console.log('fromTokenAddress=', fromToken.tokenAddress);
+          console.log('toTokenAddress=', toToken.address);
+          console.log('amount=', txAmount);
+          console.log('fromAddress=', user?.attributes['ethAddress']);
+          console.log('response:', response);
           console.groupEnd();
         });
     } else {
-      setDialog("Debug mode.  Check console log.");
-      console.groupCollapsed("DoItButton");
-      console.log("fromTokenAddress:", fromToken.tokenAddress);
-      console.log("toTokenAddress:", toToken.address);
-      console.log("txAmount:", txAmount);
-      console.log("fromAddress:", user?.attributes["ethAddress"]);
-      console.log("slippage= 3%");
-      console.log("referrerAddress:", refAddress);
-      console.log("fee: 0.2%");
+      setDialog('Debug mode.  Check console log.');
+      console.groupCollapsed('DoItButton');
+      console.log('fromTokenAddress:', fromToken.tokenAddress);
+      console.log('toTokenAddress:', toToken.address);
+      console.log('txAmount:', txAmount);
+      console.log('fromAddress:', user?.attributes['ethAddress']);
+      console.log('slippage= 3%');
+      console.log('referrerAddress:', refAddress);
+      console.log('fee: 0.2%');
       console.groupEnd();
     }
     setQuoteValid(0);
@@ -99,7 +98,7 @@ export const ApproveButton = (props) => {
   return (
     <Tooltip title="Submit swap order.">
       <Button
-        sx={{ boxShadow:"var(--boxShadow)", mr:2, mt:-2}}
+        sx={{ boxShadow: 'var(--boxShadow)', mr: 2, mt: -2 }}
         variant="contained"
         className="ExpertButton"
         onClick={handlePress}

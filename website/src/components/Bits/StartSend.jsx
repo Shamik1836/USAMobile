@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react";
-import { Box, Tooltip } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
-import { useMoralis } from "react-moralis";
-import { useActions } from "../../contexts/actionsContext";
-import { useExperts } from "../../contexts/expertsContext";
+import { useEffect, useState } from 'react';
+import { Box, Tooltip } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useMoralis } from 'react-moralis';
+import { useActions } from '../../contexts/actionsContext';
+import { useExperts } from '../../contexts/expertsContext';
 
 export const StartSend = (props) => {
   const { fromToken, toAddress, txAmount } = useActions();
   const { setDialog } = useExperts();
   const { Moralis } = useMoralis();
   const [options, setOptions] = useState({});
-  const [tokenType, setTokenType] = useState("native");
+  const [tokenType, setTokenType] = useState('native');
   const [isTxLoading, setIsTxLoading] = useState(false);
 
   useEffect(() => {
     setTokenType(
-      fromToken.tokenAddress === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        ? "native"
-        : "erc20"
+      fromToken.tokenAddress === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+        ? 'native'
+        : 'erc20'
     );
     setOptions({
       type: tokenType,
@@ -30,13 +30,13 @@ export const StartSend = (props) => {
 
   const pushIt = async (e) => {
     setIsTxLoading(true);
-    setDialog("Sending Tx for a wallet signature...");
+    setDialog('Sending Tx for a wallet signature...');
     Moralis.transfer(options)
       .then((results) => {
         setIsTxLoading(false);
-        setDialog("Your signed transaction was sent to network!");
+        setDialog('Your signed transaction was sent to network!');
       })
-      .catch((e) => setDialog("Oops! " + e.message));
+      .catch((e) => setDialog('Oops! ' + e.message));
   };
 
   return (
@@ -48,7 +48,7 @@ export const StartSend = (props) => {
             disabled={!txAmount || !toAddress}
             loading={isTxLoading}
             onClick={pushIt}
-            sx={{ boxShadow: "var(--boxShadow)" }}
+            sx={{ boxShadow: 'var(--boxShadow)' }}
           >
             Preview Send Order
           </LoadingButton>

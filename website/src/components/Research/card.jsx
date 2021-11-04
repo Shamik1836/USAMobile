@@ -1,6 +1,6 @@
-import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import React from 'react';
+import { Box, Typography, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 function Card({ data, onClose }) {
   const { market_data } = data;
@@ -8,13 +8,13 @@ function Card({ data, onClose }) {
     <Box className="card" sx={{ py: 1, px: 6 }}>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
           mt: 3.75,
         }}
       >
-        <Box sx={{ display: "flex" }}>
+        <Box sx={{ display: 'flex' }}>
           <Box
             component="img"
             sx={{ height: 70, width: 70 }}
@@ -27,15 +27,15 @@ function Card({ data, onClose }) {
         </Box>
         <Box>
           <IconButton onClick={onClose}>
-            <CloseIcon color='primary'/>
+            <CloseIcon color="primary" />
           </IconButton>
         </Box>
       </Box>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
           mt: 3.75,
         }}
       >
@@ -72,9 +72,9 @@ function Card({ data, onClose }) {
       </Box>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
           mt: 3.75,
         }}
       >

@@ -1,17 +1,17 @@
-import { useMemo } from "react";
-import { useEffect } from "react";
-import { useState } from "react";
-import { useMoralis, useMoralisCloudFunction } from "react-moralis";
-import coinGeckoList from "../../data/coinGeckoTokenList.json";
-import { tokenValue, tokenValueTxt } from "../Support/utils";
+import { useMemo } from 'react';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { useMoralis, useMoralisCloudFunction } from 'react-moralis';
+import coinGeckoList from '../../data/coinGeckoTokenList.json';
+import { tokenValue, tokenValueTxt } from '../Support/utils';
 
 const emptyList = [];
-const coinGeckoApiUrl = "https://api.coingecko.com/api/v3/coins/markets";
+const coinGeckoApiUrl = 'https://api.coingecko.com/api/v3/coins/markets';
 
 export const useCoinData = () => {
   const { user } = useMoralis();
   const userAddress = useMemo(() => user?.attributes.ethAddress, [user]);
-  const { data: tokens, isLoading } = useMoralisCloudFunction("getTokens", {
+  const { data: tokens, isLoading } = useMoralisCloudFunction('getTokens', {
     userAddress,
   });
   const [coinList, setCoinList] = useState(emptyList);
@@ -23,23 +23,23 @@ export const useCoinData = () => {
       const ids = tokens
         .map((token) => coinGeckoList[token.symbol.toLowerCase()]?.id)
         .filter((id) => Boolean(id))
-        .join(",");
+        .join(',');
       const url = `${coinGeckoApiUrl}?vs_currency=usd&ids=${ids}`;
-      console.log("url:", url);
+      console.log('url:', url);
 
       // fetch coin price data by ID
       fetch(url, {
-        method: "GET",
-        mode: "cors",
-        headers: { "Access-Control-Allow-Origin": true },
+        method: 'GET',
+        mode: 'cors',
+        headers: { 'Access-Control-Allow-Origin': true },
       })
         .then((response) => response.json())
         .then((data) => {
           // pivot into a dictionary
-          console.log("fetch data:", data);
+          console.log('fetch data:', data);
           const marketData = {};
           data.forEach((d) => (marketData[d.symbol.toUpperCase()] = d));
-          console.log("marketData:", marketData);
+          console.log('marketData:', marketData);
           return marketData;
         })
         .then((data) => {
@@ -60,7 +60,7 @@ export const useCoinData = () => {
             );
             return output;
           });
-          console.log("output list:", newList);
+          console.log('output list:', newList);
           setCoinList(newList);
           setPortfolioValue(totalBalance);
         });

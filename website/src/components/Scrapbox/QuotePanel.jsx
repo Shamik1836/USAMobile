@@ -1,10 +1,9 @@
-import React from "react";
-import { Avatar, Button, Stack, Typography } from "@mui/material";
+import React from 'react';
+import { Avatar, Button, Stack, Typography } from '@mui/material';
 
-import { useQuote } from "../../contexts/quoteContext";
-import { useExperts } from "../../contexts/expertsContext";
-import { DoItButton } from "./DoItButton";
-
+import { useQuote } from '../../contexts/quoteContext';
+import { useExperts } from '../../contexts/expertsContext';
+import { DoItButton } from './DoItButton';
 
 export const QuotePanel = () => {
   const {
@@ -18,10 +17,9 @@ export const QuotePanel = () => {
 
   const { setDialog } = useExperts();
 
-
   const handleCancel = (e) => {
-    setQuoteValid("false");
-    setDialog("Change your swap settings to recieve a new quote.");
+    setQuoteValid('false');
+    setDialog('Change your swap settings to recieve a new quote.');
   };
 
   const gas = estimatedGas / 10 ** 7;
@@ -31,27 +29,48 @@ export const QuotePanel = () => {
   //   maximumFractionDigits: 2,
   // });
 
-
   return (
-    <Stack sx={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: '3px', px: 10, py: 2 }} spacing={2}>
+    <Stack
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderRadius: '3px',
+        px: 10,
+        py: 2,
+      }}
+      spacing={2}
+    >
       <Typography variant="h5">Swap Estimate:</Typography>
-      <Stack direction='row' alignItems="center">
+      <Stack direction="row" alignItems="center">
         <Typography>
           Trade {(fromTokenAmount / 10 ** fromToken.decimals).toPrecision(3)}
         </Typography>
-        <Avatar name={fromToken.name} src={fromToken.logoURI} sx={{ width: 30, height: 30, mx: 0.5 }} />
+        <Avatar
+          name={fromToken.name}
+          src={fromToken.logoURI}
+          sx={{ width: 30, height: 30, mx: 0.5 }}
+        />
         <Typography>
-          {fromToken.symbol} For {(toTokenAmount / 10 ** toToken.decimals).toPrecision(3)}
+          {fromToken.symbol} For{' '}
+          {(toTokenAmount / 10 ** toToken.decimals).toPrecision(3)}
         </Typography>
-        <Avatar name={toToken.name} src={toToken.logoURI} size="sm" sx={{ width: 30, height: 30, mx: 0.5 }} />
+        <Avatar
+          name={toToken.name}
+          src={toToken.logoURI}
+          size="sm"
+          sx={{ width: 30, height: 30, mx: 0.5 }}
+        />
         <Typography>{toToken.symbol}</Typography>
       </Stack>
-      <Typography>
-        Estimated network fee: {gas} MATIC
-      </Typography>
-      <Stack direction='row'>
+      <Typography>Estimated network fee: {gas} MATIC</Typography>
+      <Stack direction="row">
         <DoItButton />
-        <Button onClick={handleCancel} variant="contained" sx={{ boxShadow: "var(--boxShadow)" }}>
+        <Button
+          onClick={handleCancel}
+          variant="contained"
+          sx={{ boxShadow: 'var(--boxShadow)' }}
+        >
           Cancel
         </Button>
       </Stack>

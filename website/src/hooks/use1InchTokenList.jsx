@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNetwork } from "../contexts/networkContext";
+import { useEffect, useState } from 'react';
+import { useNetwork } from '../contexts/networkContext';
 
 export const use1InchTokenList = () => {
   const [tokenList, setTokenList] = useState([]);
@@ -7,7 +7,7 @@ export const use1InchTokenList = () => {
 
   useEffect(() => {
     fetch(`https://api.1inch.exchange/v3.0/${networkId}/tokens`, {
-      method: "GET",
+      method: 'GET',
     })
       .then((response) => response.json())
       .then((oneInchData) => {

@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { useMoralis } from "react-moralis";
-import { Alert, Button, Stack, TextField, Tooltip } from "@mui/material";
+import { useState } from 'react';
+import { useMoralis } from 'react-moralis';
+import { Alert, Button, Stack, TextField, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import "./styles.css";
-
+import './styles.css';
 
 export const AuthDrawer = (props) => {
   const {
@@ -18,20 +17,18 @@ export const AuthDrawer = (props) => {
     user,
   } = useMoralis();
 
-
-
   const [userName, setUserName] = useState(
-    user ? user.attributes.username : ""
+    user ? user.attributes.username : ''
   );
-  const [email, setEmail] = useState(user ? user.attributes.email : "");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(user ? user.attributes.email : '');
+  const [password, setPassword] = useState('');
 
   const handleSignUp = () => {
     signup(userName ? userName : email, password, email, { usePost: true });
   };
 
   const handleLogIn = () => {
-    login(email, password === "" ? undefined : password, {
+    login(email, password === '' ? undefined : password, {
       usePost: true,
     });
   };
@@ -44,14 +41,14 @@ export const AuthDrawer = (props) => {
     setUserData({
       userName,
       email,
-      password: password === "" ? undefined : password,
+      password: password === '' ? undefined : password,
       usePost: true,
     });
   };
 
   const handlePasswordReset = () => {
-    console.groupCollapsed("handlePasswordReset");
-    if (email === "") {
+    console.groupCollapsed('handlePasswordReset');
+    if (email === '') {
       alert("Please enter an e-mail, then retry 'Password reset'.");
     } else {
       // const appId = "CkGKKjw1WWWWNAo2GRMO1yPyjTrRx8YAIX4E8Q8q";
@@ -63,7 +60,7 @@ export const AuthDrawer = (props) => {
       //   .requestPasswordReset(email)
       //   .then(() => {
       //     // Password reset request was sent successfully
-      alert("Password reset e-mail has been sent to " + email);
+      alert('Password reset e-mail has been sent to ' + email);
       //     })
       //     .catch((error) => {
       //       // Show the error message somewhere
@@ -94,13 +91,11 @@ export const AuthDrawer = (props) => {
         p: 2,
         my: 2,
         mx: 5,
-        boxShadow: "var(--boxShadow)"
+        boxShadow: 'var(--boxShadow)',
       }}
     >
       {authError != null && (
-        <Alert severity="warning">
-          {authError.message}
-        </Alert>
+        <Alert severity="warning">{authError.message}</Alert>
       )}
       {isAuthenticated && (
         <Tooltip title="Enter desired USA Wallet user name.">
@@ -110,26 +105,23 @@ export const AuthDrawer = (props) => {
             variant="outlined"
             value={userName}
             onChange={(event) => setUserName(event.currentTarget.value)}
-            sx={{ boxShadow: "var(--boxShadow)" }}
-
+            sx={{ boxShadow: 'var(--boxShadow)' }}
           />
         </Tooltip>
       )}
       <Tooltip title="Enter email where you wish to recieve notifications.">
         <TextField
-          className={isAuthenticated ? "email verified" : "email"}
+          className={isAuthenticated ? 'email verified' : 'email'}
           label="E-mail *"
           type="email"
           variant="outlined"
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
-          sx={{ boxShadow: "var(--boxShadow)" }}
+          sx={{ boxShadow: 'var(--boxShadow)' }}
         />
       </Tooltip>
       {user && user.attributes.emailVerified && (
-        <Alert severity="warning">
-          Check your email for validation link.
-        </Alert>
+        <Alert severity="warning">Check your email for validation link.</Alert>
       )}
       <Tooltip title="Enter a password.">
         <TextField
@@ -138,7 +130,7 @@ export const AuthDrawer = (props) => {
           variant="outlined"
           value={password}
           onChange={(event) => setPassword(event.currentTarget.value)}
-          sx={{ boxShadow: "var(--boxShadow)" }}
+          sx={{ boxShadow: 'var(--boxShadow)' }}
         />
       </Tooltip>
 
@@ -162,7 +154,7 @@ export const AuthDrawer = (props) => {
                 variant="outlined"
                 onClick={handlePasswordReset}
                 disabled
-                sx={{ boxShadow: "var(--boxShadow)" }}
+                sx={{ boxShadow: 'var(--boxShadow)' }}
               >
                 Password Reset
               </Button>
@@ -173,7 +165,7 @@ export const AuthDrawer = (props) => {
               variant="outlined"
               loading={isAuthenticating}
               onClick={handleAuthenticate}
-              sx={{ boxShadow: "var(--boxShadow)" }}
+              sx={{ boxShadow: 'var(--boxShadow)' }}
             >
               Use MetaMask
             </LoadingButton>
@@ -181,7 +173,11 @@ export const AuthDrawer = (props) => {
         </>
       ) : (
         <Tooltip title="Update your USA Wallet account to the currently entered user name, e-mail, and password.">
-          <Button variant="outlined" onClick={handleSave} sx={{ boxShadow: "var(--boxShadow)" }}>
+          <Button
+            variant="outlined"
+            onClick={handleSave}
+            sx={{ boxShadow: 'var(--boxShadow)' }}
+          >
             Update signature.
           </Button>
         </Tooltip>
