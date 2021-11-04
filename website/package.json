@@ -1,6 +1,6 @@
 {
-  "name": "twitter",
-  "version": "0.1.0",
+  "name": "usawallet",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^1.0.13",

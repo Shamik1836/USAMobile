@@ -1,28 +1,40 @@
-import React, { useState } from 'react';
-import { Avatar, Box, Collapse, IconButton, Typography, Modal, Paper } from '@mui/material';
+import React, { useState } from "react";
+import {
+  Avatar,
+  Box,
+  Collapse,
+  IconButton,
+  Typography,
+  Modal,
+  Paper,
+} from "@mui/material";
 
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 import { usePositions } from "../../hooks/usePositions";
+import { useNetwork } from "../../contexts/networkContext";
 import { TransactionList } from "./TransactionList";
 
-
 import { getDataByCoinID } from "../../hooks/action";
-import { usePortfolio } from '../../contexts/portfolioContext'
+import { usePortfolio } from "../../contexts/portfolioContext";
 import Card from "../Research/card";
 import Loader from "../Research/load";
 
-
 export const TokenTable = () => {
-
   const { isLoading, totalValue } = usePositions();
+  const { networkName } = useNetwork();
   const { positions } = usePortfolio();
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedCoin, setSelectedCoin] = useState(null);
-
 
   const getDataApi = getDataByCoinID();
   const handleClickRow = async (p) => {
@@ -39,30 +51,30 @@ export const TokenTable = () => {
   const onModalClose = () => {
     setModalOpen(false);
     setSelectedCoin(null);
-  }
+  };
   function Position(props) {
     const { position } = props;
     const [open, setOpen] = React.useState(false);
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} style={{ cursor: 'pointer' }} onClick={() => handleClickRow(position)}>
+        <TableRow
+          sx={{ "& > *": { borderBottom: "unset" } }}
+          style={{ cursor: "pointer" }}
+          onClick={() => handleClickRow(position)}
+        >
           <TableCell component="th" scope="row">
             <Avatar
-              sx={{ background: '#790d01' }}
+              sx={{ background: "#790d01" }}
               name={position.symbol}
               src={position.image}
               size="sm"
             />
           </TableCell>
           <TableCell align="left" sx={{ border: 0 }}>
-            <Typography ml={2}>
-              {position.name}
-            </Typography>
+            <Typography ml={2}>{position.name}</Typography>
           </TableCell>
           <TableCell align="left" sx={{ border: 0 }}>
-            <Typography ml={2}>
-              {position.tokens.toPrecision(3)}
-            </Typography>
+            <Typography ml={2}>{position.tokens.toPrecision(3)}</Typography>
           </TableCell>
           <TableCell align="left" sx={{ border: 0 }}>
             <Typography ml={2}>
@@ -71,17 +83,16 @@ export const TokenTable = () => {
             </Typography>
           </TableCell>
           <TableCell align="left" sx={{ border: 0 }}>
-            <Typography ml={2}>
-              {" "}
-              = ${position.value.toFixed(2)}
-            </Typography>
-
+            <Typography ml={2}> = ${position.value.toFixed(2)}</Typography>
           </TableCell>
           <TableCell sx={{ border: 0 }}>
             <IconButton
               aria-label="expand row"
               size="small"
-              onClick={(e) => { e.stopPropagation(); setOpen(!open) }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(!open);
+              }}
             >
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
@@ -93,7 +104,8 @@ export const TokenTable = () => {
               <Box sx={{ m: 1 }}>
                 <TransactionList
                   tokenAddress={position.tokenAddress}
-                  chain={position.symbol.toLowerCase()}
+                  tokenSymbol={position.symbol.toLowerCase()}
+                  chain={networkName}
                   decimals={position.decimals}
                 />
               </Box>
@@ -104,17 +116,16 @@ export const TokenTable = () => {
     );
   }
 
-
   return (
-    <Box sx={{ display: 'inline-flex', minWidth: 320, m: 'auto' }}>
+    <Box sx={{ display: "inline-flex", minWidth: 320, m: "auto" }}>
       <TableContainer
         component={Paper}
         sx={{
           p: 2.5,
-          borderRadius: '1.5rem',
-          backgroundImage: 'var(--bg)',
+          borderRadius: "1.5rem",
+          backgroundImage: "var(--bg)",
           border: 4,
-          borderColor: 'var(--borderColor)'
+          borderColor: "var(--borderColor)",
         }}
       >
         <Table aria-label="collapsible table">
@@ -122,7 +133,9 @@ export const TokenTable = () => {
             <TableRow>
               <TableCell align="center" colSpan={6} sx={{ p: 0, pb: 1 }}>
                 {!isLoading && (
-                  <Typography>Total Value: ${parseFloat(totalValue).toFixed(2)}</Typography>
+                  <Typography>
+                    Total Value: ${parseFloat(totalValue).toFixed(2)}
+                  </Typography>
                 )}
               </TableCell>
             </TableRow>
@@ -131,7 +144,6 @@ export const TokenTable = () => {
             {!isLoading &&
               positions.map((position) => (
                 <Position key={position.name} position={position} />
-
               ))}
           </TableBody>
         </Table>
@@ -140,14 +152,17 @@ export const TokenTable = () => {
         open={modalOpen}
         aria-labelledby="Transaction Details Modal"
         aria-describedby="We will display Row Details here."
-        sx={{ maxWidth: '56rem', mx: 'auto', my: '3.56rem', px: 3, py: 1 }}
+        sx={{ maxWidth: "56rem", mx: "auto", my: "3.56rem", px: 3, py: 1 }}
         onBackdropClick={onModalClose}
       >
-        <Box sx={{ background: 'white' }}>
-          {selectedCoin ? <Card data={selectedCoin} onClose={onModalClose} /> : <Loader />}
+        <Box sx={{ background: "white" }}>
+          {selectedCoin ? (
+            <Card data={selectedCoin} onClose={onModalClose} />
+          ) : (
+            <Loader />
+          )}
         </Box>
       </Modal>
     </Box>
-  )
-
-}
+  );
+};
