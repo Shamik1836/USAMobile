@@ -3,9 +3,11 @@ import { useMoralis } from "react-moralis";
 import transakSDK from "@transak/transak-sdk";
 
 import { useExperts } from "../../contexts/expertsContext";
+import { useColorMode } from "../../contexts/colorModeContext";
 
 export const BuySell = memo(() => {
   const { setActionMode, setDialog } = useExperts();
+  const { colorMode } = useColorMode();
   const { Moralis } = useMoralis();
   const user = Moralis.User.current();
   const ethAddress = user?.attributes.ethAddress;
@@ -13,12 +15,15 @@ export const BuySell = memo(() => {
 
   useEffect(() => {
     const transak = new transakSDK({
-      apiKey: process.env.REACT_APP_TRANSAK_API_KEY,
+      apiKey:
+        process.env.NODE_ENV === "production"
+          ? process.env.REACT_APP_TRANSAK_PRODUCTION_API_KEY
+          : process.env.REACT_APP_TRANSAK_STAGING_API_KEY,
       environment:
         process.env.NODE_ENV === "production" ? "PRODUCTION" : "STAGING",
       defaultCryptoCurrency: "USDC",
       walletAddress: ethAddress,
-      themeColor: "000000",
+      themeColor: colorMode === "light" ? "D37277" : "5865C9",
       fiatCurrency: "USD",
       email: emailAddress,
       networks: "ethereum,polygon",
@@ -64,7 +69,7 @@ export const BuySell = memo(() => {
     return () => {
       transak.close();
     };
-  }, [ethAddress, emailAddress, setActionMode, setDialog]);
+  }, [ethAddress, emailAddress, setActionMode, setDialog, colorMode]);
 
   return null;
 });
