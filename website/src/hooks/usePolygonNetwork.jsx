@@ -16,7 +16,6 @@ export const usePolygonNetwork = () => {
     const getSelectedNetwork = () => {
       Moralis.getChainId()
         .then((chainId) => {
-          console.log('ChainId:', chainId);
           setNetworkId(chainId);
           if (chainId !== 137) {
             switchNetworkToPolygon(137);

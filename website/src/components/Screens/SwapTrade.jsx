@@ -16,7 +16,8 @@ export const SwapTrade = () => {
       setDialog("Switch to Polygon.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPolygon]);
+  }, [isPolygon, setDialog]);
+  
 
   useEffect(() => {
     setActionMode("swap");

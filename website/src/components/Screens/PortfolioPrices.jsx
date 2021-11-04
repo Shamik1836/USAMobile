@@ -13,8 +13,10 @@ export const PortfolioPrices = () => {
     setActionMode("portfolio");
     setDialog("Select a currency to view transaction histories.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // }, []);
 
+  },[setDialog, setActionMode]);
+  
   return (
     <Box sx={{ textAlign: "center", mt: 1, mb: 3 }}>
       <Heading variant="h4">Portfolio and Prices</Heading>

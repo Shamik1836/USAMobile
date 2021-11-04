@@ -26,7 +26,7 @@ export const SendReceive = () => {
       setDialog("Would you like to send or receive cryptocurrency?");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPolygon]);
+  }, [isPolygon, setDialog]);
 
   const handleSendMode = async () => {
     if (!isPolygon) {

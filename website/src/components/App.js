@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { useMoralis } from "react-moralis";
 import { BrowserRouter, Link, Switch, Route, Redirect } from "react-router-dom";
 
@@ -6,6 +7,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import LoopIcon from '@mui/icons-material/Loop';
 import LinkIcon from '@mui/icons-material/Link';
 import MailIcon from '@mui/icons-material/Mail';
+
+import MetaMaskOnboarding from "@metamask/onboarding";
 
 import { TopNavBar } from './Screens/TopNavBar';
 import { ExpertStage } from "./Screens/ExpertStage";
@@ -16,6 +19,7 @@ import { SendReceive } from "./Screens/SendReceive";
 import { BottomFooter } from "./Screens/BottomFooter";
 import { usePositions } from "../hooks/usePositions";
 
+import { useNetwork } from '../contexts/networkContext';
 
 import "./App.scss";
 
@@ -29,9 +33,51 @@ const CryptoRoute = ({ component: Component, address, ...rest }) => {
 };
 
 function App() {
-  const { isAuthenticated, user } = useMoralis();
+
+  const { isAuthenticated, Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
+  const { user, setUserData, isUserUpdating } = useMoralis();
+
   const { positions, isLoading } = usePositions();
+  const { setAccounts, setNetworkId } = useNetwork();
   const address = user?.attributes?.ethAddress;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (!isWeb3Enabled) {
+        enableWeb3();
+      }
+      if (isWeb3Enabled) {
+        if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+          if (window?.ethereum?.selectedAddress) {
+            setAccounts([window.ethereum?.selectedAddress]);
+          }
+        }
+      }
+    }
+
+  }, [isAuthenticated, isWeb3Enabled, enableWeb3, setAccounts]);
+
+  useEffect(() => {
+    const initMoralisEvents = () => {
+      Moralis.onAccountsChanged((accounts) => {
+        setAccounts(accounts);
+        if(isAuthenticated){
+          if (!isUserUpdating){
+            setUserData({
+              accounts: accounts,
+              ethAddress: accounts?.length > 0 ? accounts[0] : null
+            })
+          }
+        } 
+      });
+      Moralis.onChainChanged((chainId) => {
+        setNetworkId(parseInt(chainId));
+      });
+    }
+    initMoralisEvents();
+  }, [Moralis, isAuthenticated, setUserData, setNetworkId, setAccounts]);
+
+  const isOnlyMatic = positions.length === 1 && positions[0].symbol === 'MATIC';
 
   if (isLoading) {
     return (
@@ -46,8 +92,6 @@ function App() {
     );
   }
 
-  const isOnlyMatic = positions.length === 1 && positions[0].symbol === 'MATIC';
-  
   return (
     <Box>
       <Stack>
@@ -55,15 +99,15 @@ function App() {
         <ExpertStage />
         {isAuthenticated ? (
           <BrowserRouter>
-            <Stack direction="row" sx={{alignSelf:'center', justifyContent:'center', mb:2}} spacing={1}>
+            <Stack direction="row" sx={{ alignSelf: 'center', justifyContent: 'center', mb: 2 }} spacing={1}>
               <Link
                 to="/PortfolioPrices"
                 className={`NavBar${address ? "" : " disabled"}`}
               >
-                <Button variant="uw" 
-                  sx={{ 
+                <Button variant="uw"
+                  sx={{
                     boxShadow: "var(--boxShadow)",
-                   }}
+                  }}
                   startIcon={<VisibilityIcon />}
                 >
                   Portfolio
@@ -74,20 +118,20 @@ function App() {
                 className={`NavBar${address ? "" : " disabled"}`}
               >
                 <Button variant="uw"
-                  sx={{ 
+                  sx={{
                     boxShadow: "var(--boxShadow)",
-                
-                   }}
+
+                  }}
                   startIcon={<LoopIcon />}
                 >
                   Trade
                 </Button>
               </Link>
-             <Link to="/BuySell" className="NavBar">
+              <Link to="/BuySell" className="NavBar">
                 <Button variant="uw"
-                  sx={{ 
+                  sx={{
                     boxShadow: "var(--boxShadow)",
-                   }}
+                  }}
                   startIcon={<LinkIcon />}
                 >
                   Buy Crypto
@@ -99,9 +143,9 @@ function App() {
                 className={`NavBar${address ? "" : " disabled"}`}
               >
                 <Button variant="uw"
-                 sx={{ 
+                  sx={{
                     boxShadow: "var(--boxShadow)",
-                   }}
+                  }}
                   startIcon={<MailIcon />}
                 >
                   Send/Recieve

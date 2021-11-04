@@ -19,73 +19,75 @@ export const usePositions = () => {
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      // Bring back a list of all tokens the user has
-      //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
-      let chain = `0X${networkId.toString(16)}`;
-      Moralis.Web3.getAllERC20({ chain }).then((allPositions) => {
-        const ids = allPositions
-          .map((token) =>
-            token.name.toLowerCase() === "ether"
-              ? coinGeckoList["ethereum"].id
-              : coinGeckoList[token.name.toLowerCase()]?.id
-          )
-          .filter((id) => Boolean(id))
-          .join(",");
-        const url = `${geckoHead}?vs_currency=usd&ids=${ids}` + geckoTail;
-        // Call CoinGecko API:
-        fetch(url)
-          .then((response) => response.json())
-          .then((data) => {
-            // Convert to a 'dictionary' array of objects.
-            const marketData = {};
-            data.forEach((d) => (marketData[d.symbol.toUpperCase()] = d));
-            return marketData;
-          })
-          .then((data) => {
-            let runningTotal = 0;
-            const newList = allPositions.map((token) => {
-              // Merge position data with market data and augment.
-              const { symbol } = token;
-              const output = { ...token };
-              const tokenData = data[symbol];
-              output.image = tokenData?.image;
-              output.id = tokenData?.id;
-              output.price = tokenData?.current_price;
-              output.tokens = token.balance
-                ? token.balance / 10 ** token.decimals
-                : 0;
-              output.value = output.price ? output.tokens * output.price : 0;
-              runningTotal += output.value;
-              output.valueString = [
-                parseFloat(output?.tokens).toPrecision(3) +
+        // Bring back a list of all tokens the user has
+        //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
+        let chain = `0X${networkId.toString(16)}`;
+        Moralis.Web3.getAllERC20({ chain }).then((allPositions) => {
+          const ids = allPositions
+            .map((token) =>
+              token.name.toLowerCase() === "ether"
+                ? coinGeckoList["ethereum"].id
+                : coinGeckoList[token.name.toLowerCase()]?.id
+            )
+            .filter((id) => Boolean(id))
+            .join(",");
+          const url = `${geckoHead}?vs_currency=usd&ids=${ids}` + geckoTail;
+          // Call CoinGecko API:
+          fetch(url)
+            .then((response) => response.json())
+            .then((data) => {
+              // Convert to a 'dictionary' array of objects.
+              const marketData = {};
+              data.forEach((d) => (marketData[d.symbol.toUpperCase()] = d));
+              return marketData;
+            })
+            .then((data) => {
+              let runningTotal = 0;
+              const newList = allPositions.map((token) => {
+                // Merge position data with market data and augment.
+                const { symbol } = token;
+                const output = { ...token };
+                const tokenData = data[symbol];
+                output.image = tokenData?.image;
+                output.id = tokenData?.id;
+                output.price = tokenData?.current_price;
+                output.tokens = token.balance
+                  ? token.balance / 10 ** token.decimals
+                  : 0;
+                output.value = output.price ? output.tokens * output.price : 0;
+                runningTotal += output.value;
+                output.valueString = [
+                  parseFloat(output?.tokens).toPrecision(3) +
                   " @ $" +
                   parseFloat(tokenData?.current_price).toFixed(2) +
                   "/" +
                   symbol +
                   " = $" +
                   parseFloat(output?.value).toFixed(2),
-              ];
-              if (!output.tokenAddress) {
-                output.tokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-              }
-              return output;
+                ];
+                if (!output.tokenAddress) {
+                  output.tokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                }
+                return output;
+              });
+              // Done.  Report back to states.
+              setPositions(newList);
+              setTotalValue(runningTotal);
+              setIsLoading(0);
             });
-            // Done.  Report back to states.
-            setPositions(newList);
-            setTotalValue(runningTotal);
-            setIsLoading(0);
-          });
-      }).catch(e => {
-        setPositions(emptyList);
-        setIsLoading(0);
-      });
+        }).catch(e => {
+          setPositions(emptyList);
+          setIsLoading(0);
+        });
+
+      
     } else {
       // No authentication.  Report blanks.
       setPositions(emptyList);
       setIsLoading(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Moralis.Web3, isAuthenticated, isInitialized]);
+  }, [Moralis.Web3, isAuthenticated, isInitialized, networkId]);
 
   return { positions, isLoading, totalValue };
 };
