@@ -29,7 +29,7 @@ export const TopNavBar = (props) => {
       <Typography className="BrandName">USA Wallet</Typography>
       {isAuthenticated && <ExpertButton />}
       <LightSwitch />
-      <AddNetworkButton />
+      {isAuthenticated && <AddNetworkButton />}
       <AuthButton />
       {isAuthenticated && <OnBoardingButton/>}
       {isAuthenticated && <ProfileAvatar />}
