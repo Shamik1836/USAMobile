@@ -1,122 +1,103 @@
 import { useState } from "react";
 import { useMoralis } from "react-moralis";
-import { Button, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 import { useQuote } from "../../contexts/quoteContext";
 import { useExperts } from "../../contexts/expertsContext";
 import { useActions } from "../../contexts/actionsContext";
-
-
-
-const oneInchApprove = "https://api.1inch.exchange/v3.0/1/approve/calldata";
-const oneInchSwap = "https://api.1inch.exchange/v3.0/1/swap?";
-// const refAddress = "0x9A8A1C76e46940462810465F83F44dA706953F69";
+import { useNetwork } from "../../contexts/networkContext";
 
 export const DoItButton = (props) => {
-  const { setQuoteValid, fromToken, toToken } = useQuote();
-  const { txAmount } = useActions();
+  const [isLoading, setIsLoading] = useState(false);
+  const { networkId } = useNetwork();
+  const { setQuoteValid } = useQuote();
+  const { fromToken, toToken, txAmount } = useActions();
   const { Moralis, user } = useMoralis();
   const { setDialog } = useExperts();
 
-
-  const [preApproved, setPreApproved] = useState(false);
-
-  const preApproveTx = async () => {
+  const sendTransaction = (config) => {
     setDialog(
-      "Retrieving pre-approval codes to swap " + txAmount + " of your ",
-      fromToken?.symbol.toUpperCase()
+      "Transmitting pre-approval code to the send token.  " +
+        "Please sign this transaction in your wallet."
     );
-    const web3 = await Moralis.Web3.enable();
-    await fetch(
-      oneInchApprove +
-      "?tokenAddress=" +
-      fromToken?.tokenAddress +
-      "&amount=" +
-      txAmount
-    )
-      .then((response) => response.json())
-      .then((response) => {
-        setDialog("1Inch approval code received.");
-        console.groupCollapsed("DoItButton::preApprove");
-        console.log("fromToken?.tokenAddress:", fromToken?.tokenAddress);
-        console.log("amount:", txAmount);
-        console.log("Response:", response);
-        console.groupEnd();
-        return response;
-      })
-      .then((response) => {
-        setDialog(
-          "Transmitting pre-approval code to the send token.  " +
-          "Please sign this transaction in your wallet."
-        );
-        const Tx = {
-          from: user?.attributes["ethAddress"],
-          to: response.to,
-          data: response.data,
-          gasPrice: response.gasPrice,
-          value: response.value,
-        };
-        console.groupCollapsed("PreApprovalTx");
-        console.log("Tx:", Tx);
-        console.groupEnd();
-        web3.eth.sendTransaction(Tx, (err, hash) => {
+    return new Promise((resolve, reject) => {
+      Moralis.Web3.enable().then((web3) => {
+        web3.eth.sendTransaction(config, (err, hash) => {
           if (err) {
             setDialog("Swap was not pre-approved.");
-            console.groupCollapsed("PreApprovalError");
-            console.log(err);
-            console.groupEnd();
-            setPreApproved(false);
+            reject(err);
           } else {
             setDialog("Swap is now pre-approved.");
-            console.groupCollapsed("PreApprovalHash");
-            console.log(hash);
-            console.groupEnd();
-            setPreApproved(true);
+            resolve(hash);
           }
         });
       });
+    });
   };
 
   const handlePress = async () => {
-    await preApproveTx();
+    setIsLoading(true);
 
-    if (preApproved) {
+    try {
+      setDialog(
+        "Retrieving pre-approval codes to swap " + txAmount + " of your ",
+        fromToken?.symbol.toUpperCase()
+      );
+
+      const res = await fetch(
+        "https://api.1inch.exchange/v3.0/" +
+          networkId +
+          "/approve/calldata?" +
+          "tokenAddress=" +
+          fromToken?.tokenAddress +
+          "&amount=" +
+          txAmount
+      ).then((response) => response.json());
+
+      await sendTransaction({
+        from: user.attributes.ethAddress,
+        ...res,
+      });
+
       setDialog(
         "Submitting swap transaction.  Please review and sign in MetaMask."
       );
+
       await fetch(
-        oneInchSwap +
-        "fromTokenAddress=" +
-        fromToken.tokenAddress +
-        "&toTokenAddress=" +
-        toToken.address +
-        "&amount=" +
-        txAmount +
-        "&fromAddress=" +
-        user?.attributes["ethAddress"] +
-        "&slippage=3"
-      )
-        .then((response) => response.json())
-        .then((response) => {
-          setDialog("Recieved.  Check console log.");
-          console.groupCollapsed("DoItButton::handlePress");
-          console.log("response:", response);
-          console.groupEnd();
-        });
+        "https://api.1inch.exchange/v3.0/" +
+          networkId +
+          "/swap?" +
+          "fromTokenAddress=" +
+          fromToken.tokenAddress +
+          "&toTokenAddress=" +
+          toToken.address +
+          "&amount=" +
+          txAmount +
+          "&fromAddress=" +
+          user?.attributes.ethAddress +
+          "&slippage=3"
+      ).then((response) => response.json());
+
+      setDialog("Recieved.  Check console log.");
+      setQuoteValid(0);
+    } catch (e) {
+      setIsLoading(false);
+      console.log(e);
     }
-    setQuoteValid(0);
   };
 
   return (
     <Tooltip title="Submit swap order.">
-      <Button
+      <LoadingButton
         className="ExpertButton"
         variant="contained"
-        sx={{ boxShadow:"var(--boxShadow)", mr:2}}
+        sx={{ boxShadow: "var(--boxShadow)", mr: 2 }}
         onClick={handlePress}
+        loading={isLoading}
       >
         Do it.
-      </Button>
+      </LoadingButton>
     </Tooltip>
   );
 };
