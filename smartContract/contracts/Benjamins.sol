@@ -364,6 +364,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
     }
 
+    function showReserveIn6dec() public view returns (uint256) { 
+        return reserveInUSDCin6dec; 
+    }   
+
     /* TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
     // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
     // function for owner to withdraw all errant MATIC to feeReceiver

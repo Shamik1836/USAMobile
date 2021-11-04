@@ -128,6 +128,12 @@ async function balBNJI(userToQuery) {
   return bigNumberToNumber (await benjaminsContract.balanceOf(userToQuery));
 }
 
+async function showReserveInCents(){
+  const reserveInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await benjaminsContract.showReserveIn6dec()));
+  console.log(reserveInCents, 'contract tracker shows this amount in USDC cents as reserve');
+  return reserveInCents;
+}
+
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
   let convertedNumber = Number ((ethers.utils.formatUnits(bignumber, 0)).toString());  
@@ -431,13 +437,13 @@ async function countAllCents() {
   const centsInTestUser_1 = await balUSDCinCents(testUser_1);
   const feeReceiverCents = await balUSDCinCents(feeReceiver); 
   const protocolCents = protocolUSDCbalWithoutInteresInCentsGlobalV;
-  const deployerCents = await balUSDCinCents(deployer);
+  //const deployerCents = await balUSDCinCents(deployer);
 
-  const allLiquidCents = centsInTestUser_1 + feeReceiverCents + protocolCents + deployerCents;  
+  const allLiquidCents = centsInTestUser_1 + feeReceiverCents + protocolCents /*+ deployerCents*/;  
 
   liquidCentsArray.push(allLiquidCents);  
 
-  console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
+  console.log(`These are the entries each time all USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
 }
 
 async function minimizedMint(){
@@ -479,7 +485,7 @@ async function minimizedBurn() {
 
 }
 
-async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr) {
+async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, burnLoopToSellAll) {
   
   let mintCounter = 0;
   let burnCounter = 0;  
@@ -509,23 +515,20 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr) {
       
       await testMinting(`operation nr: ${loopCounter}, minting`, minAmountMinting, accNow, accNow);
 
-      totalSpentInCents += mintAllowanceInUSDCCentsShouldBeNowGlobalV;  
+      totalSpentInCents += mintAllowanceInUSDCCentsWasNowGlobalV;  
 
     }   
-    
-
-  
+      
     // BURNING
     // if runMint == false, burn.
-    else {     
+    else {   
+      let minAmountBurning = await minimizedBurn(); // this means burning an amount of tokens, in an value as close as possible to $5  
       
-      //console.log(`In ${testNr}, operation nr: ${loopCounter} this many tokens exist:`, bigNumberToNumber(await benjaminsContract.totalSupply() )); 
-
-      let minAmountBurning = await minimizedBurn(); // this means burning an amount of tokens, in an value as close as possible to $5        
+      if (sellAll == true && burnLoopToSellAll == loopCounter) {
+        minAmountBurning = await balBNJI(testUser_1);
+      }
       
-      await calcBurnVariables(minAmountBurning, accNow, false); // this returns fee not value
-            
-      //console.log(`burnReturnTotalInUSDCcentsShouldBeNowGlobalV:`, burnReturnTotalInUSDCcentsShouldBeNowGlobalV); 
+      await calcBurnVariables(minAmountBurning, accNow, false); // this returns fee not value     
 
       if (burnReturnStillInclFeesInUSDCcentsGlobalV >= 500) {
         console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} BURNS this many tokens:`, minAmountBurning);        
@@ -545,7 +548,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr) {
   burnCounterTotal += burnCounter;
   
   console.log(`test ran ${loopCounterTotal} loops so far, of which ${mintCounterTotal} were mints and ${burnCounterTotal} were burns. ${not5USDCworthCounter} time(s), less than $5 of tokens existed`); 
-  console.log(`so far, roughly ${totalSpentInCents/100} USDC were spent by the testusers (excl. deployer) and ${totalReturnedInCents/100} USDC were paid out by the contract in total`);   
+  console.log(`estimate: so far, roughly ${totalSpentInCents/100} USDC were spent by the testusers (excl. deployer) and ${totalReturnedInCents/100} USDC were paid out by the contract in total`);   
 
   const protocolBalanceAfterTestInCents = dividefrom6decToUSDCcents( bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)) );
   
@@ -564,7 +567,8 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr) {
   console.log(protocolUSDCbalWithoutInteresInCentsGlobalV/100, 'protocol should have this many (am)USDC, without interest so far');
   console.log(protocolBalanceAfterTestInCents/100, 'protocol has this many funds in amUSDC, incl interest so far');  
   console.log(feeReceiverUSDCbalAfterTestsInCents/100, `feeReceiver's USDC balance at the end of all loops so far`);
-  
+  const reserveTracked = await showReserveInCents();
+  expect(reserveTracked).to.equal(protocolUSDCbalWithoutInteresInCentsGlobalV); 
 } 
 
 describe("Benjamins Test", function () {
@@ -741,73 +745,64 @@ describe("Benjamins Test", function () {
   
   it("1.: Small amount test: 100 mints", async function () {  
       
-    await runMintOrBurnLoop(100, true, testUser_1, 'Test 1');
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 1', false, 0);
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("2.: Small amount test: 100 burns", async function () {     
-    
-    await runMintOrBurnLoop(100, false, testUser_1, 'Test 2');
-    await countAllCents();
-    waitFor(4000);
-
-  });
-  /*
-  it("3.: Small amount test: 100 mints", async function () {     
-    let accOrderArray3  = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, true, accOrderArray3, 'Test 3');
+  it("2.: Small amount test: 100 burns", async function () {    
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 2', false, 0);    
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("4.: Small amounts test: 100 burns", async function () {     
-    let accOrderArray4 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, false, accOrderArray4, 'Test 4');
+  it("3.: Small amount test: 100 mints", async function () {
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 3', false, 0);
+    await countAllCents();    
+    waitFor(4000);
+  });
+  
+  it("4.: Small amounts test: 100 burns", async function () { 
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 4', false, 0);
     await countAllCents();
     waitFor(4000);
   });
   
   it("5.: Small amounts test: 100 mints", async function () {     
-    let accOrderArray5  = [1,1,1,1,1,1,1,1,1,1];    
-    await runMintOrBurnLoop(100, true, accOrderArray5, 'Test 5');
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 5', false, 0);
     await countAllCents();    
     waitFor(4000);
   });
   
   it("6.: Small amounts test: 100 burns", async function () { 
-    let accOrderArray6 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, false, accOrderArray6, 'Test 6');
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 6', false, 0);
     await countAllCents();
     waitFor(4000);
   });
 
-  it("7.: Small amounts test: 100 mints", async function () {     
-    let accOrderArray7 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, true, accOrderArray7, 'Test 7');
+  it("7.: Small amounts test: 100 mints", async function () {  
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 7', false, 0);
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("8.: Small amounts test: 100 burns", async function () {     
-    let accOrderArray8 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, false, accOrderArray8, 'Test 8');
+  it("8.: Small amounts test: 100 burns", async function () {       
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 8', false, 0);
     await countAllCents();
     waitFor(4000);
   });
 
-  it("9.: Small amounts test: 100 mints", async function () {     
-    let accOrderArray9 = [1,1,1,1,1,1,1,1,1,1];    
-    await runMintOrBurnLoop(100, true, accOrderArray9, 'Test 9');
+  it("9.: Small amounts test: 100 mints", async function () {         
+    await runMintOrBurnLoop(100, true, testUser_1, 'Test 9', false, 0);
     await countAllCents();    
     waitFor(4000);
   });
   
-  it("10.: Small amounts test: 100 burns", async function () {     
-    let accOrderArray10 = [1,1,1,1,1,1,1,1,1,1];  
-    await runMintOrBurnLoop(100, false, accOrderArray10, 'Test 10');
+  it("10.: Small amounts test: 100 burns", async function () {  
+    await runMintOrBurnLoop(100, false, testUser_1, 'Test 10', true, 100);
     await countAllCents();
-    waitFor(4000);
+    console.log(await balUSDC(testUser_1), 'end balance of testUser_1 in USDC');
+    
   });// */
   
 }); 
