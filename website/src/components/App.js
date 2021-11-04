@@ -62,11 +62,11 @@ function App() {
       Moralis.onAccountsChanged((accounts) => {
         console.log('Account Changed Called.', accounts);
         setAccounts(accounts);
-        if (isAuthenticated && !isUserUpdating) {
+        if (user && !isUserUpdating) {
           setUserData({
             accounts: accounts,
             ethAddress: accounts?.length > 0 ? accounts[0] : null
-          })
+          },{onError:(error)=>{ console.log('UpdateUserError:', error)}})
         }
       });
       Moralis.onChainChanged((chainId) => {
@@ -93,11 +93,11 @@ function App() {
         if (MetaMaskOnboarding.isMetaMaskInstalled()) {
           if (window?.ethereum?.selectedAddress) {
             setAccounts([window.ethereum?.selectedAddress]);
-            if (isAuthenticated && !isUserUpdating) {
+            if (user && !isUserUpdating) {
               setUserData({
                 accounts: [window.ethereum?.selectedAddress],
                 ethAddress: window.ethereum?.selectedAddress
-              })
+              },{onError:(error)=>{ console.log('UpdateUserError:', error)}})
             }
           }
         }
