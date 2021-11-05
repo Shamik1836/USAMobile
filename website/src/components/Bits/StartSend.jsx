@@ -14,19 +14,27 @@ export const StartSend = (props) => {
   const [isTxLoading, setIsTxLoading] = useState(false);
 
   useEffect(() => {
+    console.log(fromToken, txAmount);
     setTokenType(
       fromToken.tokenAddress === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
         ? 'native'
         : 'erc20'
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromToken]);
+
+  useEffect(() => {
     setOptions({
       type: tokenType,
-      amount: Moralis.Units.ETH(Number(txAmount), fromToken.decimals),
+      amount:
+        tokenType === 'native'
+          ? Moralis.Units.ETH(Number(txAmount), fromToken.decimals)
+          : Moralis.Units.Token(txAmount, fromToken.decimals),
       receiver: toAddress,
       contractAddress: fromToken.tokenAddress,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromToken, toAddress, txAmount]);
+  }, [toAddress, txAmount, tokenType]);
 
   const pushIt = async (e) => {
     setIsTxLoading(true);
@@ -36,7 +44,10 @@ export const StartSend = (props) => {
         setIsTxLoading(false);
         setDialog('Your signed transaction was sent to network!');
       })
-      .catch((e) => setDialog('Oops! ' + e.message));
+      .catch((e) => {
+        setDialog('Oops! ' + e.message);
+        setIsTxLoading(false);
+      });
   };
 
   return (
