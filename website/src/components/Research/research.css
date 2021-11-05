@@ -7,15 +7,18 @@
 .card .header-title {
   align-self: center;
   margin-left: 20px;
+  color: #000;
 }
 .card .price {
   font-size: 23px;
   font-weight: 700;
+  color: #000;
 }
 .card .title {
   font-size: 13px;
   font-weight: 500;
   opacity: 0.9;
+  color: #000;
 }
 .card .percent {
   font-size: 15px;
