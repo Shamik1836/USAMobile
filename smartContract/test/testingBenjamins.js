@@ -59,7 +59,9 @@ async function addUserAccDataPoints(userToCheck){
   console.log(userToCheck, "userToCheck <==============") ;
   const userLevelNow = bigNumberToNumber (await benjaminsContract.discountLevel(userToCheck));
   console.log(userLevelNow, "userLevelNow <==============") ;
-  const userDiscountNow = /*(100*baseFee) - */bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100);
+
+  // in solidity: return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]);
+  const userDiscountNow = 100 - bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100/baseFee);
   console.log(userDiscountNow, "userDiscountNow <==============") ;
   
   if (userToCheck == testUser_1){
@@ -711,7 +713,7 @@ describe("Benjamins Test", function () {
   });
     
   // took out test 3, can be replaced. Not possible to call function with fractions of tokens as argument
-  /*  
+    
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
 
     await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -1204,7 +1206,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Levels = [0,4];
     const expectedUser2Discounts = [0,40];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
-  });*//*
+  });*/
 
   
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
