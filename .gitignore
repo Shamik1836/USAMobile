@@ -7,6 +7,9 @@ npm-debug.*
 *.key
 *.mobileprovision
 *.orig.*
+website/build/
+website/build/static/css
+website/build/static/js
 web-build/
 website/.env
 website/.env.development
