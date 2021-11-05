@@ -86,17 +86,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Are we past the withdraw timeout?
-    modifier withdrawAllowed(address userToCheck) {
-
-        /*
+    modifier withdrawAllowed(address userToCheck) {                
         uint256 blockNum = block.number;
-        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck]; 
-       //console.log('holdTime calculated:', holdTime);
-       //console.log('holdTime necessary, i.e. blocksPerDay*levelHolds[discountLevel(userToCheck)]:', blocksPerDay*levelHolds[discountLevel(userToCheck)]);
+        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];       
         require(holdTime > antiFlashLoan, 
             'Anti-flashloan withdraw timeout in effect.');
         require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 
-            'Discount level withdraw timeout in effect.');*/
+            'Discount level withdraw timeout in effect.');
         _;
     }
  
