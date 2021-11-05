@@ -23,28 +23,19 @@ const scale6dec = 1000000;
 
 let testingUserAddressesArray = [];
 
-const baseFee = 1;
-const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];      // TODO: check if can/should be used
-const levelDiscountsArray = [ 0, 5,  10,  20,  40,   75];  // TODO: check if can/should be used
+const baseFee = 2;
+const levelAntesArray =     [ 0, 20, 60, 100, 500, 2000];       // TODO: check if can/should be used
+const levelDiscountsArray = [ 0,  5, 10,  20,  40,   75];       // TODO: check if can/should be used
 
 
 let benjaminsContract;
 
-const polygonMATICaddress = '0x0000000000000000000000000000000000001010';
-
 let polygonUSDC;
 const polygonUSDCaddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
-
-let polygonLendingPool;
-const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
 
 let polygonAmUSDC;
 const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
-let quickswapFactory;
-const quickswapFactoryAddress = '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32';
-
-let polygonETH;
 const polygonWETHaddress = '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619';
 
 let polygonWMATIC;
@@ -65,8 +56,11 @@ let user2DiscountDataArray = [];
 
 // querrying and saving account level and account discount info for userToCheck, and saving them to an array for later confirmation
 async function addUserAccDataPoints(userToCheck){
+  console.log(userToCheck, "userToCheck <==============") ;
   const userLevelNow = bigNumberToNumber (await benjaminsContract.discountLevel(userToCheck));
-  const userDiscountNow = 100 - bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100); 
+  console.log(userLevelNow, "userLevelNow <==============") ;
+  const userDiscountNow = /*(100*baseFee) - */bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100);
+  console.log(userDiscountNow, "userDiscountNow <==============") ;
   
   if (userToCheck == testUser_1){
     user1LevelDataArray.push(userLevelNow);
@@ -84,13 +78,13 @@ async function addUserAccDataPoints(userToCheck){
 function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
   if  (userToCheck == testUser_1){
     for (let index = 0; index < user1LevelDataArray.length; index++) {
-     //console.log("userToCheck", userToCheck);
-     //console.log("index", index);
-     //console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
-     //console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
+      console.log("userToCheck", userToCheck);
+      console.log("index", index);
+      console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
+      console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
 
-     //console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
-     //console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
+      console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
+      console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
       expect(user1LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
       expect(user1DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
     }
@@ -226,15 +220,14 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
   
-  const restAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
+  const restAllowanceToBNJIcontractIn6dec = await polygonUSDC.allowance(callingAccAddress, benjaminsContract.address);
   expect(await restAllowanceToBNJIcontractIn6dec).to.equal(0);
   
-  const amountToApproveIn6dec = await calcMintApprovalAndPrep(amountToMint, callingAccAddress);  // pausing issue is here TODO:fix
-  console.log(bigNumberToNumber(amountToApproveIn6dec), 'amountToApproveIn6dec in testMinting', );  
+  const amountToApproveIn6dec = await calcMintApprovalAndPrep(amountToMint, callingAccAddress);  
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
   
   const givenAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
-  //console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
+  console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
@@ -532,15 +525,7 @@ describe("Benjamins Test", function () {
         'function transfer(address recipient, uint256 amount) external returns (bool)',
       ], 
       deployerSigner
-    );  
-    
-    polygonLendingPool = new ethers.Contract(
-      polygonLendingPoolAddress,
-      [
-        'function getUserAccountData(address user) external view returns ( uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)',
-      ], 
-      deployerSigner
-    );  
+    );      
     
     // after deployment, querying benjamins balance of deployer, logging as number and from WEI to ETH
     //const startingBalanceInbenjamins = await balBNJI(deployer);    
@@ -726,7 +711,7 @@ describe("Benjamins Test", function () {
   });
     
   // took out test 3, can be replaced. Not possible to call function with fractions of tokens as argument
-    
+  /*  
   it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
 
     await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -1219,7 +1204,7 @@ describe("Benjamins Test", function () {
     const expectedUser2Levels = [0,4];
     const expectedUser2Discounts = [0,40];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
-  });*/
+  });*//*
 
   
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
@@ -1358,7 +1343,7 @@ describe("Benjamins Test", function () {
     await benjaminsContract.connect(deployerSigner).unpause();
     expect(await  benjaminsContract.paused()).to.equal(false);
     
-  });
+  });//*/
 
   
 }); 

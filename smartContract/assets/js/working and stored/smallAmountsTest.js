@@ -25,7 +25,8 @@ let burnReturnStillInclFeesInUSDCcentsGlobalV = 0;
 
 // variable to help track the protocol's USDC balance value, which is actually existing as
 // an amUSDC balance, which is difficult to track, since it constantly accrues interest via Aave's lendingPool
-// this variable is calculated at first, and constantly compared to the variable reserveTracked,
+// (the amUSDC balance is queried locally at the end of each test series and console logged via protocolBalanceAfterTestInCents)
+// this here variable is calculated at first, and constantly compared to the variable reserveTracked,
 // which queries the benjaminsContract's reserveInUSDCin6dec variable
 let protocolUSDCbalWithoutInterestInCentsGlobalV = 0;
 
@@ -477,8 +478,7 @@ describe("Small Amounts Test", function () {
   before(async function() {   
 
     ({deployer, 
-    feeReceiver, 
-    accumulatedReceiver,    
+    feeReceiver,         
     testUser_1
     } = await getNamedAccounts());
     
