@@ -4,14 +4,13 @@ import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useNetwork } from '../../contexts/networkContext';
 
 export const NetworkSelect = () => {
-  const { setNetworkId, setNetworkName } = useNetwork();
+  const { setNetworkId } = useNetwork();
   const [value, setValue] = useState('');
 
   const handleChange = async (e) => {
     let selectedOption = e.target.value;
     setValue(selectedOption);
     console.log('selectedOption:', selectedOption);
-    setNetworkName(selectedOption === 'ethereum' ? 'eth' : 'polygon');
     setNetworkId(selectedOption === 'ethereum' ? 1 : 137);
   };
 
