@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Box, FormControl, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { useMoralis } from 'react-moralis';
 
 import { useActions } from '../../contexts/actionsContext';
 import { useExperts } from '../../contexts/expertsContext';
 import { useQuote } from '../../contexts/quoteContext';
-
 import { useColorMode } from '../../contexts/colorModeContext';
 import { useNetwork } from '../../contexts/networkContext';
 
 export const RequestQuote = () => {
-  const { networkId } = useNetwork();
+  const { Moralis } = useMoralis();
+  const { networkAlias } = useNetwork();
   const [loading, setLoading] = useState(false);
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
@@ -24,67 +25,45 @@ export const RequestQuote = () => {
     setEstimatedGas,
   } = useQuote();
   const { setDialog } = useExperts();
-  // const toast = useToast();
-
   const { colorMode } = useColorMode();
 
   const handlePress = async () => {
-    console.groupCollapsed('GetQuote::inputs');
-    console.debug('Received fromSymbol: ', fromSymbol);
-    console.debug('Received fromAddress: ', fromAddress);
-    console.debug('Received toSymbol: ', toSymbol);
-    console.debug('Received toAddress ', toAddress);
-    console.debug('Received txAmount: ', txAmount);
-    console.groupEnd();
-
     setDialog(
       'Estimating costs to swap ' + fromSymbol + ' to ' + toSymbol + ' ... '
     );
+
     setLoading(true);
-    await fetch(
-      'https://api.1inch.exchange/v3.0/' +
-        networkId +
-        '/quote?' +
-        'fromTokenAddress=' +
-        fromAddress +
-        '&toTokenAddress=' +
-        toAddress +
-        '&amount=' +
-        txAmount
-    )
-      .then((response) => response.json())
-      .then((oneInchQuote) => {
-        console.groupCollapsed('RequestQuote::response.');
-        console.log('Recieved Quote:', oneInchQuote);
-        setLoading(false);
-        if (oneInchQuote.protocols !== undefined) {
-          setFromToken(oneInchQuote.fromToken);
-          setFromTokenAmount(oneInchQuote.fromTokenAmount);
-          setProtocols(oneInchQuote.protocols[0]);
-          setToToken(oneInchQuote.toToken);
-          setToTokenAmount(oneInchQuote.toTokenAmount);
-          setEstimatedGas(oneInchQuote.estimatedGas);
-          setQuoteValid('true');
-          setDialog(
-            "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
-          );
-        } else {
-          setDialog(
-            'Something went wrong: ' +
-              oneInchQuote.error +
-              ' re: ' +
-              oneInchQuote.message
-          );
-          setQuoteValid('false');
-          // toast({
-          //   description: oneInchQuote.message,
-          //   status: "error",
-          //   isClosable: true,
-          // });
-          return;
-        }
-        console.groupEnd();
+
+    try {
+      const quote = await Moralis.Plugins.oneInch.quote({
+        chain: networkAlias,
+        fromTokenAddress: fromAddress,
+        toTokenAddress: toAddress,
+        amount: txAmount,
       });
+
+      if (quote.protocols !== undefined) {
+        setFromToken(quote.fromToken);
+        setFromTokenAmount(quote.fromTokenAmount);
+        setProtocols(quote.protocols[0]);
+        setToToken(quote.toToken);
+        setToTokenAmount(quote.toTokenAmount);
+        setEstimatedGas(quote.estimatedGas);
+        setQuoteValid('true');
+        setDialog(
+          "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
+        );
+      } else {
+        setDialog(
+          'Something went wrong: ' + quote.error + ' re: ' + quote.message
+        );
+        setQuoteValid('false');
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
+    setLoading(false);
   };
 
   return (
