@@ -14,7 +14,7 @@ const BLOCK_EXPLORER_URL = 'https://polygonscan.com/';
 
 export const usePolygonNetwork = () => {
   const { Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
-  const { isAuthenticated, setIsPolygon, setNetworkId } = useNetwork();
+  const { isAuthenticated, setNetworkId } = useNetwork();
   const { setDialog } = useExperts();
 
   useEffect(() => {
@@ -32,25 +32,20 @@ export const usePolygonNetwork = () => {
         .then(
           (chainId) => {
             setNetworkId(chainId);
-            if (chainId !== 137) {
-              setIsPolygon(false);
-            } else {
-              setIsPolygon(true);
-            }
           },
           (error) => {
             console.log('ChainIdError:', error);
             setDialog(error.message);
-            setIsPolygon(false);
+            setNetworkId(1);
           }
         )
         .catch((error) => {
           console.log('ChainIdCatch:', error);
           setDialog(error.message);
-          setIsPolygon(false);
+          setNetworkId(1);
         });
     } else {
-      setIsPolygon(false);
+      setNetworkId(1);
       setDialog('Install MetaMask First.');
     }
   };
@@ -60,13 +55,12 @@ export const usePolygonNetwork = () => {
         .then(
           (success) => {
             console.log('Success:', success);
-            setIsPolygon(true);
             setNetworkId(CHAIN_ID);
             setDialog('Polygon Chain switched successfully.');
           },
           (switchError) => {
             console.log('SwitchError:', switchError);
-            setIsPolygon(false);
+            setNetworkId(1);
             setDialog(switchError.message);
             if (switchError.code === 4902) {
               // console.log('We will call Add Network here.');
@@ -83,11 +77,11 @@ export const usePolygonNetwork = () => {
         )
         .catch((error) => {
           console.log('SwitchCatch:', error);
-          setIsPolygon(false);
+          setNetworkId(1);
           setDialog(error.message);
         });
     } else {
-      setIsPolygon(false);
+      setNetworkId(1);
       setDialog('Install MetaMask First.');
     }
   };
@@ -106,21 +100,20 @@ export const usePolygonNetwork = () => {
           (success) => {
             if (typeof success == 'undefined') {
               setDialog('Polygon Network added to Metamask successfully.');
-              setIsPolygon(true);
               setNetworkId(CHAIN_ID);
             }
           },
           (error) => {
-            setIsPolygon(false);
+            setNetworkId(1);
             setDialog('There is an error in adding Network, Please try again.');
           }
         )
         .catch((error) => {
-          setIsPolygon(false);
+          setNetworkId(1);
           setDialog('There is an error in adding Network, Please try again.');
         });
     } else {
-      setIsPolygon(false);
+      setNetworkId(1);
       setDialog('Install MetaMask First.');
     }
   };

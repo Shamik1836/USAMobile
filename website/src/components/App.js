@@ -38,7 +38,7 @@ function App() {
   const { isAuthenticated, Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
   const { user, setUserData, isUserUpdating } = useMoralis();
   const { positions, isLoading } = usePositions();
-  const { setAccounts, setNetworkId, setIsPolygon } = useNetwork();
+  const { setAccounts, setNetworkId } = useNetwork();
   const address = user?.attributes?.ethAddress;
 
   const { getSelectedNetwork } = usePolygonNetwork();
@@ -77,9 +77,6 @@ function App() {
       Moralis.onChainChanged((chainId) => {
         console.log('ChainId:', chainId);
         setNetworkId(parseInt(chainId));
-        if (parseInt(chainId) !== 137) {
-          setIsPolygon(false);
-        }
       });
     };
 
