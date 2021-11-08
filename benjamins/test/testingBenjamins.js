@@ -9,15 +9,17 @@ let tokensShouldExistNowGlobalV;
 let mintPriceTotalInUSDCShouldBeNowGlobalV; 
 let mintFeeInUSDCShouldBeNowGlobalV; 
 let mintAllowanceInUSDCCentsShouldBeNowGlobalV;
-let burnReturnTotalInUSDCShouldBeNowGlobalV;
+let burnReturnWOfeeInUSDCShouldBeNowGlobalV;
 let burnFeeInUSDCShouldBeNowGlobalV;
+let transferFeeShouldBeNowInUSDCcentsGlobalV;
 
 let tokensExistQueriedGlobalV;
 let mintPriceTotalInUSDCWasPaidNowGlobalV;
 let mintFeeInUSDCWasPaidNowGlobalV;
 let mintAllowanceInUSDCCentsWasNowGlobalV;
-let burnReturnTotalInUSDCWasPaidNowGlobalV;
+let burnReturnWOfeeInUSDCWasPaidNowGlobalV;
 let burnFeeInUSDCWasPaidNowGlobalV;
+let transferFeeWasPaidNowInUSDCcentsGlobalV;
 
 const scale6dec = 1000000;
 
@@ -56,13 +58,13 @@ let user2DiscountDataArray = [];
 
 // querrying and saving account level and account discount info for userToCheck, and saving them to an array for later confirmation
 async function addUserAccDataPoints(userToCheck){
-  console.log(userToCheck, "userToCheck <==============") ;
+  //console.log(userToCheck, "userToCheck <==============") ;
   const userLevelNow = bigNumberToNumber (await benjaminsContract.discountLevel(userToCheck));
-  console.log(userLevelNow, "userLevelNow <==============") ;
+  //console.log(userLevelNow, "userLevelNow <==============") ;
 
   // in solidity: return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]);
   const userDiscountNow = 100 - bigNumberToNumber( await benjaminsContract.quoteFeePercentage(userToCheck)/100/baseFee);
-  console.log(userDiscountNow, "userDiscountNow <==============") ;
+  //console.log(userDiscountNow, "userDiscountNow <==============") ;
   
   if (userToCheck == testUser_1){
     user1LevelDataArray.push(userLevelNow);
@@ -80,13 +82,13 @@ async function addUserAccDataPoints(userToCheck){
 function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUserDiscountArray) {
   if  (userToCheck == testUser_1){
     for (let index = 0; index < user1LevelDataArray.length; index++) {
-      console.log("userToCheck", userToCheck);
-      console.log("index", index);
-      console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
-      console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
+      //console.log("userToCheck", userToCheck);
+      //console.log("index", index);
+      //console.log("expectedUserLevelsArray[index]", expectedUserLevelsArray[index]);
+      //console.log("user1LevelDataArray[index]", user1LevelDataArray[index]);
 
-      console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
-      console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
+      //console.log("expectedUserDiscountArray[index]", expectedUserDiscountArray[index]);
+      //console.log("user1DiscountDataArray[index]", user1DiscountDataArray[index]);
       expect(user1LevelDataArray[index]).to.equal(expectedUserLevelsArray[index]); 
       expect(user1DiscountDataArray[index]).to.equal(expectedUserDiscountArray[index]);
     }
@@ -189,24 +191,32 @@ function getRoundedFee(userLevel, principalInUSDCcents){
 }
 
 async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingAddress){
-  console.log(callingAccAddress, 'callingAccAddress in testTransfer');
-  console.log(amountBNJIsToTransfer, 'amountBNJIsToTransfer in testTransfer');
-  console.log(receivingAddress, 'receivingAddress in testTransfer');
+  //console.log(callingAccAddress, 'callingAccAddress in testTransfer');
+  //console.log(amountBNJIsToTransfer, 'amountBNJIsToTransfer in testTransfer');
+  //console.log(receivingAddress, 'receivingAddress in testTransfer');
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(callingAccAddress)); 
-  console.log(userLevel, 'userLevel in testTransfer');
+  //console.log(userLevel, 'userLevel in testTransfer');
+
+  const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
 
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
   const feeInCentsRoundedDown = await calcBurnVariables(amountBNJIsToTransfer, callingAccAddress, true);  
-  console.log(feeInCentsRoundedDown, 'feeInCentsRoundedDown to be approved in testTransfer');    
+  //console.log(feeInCentsRoundedDown, 'feeInCentsRoundedDown to be approved in testTransfer');    
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
   // calling transfer function on benjaminscontract  
   await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJIsToTransfer);
+
+  const feeReceiverUSDCBalancAfterTransferIn6dec = await balUSDCin6decBN(feeReceiver);
+
+  transferFeeWasPaidNowInUSDCcentsGlobalV = dividefrom6decToUSDCcents(bigNumberToNumber(feeReceiverUSDCBalancAfterTransferIn6dec - feeReceiverUSDCBalanceBeforeTransferIn6dec));
+
+  expect(transferFeeShouldBeNowInUSDCcentsGlobalV).to.equal( Number (transferFeeWasPaidNowInUSDCcentsGlobalV)); 
 }
 
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
- console.log('calling address in testMinting is now:', callingAccAddress);
+ //console.log('calling address in testMinting is now:', callingAccAddress);
   
   
   const totalSupplyBeforeMint = bigNumberToNumber( await benjaminsContract.totalSupply()); 
@@ -229,16 +239,16 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, amountToApproveIn6dec);
   
   const givenAllowanceToBNJIcontractIn6dec = await polygonUSDC.connect(callingAccSigner).allowance(callingAccAddress, benjaminsContract.address);
-  console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
+  //console.log(bigNumberToNumber(givenAllowanceToBNJIcontractIn6dec), `givenAllowanceToBNJIcontract in testMinting by ${callingAccAddress}` ); 
 
   expect(Number (amountToApproveIn6dec)).to.equal(Number (givenAllowanceToBNJIcontractIn6dec));
   
-  console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
+  //console.log(`${callingAccAddress} is minting this many tokens:`, amountToMint, 'for:', receivingAddress );
   
   // descr: function mintTo(uint256 _amount, address _toWhom) public whenAvailable {  
   await benjaminsContract.connect(callingAccSigner).mintTo(amountToMint, receivingAddress);  
 
-  console.log("MINTING HAPPENED ======= == = = == = = = = = = == = = =" );
+  //console.log("MINTING HAPPENED ======= == = = == = = = = = = == = = =" );
 
   const totalSupplyAfterMint = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
   const receivingAddressBNJIbalAfterMint = await balBNJI(receivingAddress);
@@ -253,29 +263,29 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   const contractAMUSDCdiffMintInCents = contractAMUSDCbalanceAfterMintInCents - contractAMUSDCbalanceBeforeMintInCents;
   const feeReceiverUSDCdiffMintInCents = feeReceiverUSDCBalanceAfterMintInCents - feeReceiverUSDCBalanceBeforeMintInCents;     
   
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
+  //console.log(fromCentsToUSDC(contractAMUSDCbalanceBeforeMintInCents), `benjaminsContract amUSDC balance before ${mintName}`);
+  //console.log(fromCentsToUSDC(contractAMUSDCbalanceAfterMintInCents), `benjaminsContract amUSDC balance after ${mintName}`);
 
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${callingAccAddress} USDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${callingAccAddress} USDC balance after ${mintName}`);    
+  //console.log(fromCentsToUSDC(callingAccUSDCBalanceBeforeMintInCents), `${callingAccAddress} USDC balance before ${mintName}`);
+  //console.log(fromCentsToUSDC(callingAccUSDCBalanceAfterMintInCents), `${callingAccAddress} USDC balance after ${mintName}`);    
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before ${mintName}`);
-  console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
+  //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceBeforeMintInCents), `feeReceiver USDC balance before ${mintName}`);
+  //console.log(fromCentsToUSDC(feeReceiverUSDCBalanceAfterMintInCents), `feeReceiver USDC balance after ${mintName}`);
   
-  console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
+  //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents), `${callingAccAddress} mint price paid in USDC`);
  //console.log(fromCentsToUSDC(contractAMUSDCdiffMintInCents), `approx. of what benjaminsContract received in amUSDC (incl. interest already accrued)`);
 
-  console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
+  //console.log(fromCentsToUSDC(feeReceiverUSDCdiffMintInCents), `feeReceiver mint fee received in USDC:`);  
  //console.log(fromCentsToUSDC(callingAccMintPricePaidInCents - contractAMUSDCdiffMintInCents), `approx. of what should be the fee received, in USDC (difference between paid by user and received by protocol, changed by interest already accrued)`); 
 
-  console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
-  console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
+  //console.log(totalSupplyBeforeMint, `Benjamins total supply before minting ${amountToMint} Benjamins`); 
+  //console.log(totalSupplyAfterMint, `Benjamins total supply after minting ${amountToMint} Benjamins`); 
 
-  console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
-  console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after${mintName}`);
+  //console.log(contractBNJIbalBefore, `benjaminsContract owns/manages this many benjamins before ${mintName}`);
+  //console.log(contractBNJIbalAfter, `benjaminsContract owns/manages this many benjamins after${mintName}`);
 
-  console.log(receivingAddressBNJIbalBeforeMint, `receivingAddress owns/manages this many benjamins before ${mintName}`);
-  console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
+  //console.log(receivingAddressBNJIbalBeforeMint, `receivingAddress owns/manages this many benjamins before ${mintName}`);
+  //console.log(receivingAddressBNJIbalAfterMint, `receivingAddress owns/manages this many benjamins after ${mintName}`);
 
   
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
@@ -285,14 +295,14 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
 
   confirmMint();
 
-  console.log(`==============================================================================`);
-  console.log(`==============================================================================`);
+  //console.log(`==============================================================================`);
+  //console.log(`==============================================================================`);
 
 };
 
 async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
 
- console.log('calling address in testBurning is now:', callingAccAddress);
+ //console.log('calling address in testBurning is now:', callingAccAddress);
  
   const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
 
@@ -353,7 +363,7 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   
  //console.log(`Benjamin total supply after, burning ${amountToBurn} tokens:`, totalSupplyAfterBurn); 
 
-  burnReturnTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(receivingAccBurnReturnReceivedInCents);
+  burnReturnWOfeeInUSDCWasPaidNowGlobalV = fromCentsToUSDC(receivingAccBurnReturnReceivedInCents);
   burnFeeInUSDCWasPaidNowGlobalV = feeReceiverUSDCdiffBurnInCents/100;
   tokensExistQueriedGlobalV = totalSupplyAfterBurn;
 
@@ -368,32 +378,33 @@ function resetTrackers(){
   tokensShouldExistNowGlobalV = 0;
   mintPriceTotalInUSDCShouldBeNowGlobalV = 0; 
   mintFeeInUSDCShouldBeNowGlobalV = 0; 
-
   mintAllowanceInUSDCCentsShouldBeNowGlobalV = 0;
-  burnReturnTotalInUSDCShouldBeNowGlobalV = 0;
+  burnReturnWOfeeInUSDCShouldBeNowGlobalV = 0;
   burnFeeInUSDCShouldBeNowGlobalV = 0;
+  transferFeeShouldBeNowInUSDCcentsGlobalV = 0;
 
   tokensExistQueriedGlobalV = 0;
   mintPriceTotalInUSDCWasPaidNowGlobalV = 0;
   mintFeeInUSDCWasPaidNowGlobalV = 0;
-
   mintAllowanceInUSDCCentsWasNowGlobalV = 0;
-  burnReturnTotalInUSDCWasPaidNowGlobalV = 0;
+  burnReturnWOfeeInUSDCWasPaidNowGlobalV = 0;
   burnFeeInUSDCWasPaidNowGlobalV = 0;
+  transferFeeWasPaidNowInUSDCcentsGlobalV = 0;
+
 } 
 
 function confirmMint(){  
-  console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmMint');
-  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
+  //console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmMint');
+  //console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
   
-  console.log(mintPriceTotalInUSDCShouldBeNowGlobalV, 'mintPriceTotalInUSDCShouldBeNowGlobalV, confirmMint');
-  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
+  //console.log(mintPriceTotalInUSDCShouldBeNowGlobalV, 'mintPriceTotalInUSDCShouldBeNowGlobalV, confirmMint');
+  //console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmMint');
 
-  console.log(mintFeeInUSDCShouldBeNowGlobalV, 'mintFeeInUSDCShouldBeNowGlobalV, confirmMint');
-  console.log(mintFeeInUSDCWasPaidNowGlobalV, 'mintFeeInUSDCWasPaidNowGlobalV, confirmMint');
+  //console.log(mintFeeInUSDCShouldBeNowGlobalV, 'mintFeeInUSDCShouldBeNowGlobalV, confirmMint');
+  //console.log(mintFeeInUSDCWasPaidNowGlobalV, 'mintFeeInUSDCWasPaidNowGlobalV, confirmMint');
 
-  console.log(mintAllowanceInUSDCCentsShouldBeNowGlobalV, 'mintAllowanceInUSDCCentsShouldBeNowGlobalV, confirmMint');
-  console.log(mintAllowanceInUSDCCentsWasNowGlobalV, 'mintAllowanceInUSDCCentsWasNowGlobalV, confirmMint');
+  //console.log(mintAllowanceInUSDCCentsShouldBeNowGlobalV, 'mintAllowanceInUSDCCentsShouldBeNowGlobalV, confirmMint');
+  //console.log(mintAllowanceInUSDCCentsWasNowGlobalV, 'mintAllowanceInUSDCCentsWasNowGlobalV, confirmMint');
 
   expect(tokensShouldExistNowGlobalV).to.equal( Number (tokensExistQueriedGlobalV));
   expect(mintPriceTotalInUSDCShouldBeNowGlobalV).to.equal(Number (mintPriceTotalInUSDCWasPaidNowGlobalV));
@@ -402,17 +413,17 @@ function confirmMint(){
 };
 
 function confirmBurn(){  
-  console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmBurn');
-  console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmBurn');
+  //console.log(tokensShouldExistNowGlobalV, 'tokensShouldExistNowGlobalV, confirmBurn');
+  //console.log(tokensExistQueriedGlobalV, 'tokensExistQueriedGlobalV, confirmBurn');
   
-  console.log(burnReturnTotalInUSDCShouldBeNowGlobalV, 'burnReturnTotalInUSDCShouldBeNowGlobalV, confirmBurn');
-  console.log(burnReturnTotalInUSDCWasPaidNowGlobalV, 'burnReturnTotalInUSDCWasPaidNowGlobalV, confirmBurn');
+  //console.log(burnReturnWOfeeInUSDCShouldBeNowGlobalV, 'burnReturnWOfeeInUSDCShouldBeNowGlobalV, confirmBurn');
+  //console.log(burnReturnWOfeeInUSDCWasPaidNowGlobalV, 'burnReturnWOfeeInUSDCWasPaidNowGlobalV, confirmBurn');
   
-  console.log(burnFeeInUSDCShouldBeNowGlobalV, 'burnFeeInUSDCShouldBeNowGlobalV, confirmBurn');
-  console.log(burnFeeInUSDCWasPaidNowGlobalV, 'burnFeeInUSDCWasPaidNowGlobalV, confirmBurn');
+  //console.log(burnFeeInUSDCShouldBeNowGlobalV, 'burnFeeInUSDCShouldBeNowGlobalV, confirmBurn');
+  //console.log(burnFeeInUSDCWasPaidNowGlobalV, 'burnFeeInUSDCWasPaidNowGlobalV, confirmBurn');
 
   expect(tokensShouldExistNowGlobalV).to.equal(Number(tokensExistQueriedGlobalV));
-  expect(burnReturnTotalInUSDCShouldBeNowGlobalV).to.equal(Number(burnReturnTotalInUSDCWasPaidNowGlobalV));
+  expect(burnReturnWOfeeInUSDCShouldBeNowGlobalV).to.equal(Number(burnReturnWOfeeInUSDCWasPaidNowGlobalV));
   expect(burnFeeInUSDCShouldBeNowGlobalV).to.equal(Number(burnFeeInUSDCWasPaidNowGlobalV));
 };
 
@@ -422,15 +433,15 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);  
 
   const usersTokenAtStart = await balBNJI(accountMinting);
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); // TODO: fix, pausing issue is in this call
-  
+  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
+
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
   const mintFeeInCentsRoundedDown = getRoundedFee(userLevel, mintingCostRoundedDownInCents);  
-  console.log(mintFeeInCentsRoundedDown, "mintFeeInCentsRoundedDown, calcMintApprovalAndPrep"); 
+  //console.log(mintFeeInCentsRoundedDown, "mintFeeInCentsRoundedDown, calcMintApprovalAndPrep"); 
 
   // results, toPayTotalInUSDC can be displayed to user
   const toPayTotalInCents = mintingCostRoundedDownInCents + mintFeeInCentsRoundedDown;
@@ -470,13 +481,14 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   
   if (isTransfer==false){
     tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
-    burnReturnTotalInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
+    burnReturnWOfeeInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
     burnFeeInUSDCShouldBeNowGlobalV = burnFeeInCentsRoundedDown/100;
   } else {
+    transferFeeShouldBeNowInUSDCcentsGlobalV = burnFeeInCentsRoundedDown;
     return burnFeeInCentsRoundedDown;
   }
   //console.log("tokensShouldExistNowGlobalV:", tokensShouldExistNowGlobalV );
-  //console.log("burnReturnTotalInUSDCShouldBeNowGlobalV:", burnReturnTotalInUSDCShouldBeNowGlobalV );
+  //console.log("burnReturnWOfeeInUSDCShouldBeNowGlobalV:", burnReturnWOfeeInUSDCShouldBeNowGlobalV );
 
   //console.log(usersTokenAtStart, "this is the burning users token balance found at start, calcBurnVariables");  
   //console.log(userLevel, "this is the burning users account level found at start, calcBurnVariables");
@@ -736,14 +748,16 @@ describe("Benjamins Test", function () {
 
     await testMinting("Test 5.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);        
 
+    const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100;
     expect(await balBNJI(testUser_1)).to.equal(19); 
-    expect(await balUSDC(testUser_1)).to.equal(2986.44);
+    expect(await balUSDC(testUser_1)).to.equal(3000-costInUSDC1);
     await mintBlocks(11); 
               
     await testBurning("Test 5.2, burning after 11 blocks", 19, testUser_1, testUser_1);
 
+    const returnInUSDC1 = burnReturnWOfeeInUSDCShouldBeNowGlobalV;
     expect(await balBNJI(testUser_1)).to.equal(0);
-    expect(await balUSDC(testUser_1)).to.equal(2999.74); 
+    expect(await balUSDC(testUser_1)).to.equal(3000-costInUSDC1+returnInUSDC1); 
 
   });    
   
@@ -761,16 +775,19 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(10);
   }); 
 
-  it("Test 7. Token price should increase following bonding curve", async function () {   
+  it("Test 7. Token price should increase following bonding curve", async function () {      
 
-    await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);   
+    await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);
+   
     expect(await balBNJI(testUser_1)).to.equal(2000);
     await mintBlocks(1);  
     
     const balanceUSDCbefore1stBN = await balUSDCin6decBN(testUser_1); 
     await testMinting("Test 7.2, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     
+    const costInCents1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV;   
     expect(await balBNJI(testUser_1)).to.equal(2010); 
+
     const balanceUSDCafter1stBN = await balUSDCin6decBN(testUser_1);
     const firstPriceForTenInCents = dividefrom6decToUSDCcents(balanceUSDCbefore1stBN-balanceUSDCafter1stBN);  
     await mintBlocks(1);    
@@ -782,13 +799,14 @@ describe("Benjamins Test", function () {
 
     const balanceUSDCbefore2ndBN = await balUSDCin6decBN(testUser_1);
     await testMinting("Test 7.4, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
-    
+    const costInCents2 = mintAllowanceInUSDCCentsShouldBeNowGlobalV;
+
     expect(await balBNJI(testUser_1)).to.equal(3020);
     const balanceUSDCafter2ndBN = await balUSDCin6decBN(testUser_1);
     const secondPriceForTenInCents = dividefrom6decToUSDCcents(balanceUSDCbefore2ndBN-balanceUSDCafter2ndBN);
 
-    expect(firstPriceForTenInCents).to.equal(713);
-    expect(secondPriceForTenInCents).to.equal(715); 
+    expect(firstPriceForTenInCents).to.equal(costInCents1);
+    expect(secondPriceForTenInCents).to.equal(costInCents2); 
   });  
   
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
@@ -1082,8 +1100,9 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(0);  
     expect(await balBNJI(testUser_2)).to.equal(0);         
 
-    await testMinting("Test 20, minting 120 BNJI from user 1 to user 1", 120, testUser_1, testUser_1);    
+    await testMinting("Test 20, minting 120 BNJI by testUser_1 for testUser_1", 120, testUser_1, testUser_1);    
     
+    const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100; 
     expect(await balBNJI(testUser_1)).to.equal(120); 
     expect(await balBNJI(testUser_2)).to.equal(0);  
     await mintBlocks(60);    
@@ -1091,21 +1110,22 @@ describe("Benjamins Test", function () {
     const user_1_USDCbalBefore = await balUSDC(testUser_1);
     const user_2_USDCbalBefore = await balUSDC(testUser_2);
 
-    await testBurning("Test 20, burning 50 BNJI, return goes to acc2", 50, testUser_1, testUser_2);    
+    await testBurning("Test 20, burning 50 BNJI, by testUser_1 return goes to testUser_2", 50, testUser_1, testUser_2);    
     
+    const returnInUSDC1 = burnReturnWOfeeInUSDCShouldBeNowGlobalV;
     expect(await balBNJI(testUser_1)).to.equal(70); 
     expect(await balBNJI(testUser_2)).to.equal(0);  
 
     const user_1_USDCbalAfter = await balUSDC(testUser_1);
     const user_2_USDCbalAfter = await balUSDC(testUser_2);      
         
-    expect(user_1_USDCbalBefore).to.equal(2914.29);    
+    expect(user_1_USDCbalBefore).to.equal(3000-costInUSDC1);    
     expect(user_2_USDCbalBefore).to.equal(0);
 
-    expect(user_1_USDCbalAfter).to.equal(2914.29);   
-    expect(user_2_USDCbalAfter).to.equal(35.08);       
+    expect(user_1_USDCbalAfter).to.equal(user_1_USDCbalBefore);   
+    expect(user_2_USDCbalAfter).to.equal(0 + returnInUSDC1);       
 
-    expect(user_1_USDCbalBefore).to.equal(user_1_USDCbalAfter);  
+    //expect(user_1_USDCbalBefore).to.equal(user_1_USDCbalAfter);  
   });  
   
   it("Test 21. Should first REVERT: testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
@@ -1266,10 +1286,16 @@ describe("Benjamins Test", function () {
       "Benjamins is paused."
     );
 
-     // when pause has been activated, normal users cannot use quoteFeePercentage
-     await expect( benjaminsContract.connect(testUser_1_Signer).quoteFeePercentage(testUser_2)).to.be.revertedWith(
+    // when pause has been activated, normal users cannot use quoteFeePercentage
+    await expect( benjaminsContract.connect(testUser_1_Signer).quoteFeePercentage(testUser_2)).to.be.revertedWith(
       "Benjamins is paused."
     );
+
+    // when pause has been activated, normal users cannot use quoteFeePercentage
+    await expect( benjaminsContract.connect(testUser_1_Signer).calcTransportFee(100)).to.be.revertedWith(
+      "Benjamins is paused."
+    );
+    
     
     //test preparation verification, contract owner should have 282840 tokens from "First Setup mint for 100k USDC"
     expect(await balBNJI(deployer)).to.equal(282840);
@@ -1317,9 +1343,9 @@ describe("Benjamins Test", function () {
 
     // when paused is active, contract owner can use burnTo
     expect(await balBNJI(deployer)).to.equal(282831);
-    expect(await balUSDCinCents(testUser_2)).to.equal(0);    
-    await benjaminsContract.connect(deployerSigner).burnTo(16, testUser_2);
-    expect(await balUSDCinCents(testUser_2)).to.equal(1131);
+    expect(await balUSDCinCents(testUser_2)).to.equal(0);        
+    await benjaminsContract.connect(deployerSigner).burnTo(16, testUser_2);       
+    expect(await balUSDCinCents(testUser_2)).to.equal(1128);
 
     // when paused is active, contract owner can use quoteUSDC
     const tokenValueIn6dec = await benjaminsContract.connect(deployerSigner).quoteUSDC(100, true);
@@ -1331,7 +1357,11 @@ describe("Benjamins Test", function () {
 
     // when paused is active, contract owner can use quoteFeePercentage
     const feeModifier = await benjaminsContract.connect(deployerSigner).quoteFeePercentage(testUser_1);
-    expect(feeModifier).to.equal(6000);
+    expect(feeModifier).to.equal(baseFee*6000);
+
+    // when paused is active, contract owner can use calcTransportFee
+    const transportFee = await benjaminsContract.connect(deployerSigner).calcTransportFee(100);
+    expect(transportFee).to.equal(350000);
 
     // verifying once more that benjaminsContract is still paused
     expect(await benjaminsContract.paused()).to.equal(true);

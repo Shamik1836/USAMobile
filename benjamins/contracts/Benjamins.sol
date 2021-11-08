@@ -73,9 +73,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         pause();
     }
 
+    // event for updating Aave's lendingPool address
+    event newDepositAccount(address account);
 
-    event newDepositAccount(address account);       // event for updating Aave's lendingPool
-    event newFeeReceiver(address beneficiary);      // event for updating Aave's lendingPool
+    // event for updating feeReceiver address
+    event newFeeReceiver(address beneficiary);      
 
     // event for exchanging USDC and BNJI
     event exchanged(
@@ -262,8 +264,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Quote USDC for mint or burn
-    // based on circulation and amount
+    // based on BNJI in circulation and amount to mint/burn
     function quoteUSDC(uint256 _amount, bool isMint) public view whenAvailable returns (uint256) {
+
         uint256 supply = totalSupply();                     // total supply of BNJI
         uint256 supply2 = supply*supply;                    // Supply squared
         uint256 supplyAfterTx;                              // post-mint supply, see below
@@ -357,7 +360,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             // on minting, fee is added to price
             uint256 _afterFeeUSDCin6dec = _beforeFeeInUSDCin6dec + _feeRoundedDownIn6dec;
 
-            console.log(_afterFeeUSDCin6dec, 'contract needs allowance for _afterFeeUSDCin6dec, BNJ');
             // pull USDC from user (_payer), push to this contract
             polygonUSDC.transferFrom(_payer, address(this), _afterFeeUSDCin6dec);
 
