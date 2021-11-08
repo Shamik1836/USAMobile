@@ -610,7 +610,7 @@ describe("Small Amounts Test", function () {
     expect(await benjaminsContract.discountLevel(testUser_1)).to.equal(5);
        
     // user waits for blocks to pass, so that he can burn his tokens
-    mintBlocks(720);
+    await mintBlocks(720);
     
   });  
   

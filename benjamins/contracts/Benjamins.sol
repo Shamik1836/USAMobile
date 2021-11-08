@@ -127,8 +127,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Redundant reserveInUSDCin6dec protection vs. user withdraws.
-    modifier wontBreakTheBank(uint256 amountBNJItoBurn) {
-        require(reserveInUSDCin6dec >= quoteUSDC(amountBNJItoBurn, false));
+    modifier wontBreakTheBank(uint256 amountBNJItoBurn) {        
+        uint256 totalNotRoundedIn6dec = (quoteUSDC(amountBNJItoBurn, false)*quoteFeePercentage(msg.sender)) /USDCscaleFactor ;        
+        uint256 totalRoundedDownIn6dec = totalNotRoundedIn6dec - (totalNotRoundedIn6dec % USDCcentsScaleFactor);
+        require(reserveInUSDCin6dec >= totalRoundedDownIn6dec, "BNJ: wontBreakTheBank threw");
         _;
     }
 
@@ -152,8 +154,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // calculating USDC value of BNJI)
         uint256 beforeFeeInUSDCin6dec = quoteUSDC(amountOfBNJI, false);
         // calculating the fee, rounding it down to full cents and returning the result
-        uint256 fee = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ USDCscaleFactor;
-        uint256 feeRoundedDownIn6dec = fee - (fee % USDCcentsScaleFactor);
+        uint256 feeNotRoundedIn6dec = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ USDCscaleFactor;
+        uint256 feeRoundedDownIn6dec = feeNotRoundedIn6dec - (feeNotRoundedIn6dec % USDCcentsScaleFactor);
         return feeRoundedDownIn6dec;
     }
 
@@ -327,8 +329,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         } else {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, false);
         }
-        uint256 fee = (beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender)))/ USDCscaleFactor;
-        uint256 feeRoundedDownIn6dec = fee - (fee % USDCcentsScaleFactor);
+        uint256 feeNotRoundedIn6dec = (beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender)))/ USDCscaleFactor;
+        uint256 feeRoundedDownIn6dec = feeNotRoundedIn6dec - (feeNotRoundedIn6dec % USDCcentsScaleFactor);
         // Execute exchange
         if (isMint == true) {
             // moving funds for minting

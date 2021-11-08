@@ -22,7 +22,7 @@ let transferFeeWasPaidNowInUSDCcentsGlobalV;
 
 const scale6dec = 1000000;
 
-let testingUserAddressesArray = [];
+let testUserAddressesArray = [];
 
 const baseFee = 2;
 const levelDiscountsArray = [ 0,  5, 10,  20,  40,   75];       
@@ -353,11 +353,11 @@ describe("Benjamins Test", function () {
     testUser_1_Signer = await ethers.provider.getSigner(testUser_1); 
     testUser_2_Signer = await ethers.provider.getSigner(testUser_2); 
 
-    testingUserAddressesArray.push(testUser_1);
-    testingUserAddressesArray.push(testUser_2);
-    testingUserAddressesArray.push(testUser_3);
-    testingUserAddressesArray.push(testUser_4);
-    testingUserAddressesArray.push(testUser_5);    
+    testUserAddressesArray.push(testUser_1);
+    testUserAddressesArray.push(testUser_2);
+    testUserAddressesArray.push(testUser_3);
+    testUserAddressesArray.push(testUser_4);
+    testUserAddressesArray.push(testUser_5);    
     
     // Deploy contract
     await fixture(["Benjamins"]);
@@ -463,7 +463,7 @@ describe("Benjamins Test", function () {
     await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);    
         
     for (let index = 0; index < 2; index++) {
-      const testingUser = testingUserAddressesArray[index];
+      const testingUser = testUserAddressesArray[index];
 
       await deployerSigner.sendTransaction({
         to: testingUser,
@@ -1185,8 +1185,8 @@ describe("Benjamins Test", function () {
 
   it("Test 25. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
-    for (let index = 0; index < testingUserAddressesArray.length; index++) {
-      const callingAcc = testingUserAddressesArray[index];
+    for (let index = 0; index < testUserAddressesArray.length; index++) {
+      const callingAcc = testUserAddressesArray[index];
 
       const balanceBNJI = await balBNJI(callingAcc);
 
