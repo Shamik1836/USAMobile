@@ -27,6 +27,7 @@ import "hardhat/console.sol";
 // There is a 10 block lockup vs. flash loan attacks.
 // Discounts and level holds are staged vs. a lookup table.
 contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
+    
     using SafeMath for uint256;             // TODO: complete for other datatypes or out? use .add, etc?
 
     ILendingPool public polygonLendingPool; // Aave lending pool on Polygon
