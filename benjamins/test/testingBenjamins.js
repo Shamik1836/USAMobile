@@ -117,6 +117,12 @@ async function balBNJI(userToQuery) {
   return bigNumberToNumber (await benjaminsContract.balanceOf(userToQuery));
 }
 
+async function getMaticBalance(adress) {    
+  const balanceInWEI = await ethers.provider.getBalance(adress); 
+  const balanceInMATIC = Number(balanceInWEI / (10**18) );        
+  return balanceInMATIC;
+}
+
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
   let convertedNumber = Number ((ethers.utils.formatUnits(bignumber, 0)).toString());  
@@ -535,18 +541,40 @@ describe("Benjamins Test", function () {
    expect(await benjaminsContract.paused()).to.equal(false);
   });
   
-  it("Test 4. Should REVERT: testUser_1 tries to burn tokens before anti flashloan holding period ends", async function () { 
+  
+  it.only("Test 4. Owner can withdraw MATIC and ERC20 tokens that were sent to the contract directly, by mistake", async function () { 
 
-    await testMinting("Test 4.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
-    
-    expect(await balBNJI(testUser_1)).to.equal(20);
-    await mintBlocks(5);  
-    
-    await expect( testBurning("Test 4.2, should REVERT, burning after 5 blocks", 10, testUser_1, testUser_1) ).to.be.revertedWith(
-      "Anti-flashloan withdraw timeout in effect."
-    );   
+    const contractMaticStart = await getMaticBalance(benjaminsContract.address);  
+    const deployerMaticStart = await getMaticBalance(deployer);
+    const deployerMaticStartRounded = deployerMaticStart - (deployerMaticStart%1); 
+    console.log(deployerMaticStartRounded, 'deployerMaticStartRounded');
 
-    expect(await balBNJI(testUser_1)).to.equal(20);
+    expect(contractMaticStart).to.equal(0); 
+    
+    await deployerSigner.sendTransaction({
+      to: benjaminsContract.address,
+      value: ethers.utils.parseEther("20") // 20 Matic
+    })
+
+    const contractMaticAfterSend = await getMaticBalance(benjaminsContract.address); 
+    expect(contractMaticAfterSend).to.equal(contractMaticStart+20); 
+
+    const deployerMaticAfterSend = await getMaticBalance(deployer);
+    const deployerMaticcAfterSendRounded = deployerMaticAfterSend - (deployerMaticAfterSend%1);
+    expect(deployerMaticcAfterSendRounded).to.equal(deployerMaticStartRounded-20);    
+    console.log(deployerMaticcAfterSendRounded, 'deployerMaticcAfterSendRounded'); 
+    
+    await benjaminsContract.connect(deployerSigner).cleanTips();
+  
+    const contractMaticAfterCleanedTips = await getMaticBalance(benjaminsContract.address); 
+    expect(contractMaticAfterCleanedTips).to.equal(0); 
+
+    const deployerMaticAfterCleanedTips = await getMaticBalance(deployer);
+    const deployerMaticcAfterCleanedTipsRounded = deployerMaticAfterCleanedTips - (deployerMaticAfterCleanedTips%1);
+    expect(deployerMaticcAfterCleanedTipsRounded).to.equal(deployerMaticcAfterSendRounded+20);
+    console.log(deployerMaticcAfterCleanedTipsRounded, 'deployerMaticcAfterCleanedTipsRounded');
+
+    
   });    
 
   
@@ -805,7 +833,7 @@ describe("Benjamins Test", function () {
   it("Test 16. There is no time-lock for buying and discounts are effective immediately upon having the needed balance ", async function () {   
 
     await addUserAccDataPoints(testUser_1); 
-    await testMinting("Test 16.1, minting 2500 BNJI to caller", 25, testUser_1, testUser_1);    
+    await testMinting("Test 16.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(25);   
     await addUserAccDataPoints(testUser_1);  
@@ -830,13 +858,13 @@ describe("Benjamins Test", function () {
   it("Test 17. It is possible to skip levels by minting larger amounts of tokens", async function () {   
 
     await addUserAccDataPoints(testUser_1); 
-    await testMinting("Test 17.1, minting 2500 BNJI to caller", 25, testUser_1, testUser_1);    
+    await testMinting("Test 17.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(25);       
     await addUserAccDataPoints(testUser_1);  
     await mintBlocks(1); 
 
-    await testMinting("Test 17.2, minting 35 BNJI to caller", 75, testUser_1, testUser_1);    
+    await testMinting("Test 17.2, minting 75 BNJI to caller", 75, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(100);  
     await addUserAccDataPoints(testUser_1); 
@@ -947,17 +975,9 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_2)).to.equal(0);
 
     await addUserAccDataPoints(testUser_1);   
-    await mintBlocks(5);    
-    
-    await expect( testTransfer(30,testUser_1, testUser_2) ).to.be.revertedWith(
-      "Anti-flashloan withdraw timeout in effect."
-    );
+    await mintBlocks(10);  
 
-    expect(await balBNJI(testUser_1)).to.equal(60);
-    expect(await balBNJI(testUser_2)).to.equal(0);
-    await mintBlocks(5); 
-
-    await expect( testTransfer(30,testUser_1, testUser_2) ).to.be.revertedWith(
+    await expect( testTransfer(30, testUser_1, testUser_2) ).to.be.revertedWith(
       "Discount level withdraw timeout in effect."
     );
 
@@ -1197,7 +1217,7 @@ describe("Benjamins Test", function () {
     
   });
 
-  it.only("Test 25. Owner can add additional funds to contract's amUSDC balance", async function () { 
+  it("Test 25. Owner can add additional funds to contract's amUSDC balance", async function () { 
     // getting contracts amUSDC balance
     const contractAMUSDCbalBeforeInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
     // since it constantly changes in tiny amounts, due to accruing interest, rounding it down to whole cents
@@ -1236,4 +1256,6 @@ describe("Benjamins Test", function () {
     const totalSupplyExisting = bigNumberToNumber(await benjaminsContract.totalSupply()); 
     expect(totalSupplyExisting).to.equal(0);
   });
+
+  // TODO put in reentrancy guard test
 }); 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // importing interface for Aave's lending pool
-import "./ILendingPool.sol"; // TODO: maybe get interface from some specific source?
+import "./ILendingPool.sol";
 // importing openZeppelin's SafeMath library
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 // importing openZeppelin's ERC20 contract
@@ -24,32 +24,29 @@ import "hardhat/console.sol";
 // 100% USDC is maintained against burning. (see variable reserveInUSDCin6dec, in 6 decimals format)
 // Collected fees and interest are withdrawable to the owner to a set recipient address.
 // Fee discounts are calculated based on BNJI balance.
-// There is a 10 block lockup vs. flash loan attacks.
+// Reentrancy is protected against via OpenZeppelin's ReentrancyGuard
 // Discounts and level holds are staged vs. a lookup table.
 contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     
-    using SafeMath for uint256;             // TODO: complete for other datatypes or out? use .add, etc?
-
     ILendingPool public polygonLendingPool; // Aave lending pool on Polygon
     IERC20 public polygonUSDC;              // USDC crypto currency on Polygon
     IERC20 public polygonAMUSDC;            // Aave's amUSDC crypto currency on Polygon
 
-    address feeReceiver;                    // beneficiary address for collected fees
+    address public feeReceiver;             // beneficiary address for collected fees
 
-    uint256 reserveInUSDCin6dec;            // end user USDC on deposit
+    uint256 public reserveInUSDCin6dec;     // end user USDC on deposit
     uint256 USDCscaleFactor = 1000000;      // 6 decimals scale of USDC crypto currency
     uint256 USDCcentsScaleFactor = 10000;   // 4 decimals scale of USDC crypto currency cents
-    uint256 blocksPerDay = 2;               // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
-    uint8 private _decimals;                // storing BNJI decimals, set to 0 in constructor
-
-    uint8 antiFlashLoan = 10;               // number of blocks hold to defend vs. flash loans.
+    uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
+    uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
+    
     uint256 curveFactor = 800000;           // Inverse slope of the bonding curve.
-    uint16 baseFee = 2;                     // in percent as an integer  // TODO: change to real value, this is for testing
+    uint16  baseFee = 2;                    // in percent as an integer  // TODO: change to real value, this is for testing
 
     // Manage Discounts
-    uint32[] levelAntes;                    // how many BNJI are needed for each level;
-    uint16[] levelHolds;                    // how many blocks to hold are necessary before withdraw is unlocked, at each level;
-    uint8[] levelDiscounts;                 // percentage discount given by each level;
+    uint32[] public levelAntes;                    // how many BNJI are needed for each level;
+    uint16[] public levelHolds;                    // how many blocks to hold are necessary before withdraw is unlocked, at each level;
+    uint8[]  public levelDiscounts;                 // percentage discount given by each level;
 
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
     mapping (address => uint256) lastUpgradeBlockHeight;
@@ -66,7 +63,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =     [    20, 60, 100, 500, 2000]; // in Benjamins
+        levelAntes =         [20, 60, 100, 500, 2000]; // in Benjamins
         levelHolds =     [ 0,  2,  7,  30,  90,  360]; // in days
         levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent
 
@@ -74,14 +71,26 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         pause();
     }
 
-    // event for updating Aave's lendingPool address
-    event LendingPoolUpdated(address account);
+    // event for updating these addresses: feeReceiver, polygonUSDC, polygonAMUSDC
+    event AddressUpdate(address newAddress, string typeOfUpdate); 
 
-    // event for updating feeReceiver address
-    event feeReceiverUpdated(address beneficiary);      
+    // event for updating the amounts of blocks mined on Polygon network per day
+    event BlocksPerDayUpdate(uint256 newAmountOfBlocksPerDay);
+
+    // event for updating the contract's approval to Aave's USDC lending pool
+    event LendingPoolApprovalUpdate(uint256 amountToApproveIn6dec);
+
+    // event for updating the table of necessary BNJI amounts for the respective account level
+    event LevelAntesUpdate(uint32[] newLevelAntes);
+
+    // event for updating the table of necessary holding periods for the respective account level
+    event LevelHoldsUpdate(uint16[] newLevelHolds);
+
+    // event for updating the table of discounts for the respective account level
+    event LevelDiscountsUpdate(uint8[] newLevelDiscounts);
 
     // event for exchanging USDC and BNJI // TODO:include mint or burn bool or type string 
-    event exchanged(
+    event Exchanged(
         address fromAddress,
         address toAddress,
         uint256 inTokens,
@@ -92,7 +101,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // event for withdrawGains function
     // availableIn6dec shows how many USDC were available to withdraw, in 6 decimals format
     // amountUSDCin6dec shows how many USDC were withdrawn, in 6 decimals format
-    event profitTaken(uint256 availableIn6dec, uint256 amountUSDCin6dec);
+    event ProfitTaken(uint256 availableIn6dec, uint256 amountUSDCin6dec);
 
     // event for deposits into the lending pool
     event LendingPoolDeposit (uint256 amountUSDCin6dec, address payer);
@@ -117,9 +126,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // blockHeight right now
         uint256 blockNum = block.number;
         // amount of time that has passed since last account level upgrade, measured in blocks
-        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];
-        // checking whether the result is larger than the required flashloan protection variable, antiFlashLoan
-        require(holdTime > antiFlashLoan, 'Anti-flashloan withdraw timeout in effect.');
+        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];       
         // checking result against the withdrawal timeout period required by user's account level
         require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)],
             'Discount level withdraw timeout in effect.');
@@ -169,7 +176,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return feeRoundedDownIn6dec;
     }
 
-    // Modified ERC20 transfer() // TODO: use msg.sender or _msgSender() ?
+    // Modified ERC20 transfer() 
     // User needs to give this contract an approval for the necessary transportFeeRoundedIn6dec via the USDC contract
     // To get the necessary value, user can call calcTransportFee, see above
     // This must have happened before calling this function, or it will revert
@@ -178,6 +185,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function transfer(address recipient, uint256 amount)
         public
         override
+        nonReentrant
         whenAvailable
         withdrawAllowed(_msgSender())
         returns(bool) {
@@ -203,7 +211,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return true;
     }
 
-    // modified ERC20 transferFrom() // TODO: use msg.sender or _msgSender() ?
+    // modified ERC20 transferFrom() 
     // Cannot send until holding time is passed for sender.
     // Creates possible lockout time for receiver.
     // USDC approval must be given as in transfer function, see above
@@ -360,7 +368,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             reserveInUSDCin6dec -= beforeFeeInUSDCin6dec;
         }
 
-        emit exchanged(msg.sender, _forWhom, _amountBNJI, beforeFeeInUSDCin6dec, feeRoundedDownIn6dec);
+        emit Exchanged(msg.sender, _forWhom, _amountBNJI, beforeFeeInUSDCin6dec, feeRoundedDownIn6dec);
     }
 
     // Move USDC for a supply change.  Note: sign of amount is the mint/burn direction.
@@ -408,16 +416,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         lastUpgradeBlockHeight[_toWhom] = block.number;
     }
 
+    // TODO: test and look at in depth
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {
         uint256 availableIn6dec = polygonAMUSDC.balanceOf(address(this)) - reserveInUSDCin6dec;
         require(availableIn6dec > _amountIn6dec, "Insufficient funds.");
         polygonAMUSDC.transfer(feeReceiver, _amountIn6dec);
-        emit profitTaken(availableIn6dec, _amountIn6dec);
+        emit ProfitTaken(availableIn6dec, _amountIn6dec);
     }
 
+    // TODO: Rename?
     // function for owner to withdraw errant ERC20 tokens // TODO: Rename?
-    function scavengeERC20Tip(address ERC20ContractAddress) public onlyOwner {
+    function cleanERC20Tip(address ERC20ContractAddress) public onlyOwner {
         IERC20 USDCcontractIF = IERC20(ERC20ContractAddress);
         uint256 accumulatedTokens = USDCcontractIF.balanceOf(address(this));
         USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
@@ -429,80 +439,95 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return reserveInUSDCin6dec;
     }
 
-    // TODO: Rename?
-    /* TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
+    // TODO: Rename to clean
+    // TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
     // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
     // function for owner to withdraw all errant MATIC to feeReceiver
-    function scavengeTips() public onlyOwner {
+    function cleanTips() public onlyOwner {
         address payable receiver = payable(msg.sender);
-        (bool success, ) = receiver.call.value(amount)("");
+        uint256 accumulatedMatic = address(this).balance;
+        (bool success, ) = receiver.call{value: accumulatedMatic}("");
         require(success, "Transfer failed.");
     }
-    */
+    
 
     // Fallback receives all incoming funds of any type.
     receive() external payable {
         // blind accumulate all other payment types and tokens.
     }
 
-    // TODO: probably either verify or simplify
-    // Updating the lending pool and transfering all the depositted funds from it to the new one
-    function updatePolygonLendingPool(address newAddress) public onlyOwner {
-        // withdrawing all USDC from old lending pool address to BNJI contract
-        polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));
-        //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
+    /*  // TODO: talk to Aave, find out if they transfer funds to new lending pool or what
+        // they want us to do in such a case, (maybe just simplify this function to set newAddress)
+    
+        // event for updating Aave's lendingPool address
+        event LendingPoolUpdated(address account);  
 
-        // setting new lending pool address and emitting event
-        polygonLendingPool = ILendingPool(newAddress);
-        emit LendingPoolUpdated(newAddress);
+        // NOTE: used to update in case a better Aave lendingpool comes out
+        // Updating the lending pool and transfering all the deposited funds from it to the new one
+        function updatePolygonLendingPool(address newAddress) public onlyOwner {
+            // withdrawing all USDC from old lending pool address to BNJI contract
+            polygonLendingPool.withdraw(address(polygonUSDC), type(uint).max, address(this));
+            //emit LendingPoolWithdrawal (uint256 amount); // TODO: ideally find and emit the exact amount withdrawn
 
-        // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
-        uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
-        polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
-        polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
-        // emitting related event
-        emit LendingPoolDeposit(bnjiContractUSDCBal, address(this));
-    }
+            // setting new lending pool address and emitting event
+            polygonLendingPool = ILendingPool(newAddress);
+            emit LendingPoolUpdated(newAddress);
+
+            // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
+            uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
+            polygonUSDC.approve(address(polygonLendingPool), bnjiContractUSDCBal);
+            polygonLendingPool.deposit(address(polygonUSDC), bnjiContractUSDCBal, address(this), 0);
+            // emitting related event
+            emit LendingPoolDeposit(bnjiContractUSDCBal, address(this));
+        }
+    */
 
     // Update the feeReceiver address.
     function updateFeeReceiver(address newFeeReceiver) public onlyOwner {
-        feeReceiver = newFeeReceiver;
-        emit feeReceiverUpdated(newFeeReceiver);
+        feeReceiver = newFeeReceiver;     
+        emit AddressUpdate(newFeeReceiver, "feeReceiver");           
     }   
 
     // Update the USDC token address on Polygon.
     function updatePolygonUSDC(address newAddress) public onlyOwner {
         polygonUSDC = IERC20(newAddress);
+        emit AddressUpdate(newAddress, "polygonUSDC");
     }
 
     // Update the amUSDC token address on Polygon.
     function updatePolygonAMUSDC(address newAddress) public onlyOwner {
         polygonAMUSDC = IERC20(newAddress);
+        emit AddressUpdate(newAddress, "polygonAMUSDC");
     }
 
     // Update amount of blocks mined per day on Polygon
     function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
         blocksPerDay = newAmountOfBlocksPerDay;
+        emit BlocksPerDayUpdate(newAmountOfBlocksPerDay);
     }
 
-    // Update approval from this contract to Aave's lending pool.
-    function updateApproveLendingPool (uint256 amountToApprove) public onlyOwner {
-        polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
+    // Update approval from this contract to Aave's USDC lending pool.
+    function updateApproveLendingPool (uint256 amountToApproveIn6dec) public onlyOwner {
+        polygonUSDC.approve(address(polygonLendingPool), amountToApproveIn6dec);
+        emit LendingPoolApprovalUpdate(amountToApproveIn6dec);
     }
 
     // Update token amount required for account levels
     function updateLevelAntes (uint32[] memory newLevelAntes) public onlyOwner {
         levelAntes = newLevelAntes;
+        emit LevelAntesUpdate(newLevelAntes);
     }
 
     // Update timeout times required by account levels
     function updateLevelHolds (uint16[] memory newLevelHolds) public onlyOwner {
         levelHolds = newLevelHolds;
+        emit LevelHoldsUpdate(newLevelHolds);
     }
 
     // Update fee discounts for account levels
     function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
         levelDiscounts = newLevelDiscounts;
+        emit LevelDiscountsUpdate(newLevelDiscounts);
     }
 
 }
