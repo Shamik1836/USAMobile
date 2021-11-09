@@ -177,6 +177,7 @@ function getRoundedFee(userLevel, principalInUSDCcents){
   return feeInCentsRoundedDown  
 }
 
+
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
   const callingAccUSDCBalanceBeforeMintInCents = await balUSDCinCents(callingAccAddress);  
@@ -698,7 +699,7 @@ describe("Benjamins Test", function () {
 
       await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (200000*scale6dec) );      
           
-    } 
+    }     
     
   })      
 
@@ -793,10 +794,13 @@ describe("Benjamins Test", function () {
     await countAllCents();    
     await mintBlocks(720);
     waitFor(4000);
-  });
+  });//*/
 
   it("Test 12. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
+    // deployer deposits $1 extra
+    //await depositAdditionalUSDC(1*scale6dec);   
+    
     await mintBlocks(720);
     
     for (let index = 0; index < testUserAddressesArray.length; index++) {
@@ -815,13 +819,12 @@ describe("Benjamins Test", function () {
 
     expect(await balBNJI(deployer)).to.equal(0);
 
-    const totalSupplyExisting = bigNumberToNumber(await benjaminsContract.totalSupply()); 
-    expect(totalSupplyExisting).to.equal(0);
+    const totalSupplyExistingAtEnd = bigNumberToNumber(await benjaminsContract.totalSupply()); 
+    expect(totalSupplyExistingAtEnd).to.equal(0);
 
     await showReserveInCents();
 
     console.log(await balUSDCinCents(feeReceiver), "feeReceiver bal in Cents, end");
-
     console.log(await balUSDCinCents(deployer), "deployer bal in Cents, end");
 
     console.log(dividefrom6decToUSDCcents(bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address))), 'benjaminsContract amUSDC at end in cents');

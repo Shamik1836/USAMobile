@@ -43,6 +43,9 @@ const polygonWMATICaddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 let polygonQuickswapRouter;
 const polygonQuickswapRouterAddress = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
 
+let polygonLendingPool;
+const polygonLendingPoolAddress = '0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf';
+
 let testUser_1_Signer;
 let testUser_2_Signer;
 
@@ -155,6 +158,11 @@ function getRoundedFee(userLevel, principalInUSDCcents){
   const feeStarterInCents = ((principalInUSDCcents * feeModifier ) /100);   
   const feeInCentsRoundedDown = feeStarterInCents - (feeStarterInCents % 1);
   return feeInCentsRoundedDown  
+}
+
+async function depositAdditionalUSDC(amountUSDCin6dec) {
+  await polygonUSDC.connect(deployerSigner).approve(polygonLendingPoolAddress, amountUSDCin6dec);  
+  await polygonLendingPool.connect(deployerSigner).deposit(polygonUSDCaddress, amountUSDCin6dec, benjaminsContract.address, 0);       
 }
 
 async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingAddress){
@@ -474,6 +482,15 @@ describe("Benjamins Test", function () {
         await polygonUSDC.connect(deployerSigner).transfer(testingUser, (3000*scale6dec) );
       }       
     } 
+
+    polygonLendingPool = new ethers.Contract(
+      polygonLendingPoolAddress,
+      [
+        'function getUserAccountData(address user) external view returns ( uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)',
+        'function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode ) external'
+      ], 
+      deployerSigner
+    );  
   })      
   
   

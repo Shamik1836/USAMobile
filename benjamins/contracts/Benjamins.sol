@@ -54,6 +54,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
     mapping (address => uint256) lastUpgradeBlockHeight;
 
+    uint256 reserveNeededUpdate; //TODO: out, just for testing 
+
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
         _decimals = 0;                      // Benjamins have 0 decimals, only full tokens exist.
@@ -126,11 +128,17 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         _;
     }
 
-    // Redundant reserveInUSDCin6dec protection vs. user withdraws.
+    // Redundant reserveInUSDCin6dec protection vs. user withdraws. TODO: clean up
     modifier wontBreakTheBank(uint256 amountBNJItoBurn) {        
-        uint256 totalNotRoundedIn6dec = (quoteUSDC(amountBNJItoBurn, false)*quoteFeePercentage(msg.sender)) /USDCscaleFactor ;        
-        uint256 totalRoundedDownIn6dec = totalNotRoundedIn6dec - (totalNotRoundedIn6dec % USDCcentsScaleFactor);
-        require(reserveInUSDCin6dec >= totalRoundedDownIn6dec, "BNJ: wontBreakTheBank threw");
+        uint256 beforeFeesNotRoundedIn6dec = quoteUSDC(amountBNJItoBurn, false);        
+        uint256 beforeFeesRoundedDownIn6dec = beforeFeesNotRoundedIn6dec - (beforeFeesNotRoundedIn6dec % USDCcentsScaleFactor);
+        if(reserveInUSDCin6dec < beforeFeesRoundedDownIn6dec) {
+            uint256 fundsOnTab = polygonAMUSDC.balanceOf(address(this));
+            if (fundsOnTab >= beforeFeesRoundedDownIn6dec ) {
+                reserveInUSDCin6dec = beforeFeesRoundedDownIn6dec;                
+            }
+        }
+        require(reserveInUSDCin6dec >= beforeFeesRoundedDownIn6dec, "BNJ: wontBreakTheBank threw");
         _;
     }
 
@@ -344,7 +352,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             _burn(msg.sender, _amountBNJI);
             // moving funds for burning
             moveUSDC(msg.sender, _forWhom, beforeFeeInUSDCin6dec, feeRoundedDownIn6dec, false);
-            // update reserve
+            // update reserve            
             reserveInUSDCin6dec -= beforeFeeInUSDCin6dec;
         }
 
@@ -455,11 +463,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function setFeeReceiver(address beneficiary) public onlyOwner {
         feeReceiver = beneficiary;
         emit newFeeReceiver(beneficiary);
-    }
+    }   
 
     // Update the USDC token address on Polygon.
     function updatePolygonUSDC(address newAddress) public onlyOwner {
-    polygonUSDC = IERC20(newAddress);
+        polygonUSDC = IERC20(newAddress);
     }
 
      // Update the amUSDC token address on Polygon.
