@@ -187,9 +187,7 @@ async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingA
 async function testMinting(mintName, amountToMint, callingAccAddress, receivingAddress) {
 
   const callingAccUSDCBalanceBeforeMintInCents = await balUSDCinCents(callingAccAddress);  
-  const feeReceiverUSDCBalanceBeforeMintInCents = await balUSDCinCents(feeReceiver); 
-  
-  const contractAMUSDCbalanceBeforeMintInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+  const feeReceiverUSDCBalanceBeforeMintInCents = await balUSDCinCents(feeReceiver);  
   
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
@@ -861,7 +859,7 @@ describe("Benjamins Test", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
     await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(60); // TODO: dummy value for testing, 2 blocks per day, will be 43200 on polygon mainnet
+    await mintBlocks(60); 
 
     await testTransfer(40, testUser_1, testUser_2);
     
@@ -1003,7 +1001,7 @@ describe("Benjamins Test", function () {
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);        
   });  
   
-  it("Test 23. Downgrading accounts works as intended", async function () {  // TODO: see about this functionality
+  it("Test 23. Downgrading accounts works as intended", async function () { 
 
     expect(await balBNJI(testUser_1)).to.equal(0); 
     await addUserAccDataPoints(testUser_1);        
@@ -1131,9 +1129,8 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_2)).to.equal(0);    
     await benjaminsContract.connect(deployerSigner).transfer(testUser_2, 10);
     expect(await balBNJI(testUser_2)).to.equal(10);  
-    expect(await balBNJI(deployer)).to.equal(282830);
+    expect(await balBNJI(deployer)).to.equal(282830);    
     
-    // todo: show USDC fee that was taken from testUser_1_Signer
     // preparation for transferFrom, testUser_1 gives more than necessary USDC approval to benjaminsContract
     await polygonUSDC.connect(testUser_1_Signer).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
     // preparation for transferFrom, testUser_1 allows owner to handle 100 BNJIs 
@@ -1200,7 +1197,23 @@ describe("Benjamins Test", function () {
     
   });
 
-  it("Test 25. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
+  it.only("Test 25. Owner can add additional funds to contract's amUSDC balance", async function () { 
+    // getting contracts amUSDC balance
+    const contractAMUSDCbalBeforeInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+    // since it constantly changes in tiny amounts, due to accruing interest, rounding it down to whole cents
+    const beforeRoundedToCents = contractAMUSDCbalBeforeInCents - (contractAMUSDCbalBeforeInCents%1); 
+    expect(beforeRoundedToCents).to.equal(9999808);
+    // owner deposits an extra $100 USDC into the lending pool on contracts behalf
+    await depositAdditionalUSDC(100*scale6dec);
+    // rounding down new amUSDC balance, same reasoning and comparing
+    const contractAMUSDCbalAfterInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
+    const afterRoundedToCents = contractAMUSDCbalAfterInCents - (contractAMUSDCbalAfterInCents%1); 
+    // expecting that the new balance is $100 bigger than the old one
+    expect(afterRoundedToCents).to.equal(beforeRoundedToCents+10000);  
+  });
+
+
+  it("Test 26. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
     for (let index = 0; index < testUserAddressesArray.length; index++) {
       const callingAcc = testUserAddressesArray[index];

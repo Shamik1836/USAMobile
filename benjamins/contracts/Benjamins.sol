@@ -54,8 +54,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
     mapping (address => uint256) lastUpgradeBlockHeight;
 
-    uint256 reserveNeededUpdate; //TODO: out, just for testing 
-
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
         _decimals = 0;                      // Benjamins have 0 decimals, only full tokens exist.
@@ -77,12 +75,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // event for updating Aave's lendingPool address
-    event newDepositAccount(address account);
+    event LendingPoolUpdated(address account);
 
     // event for updating feeReceiver address
-    event newFeeReceiver(address beneficiary);      
+    event feeReceiverUpdated(address beneficiary);      
 
-    // event for exchanging USDC and BNJI
+    // event for exchanging USDC and BNJI // TODO:include mint or burn bool or type string 
     event exchanged(
         address fromAddress,
         address toAddress,
@@ -130,14 +128,18 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Redundant reserveInUSDCin6dec protection vs. user withdraws. TODO: clean up
     modifier wontBreakTheBank(uint256 amountBNJItoBurn) {        
+        // calculating the USDC value of the BNJI tokens to burn, and rounding them to full cents
         uint256 beforeFeesNotRoundedIn6dec = quoteUSDC(amountBNJItoBurn, false);        
         uint256 beforeFeesRoundedDownIn6dec = beforeFeesNotRoundedIn6dec - (beforeFeesNotRoundedIn6dec % USDCcentsScaleFactor);
+        // if the USDC reserve counter shows less than what is needed, check the existing amUSDC balance of the contract
         if(reserveInUSDCin6dec < beforeFeesRoundedDownIn6dec) {
             uint256 fundsOnTab = polygonAMUSDC.balanceOf(address(this));
+            // if there are enough amUSDC available, set the tracker to allow the transfer 
             if (fundsOnTab >= beforeFeesRoundedDownIn6dec ) {
                 reserveInUSDCin6dec = beforeFeesRoundedDownIn6dec;                
             }
         }
+        // if there are not enough amUSDC, throw an error 
         require(reserveInUSDCin6dec >= beforeFeesRoundedDownIn6dec, "BNJ: wontBreakTheBank threw");
         _;
     }
@@ -192,7 +194,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // transferring BNJI
         _transfer(_msgSender(), recipient, amount);
 
-        //checking recipient's discount level after changes        // TODO: check/think about senders discount level/holding times
+        //checking recipient's discount level after changes        
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times
         if ( newUserDiscountLevel > originalUserDiscountLevel){
@@ -248,11 +250,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Buy BNJI with USDC for another address
     function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
-        // Checking user's discount level
+        // Checking user's discount level before mint
         uint8 originalUserDiscountLevel = discountLevel(_toWhom);
         // minting to user
         changeSupply(_toWhom, _amount, true);
+        // comparing user's discount level now to before
         uint8 newUserDiscountLevel = discountLevel(_toWhom);
+        // if new discount level was reached, updating the holding time timeout
         if ( newUserDiscountLevel > originalUserDiscountLevel){
             newLevelReached(_toWhom);
         }
@@ -412,7 +416,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit profitTaken(availableIn6dec, _amountIn6dec);
     }
 
-    // function for owner to withdraw errant ERC20 tokens
+    // function for owner to withdraw errant ERC20 tokens // TODO: Rename?
     function scavengeERC20Tip(address ERC20ContractAddress) public onlyOwner {
         IERC20 USDCcontractIF = IERC20(ERC20ContractAddress);
         uint256 accumulatedTokens = USDCcontractIF.balanceOf(address(this));
@@ -425,6 +429,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return reserveInUSDCin6dec;
     }
 
+    // TODO: Rename?
     /* TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
     // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
     // function for owner to withdraw all errant MATIC to feeReceiver
@@ -449,7 +454,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
         // setting new lending pool address and emitting event
         polygonLendingPool = ILendingPool(newAddress);
-        emit newDepositAccount(newAddress);
+        emit LendingPoolUpdated(newAddress);
 
         // getting USDC balance of BNJI contract, approving and depositing it to new lending pool
         uint256 bnjiContractUSDCBal = polygonUSDC.balanceOf(address(this));
@@ -460,9 +465,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Update the feeReceiver address.
-    function setFeeReceiver(address beneficiary) public onlyOwner {
-        feeReceiver = beneficiary;
-        emit newFeeReceiver(beneficiary);
+    function updateFeeReceiver(address newFeeReceiver) public onlyOwner {
+        feeReceiver = newFeeReceiver;
+        emit feeReceiverUpdated(newFeeReceiver);
     }   
 
     // Update the USDC token address on Polygon.
@@ -470,12 +475,17 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonUSDC = IERC20(newAddress);
     }
 
-     // Update the amUSDC token address on Polygon.
+    // Update the amUSDC token address on Polygon.
     function updatePolygonAMUSDC(address newAddress) public onlyOwner {
         polygonAMUSDC = IERC20(newAddress);
     }
 
-     // Update approval from this contract to Aave's lending pool.
+    // Update amount of blocks mined per day on Polygon
+    function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
+        blocksPerDay = newAmountOfBlocksPerDay;
+    }
+
+    // Update approval from this contract to Aave's lending pool.
     function updateApproveLendingPool (uint256 amountToApprove) public onlyOwner {
         polygonUSDC.approve(address(polygonLendingPool), amountToApprove);
     }
@@ -495,8 +505,4 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         levelDiscounts = newLevelDiscounts;
     }
 
-    // Update amount of blocks mined per day on Polygon
-    function updateBlocksPerDay (uint256 newAmountOfBlocksPerDay) public onlyOwner {
-        blocksPerDay = newAmountOfBlocksPerDay;
-    }
 }
