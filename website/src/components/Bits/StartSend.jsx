@@ -14,7 +14,6 @@ export const StartSend = (props) => {
   const [isTxLoading, setIsTxLoading] = useState(false);
 
   useEffect(() => {
-    console.log(fromToken, txAmount);
     setTokenType(
       fromToken.tokenAddress === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
         ? 'native'
