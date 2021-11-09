@@ -25,7 +25,11 @@
   font-weight: 500;
   color: rgba(22, 163, 74, 1);
 }
+
 .card .i-price {
   font-size: 13px;
   color: rgba(22, 163, 74, 1);
+}
+.card .negative {
+  color: red;
 }
