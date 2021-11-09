@@ -24,28 +24,44 @@ export const AuthButton = () => {
     <>
       {isAuthenticated ? (
         <Tooltip title="Log out of USA Wallet.">
-          <IconButton
+          <Button
+            variant="uw"
+            sx={{
+              alignSelf: 'center',
+              border: 1,
+              boxShadow: 'var(--boxShadow)',
+              borderColor: 'var(--borderColor)',
+              color: 'var(--color)',
+              height: 40,
+            }}
             aria-label="Log Out"
             className="LogoutButton"
-            sx={{ boxShadow: 'var(--boxShadow)' }}
-            variant="uw"
+            startIcon={<LockOpenIcon className="nav-bar-icon" />}
             onClick={() => logout()}
           >
-            <LockOpenIcon className="nav-bar-icon" />
-          </IconButton>
+            Log Out
+          </Button>
         </Tooltip>
       ) : (
         <>
           <Tooltip title="Log into USA Wallet.">
-            <IconButton
+            <Button
+              variant="uw"
+              sx={{
+                alignSelf: 'center',
+                border: 1,
+                boxShadow: 'var(--boxShadow)',
+                borderColor: 'var(--borderColor)',
+                color: 'var(--color)',
+                height: 40,
+              }}
               aria-label="Log In"
               className="LoginButton"
-              sx={{ boxShadow: 'var(--boxShadow)' }}
-              variant="uw"
+              startIcon={<LockIcon className="nav-bar-icon" />}
               onClick={() => toggleDrawer(true)}
             >
-              <LockIcon className="nav-bar-icon" />
-            </IconButton>
+              Log In
+            </Button>
           </Tooltip>
           <Drawer open={isOpen} anchor="right" onClose={onCloseDrawer}>
             <DrawerHeader closeDrawer={() => toggleDrawer(false)}>
