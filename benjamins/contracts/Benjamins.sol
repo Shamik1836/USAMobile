@@ -110,8 +110,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     event LendingPoolWithdrawal (uint256 amountUSDCBeforeFeein6dec, address payee);
 
     // owner overrides paused.
-    modifier whenAvailable() {
-        require(!paused() || (_msgSender() == owner()), "Benjamins is paused.");
+    modifier whenAvailable() {        
+        require(!paused() || (msg.sender == owner()), "Benjamins is paused.");
         _;
     }
 

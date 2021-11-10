@@ -199,8 +199,9 @@ async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBoo
 async function countAllCents() {
   const centsInAllTestUsers = await checkTestAddresses();
   const feeReceiverCents = await balUSDCinCents(feeReceiver); 
-  const protocolCents = protocolUSDCbalWithoutInterestInCentsGlobalV;  
   const deployerCents = await balUSDCinCents(deployer);
+  const protocolCents = protocolUSDCbalWithoutInterestInCentsGlobalV;  
+  console.log(protocolUSDCbalWithoutInterestInCentsGlobalV, `protocolUSDCbalWithoutInterestInCentsGlobalV: `); 
 
   const allLiquidCents = centsInAllTestUsers + feeReceiverCents + protocolCents + deployerCents;  
 
@@ -218,6 +219,7 @@ async function countAllCents() {
 
 async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
   
+  console.log(callingAccAddress, "callingAccAddress");
   const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
 
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
@@ -231,7 +233,7 @@ async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAd
     );  
 
     await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
-    // calling transfer function on benjaminscontract  
+    // calling transfer function on benjaminscontract      
     await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJItoTransfer);
   } else {
 
@@ -351,7 +353,10 @@ function resetTrackers(){
   burnFeeInUSDCWasPaidNowGlobalV = 0;
   transferFeeWasPaidNowInUSDCcentsGlobalV = 0;
 
-
+  user1LevelDataArray = [];
+  user1DiscountDataArray = [];
+  user2LevelDataArray = [];
+  user2DiscountDataArray = [];
 
 } 
 
@@ -372,12 +377,13 @@ function confirmBurn(){
 
 async function calcMintApprovalAndPrep(amountToMint, accountMinting) {  
   
+  const mintingAccSigner = await ethers.provider.getSigner(accountMinting);  
+
   const amountOfTokensBeforeMint = bigNumberToNumber(await benjaminsContract.totalSupply());
-  const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);  
-
-  const usersTokenAtStart = await balBNJI(accountMinting);
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting)); 
-
+  const amountOfTokensAfterMint = Number (amountOfTokensBeforeMint) + Number (amountToMint);
+ 
+  const userLevel = bigNumberToNumber (await benjaminsContract.connect(mintingAccSigner).discountLevel(accountMinting)); 
+  
   // starting with minting costs, then rounding down to cents
   const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
   const mintingCostInCents = mintingCostinUSDC * 100;
@@ -400,12 +406,13 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
 
 async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false) {
 
+  const burningAccSigner = await ethers.provider.getSigner(accountBurning);
+
   const amountOfTokensBeforeBurn = bigNumberToNumber(await benjaminsContract.totalSupply());  
   const amountOfTokensAfterBurn = amountOfTokensBeforeBurn - amountToBurn;
 
-  const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountBurning)); 
-  
-  
+  const userLevel = bigNumberToNumber (await benjaminsContract.connect(burningAccSigner).discountLevel(accountBurning)); 
+    
   const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
   const burnReturnInCents = burnReturnInUSDC * 100;
   const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
@@ -542,8 +549,8 @@ describe("Benjamins Test", function () {
         
     await polygonWMATIC.approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
 
-    const amountToReceiveUSDCIn6dec = 1000000 * (10**6) //ethers.utils.parseEther("1000000");
-    const amountInMaxInWEI = ethers.utils.parseEther("4000000"); //4000000 * (10**18);   
+    const amountToReceiveUSDCIn6dec = 1000000 * (10**6)
+    const amountInMaxInWEI = ethers.utils.parseEther("4000000");   
     await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
                  
     await benjaminsContract.connect(deployerSigner).unpause(); 
@@ -576,14 +583,8 @@ describe("Benjamins Test", function () {
     await countAllCents();    
     await checkTestAddresses(3000,10,0, true);
   })      
-  /*
-  it("Preparation verification: each of the 10 test users has 3000 USDC, 10 Matic and 0 BNJI", async function () {    
-        
-    await countAllCents();    
-    await checkTestAddresses(3000,10,0, true);
-    
-  });*/
-  /*
+  
+  
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {   
     await countAllCents();     
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
@@ -1087,7 +1088,7 @@ describe("Benjamins Test", function () {
 
     await countAllCents();
       
-  });  */
+  }); 
   
   it("Test 21. Should first REVERT: testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
 
@@ -1209,7 +1210,7 @@ describe("Benjamins Test", function () {
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
     
     await countAllCents();
-
+   
     // setup for test, testUser_1 mints 510 BNJI and waits 180 blocks,
     // after that, user would normally be able to transfer, burn etc
     await addUserAccDataPoints(testUser_1);        
@@ -1275,54 +1276,46 @@ describe("Benjamins Test", function () {
       "Benjamins is paused."
     );
     
-    
-    //test preparation verification, contract owner should have 282840 tokens from "First Setup mint for 100k USDC"
+    // test preparation verification, contract owner should have 282840 tokens from "First Setup mint for 100k USDC"
     expect(await balBNJI(deployer)).to.equal(282840);
-    // awaiting another 540 blocks, so that deployer can transfer and burn, since acc level 5
-    await mintBlocks(540);
-    // preparation for transfer, mint, etc., contract owner gives more than necessary USDC approval to benjaminsContract
-    await polygonUSDC.connect(deployerSigner).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
-    
-    // when paused is active, contract owner can use transfer
-    expect(await balBNJI(testUser_2)).to.equal(0);    
-    await benjaminsContract.connect(deployerSigner).transfer(testUser_2, 10);
+    // waiting for another 540 blocks, so that deployer can transfer and burn, since acc level 5
+    await mintBlocks(540);    
+    // when paused is active, contract owner can use transfer 10 BNJI from themself to testUser_2
+    expect(await balBNJI(testUser_2)).to.equal(0);        
+    await testTransfer(10, deployer, testUser_2, false,0 );
     expect(await balBNJI(testUser_2)).to.equal(10);  
-    expect(await balBNJI(deployer)).to.equal(282830);    
-    
-    // preparation for transferFrom, testUser_1 gives more than necessary USDC approval to benjaminsContract
-    await polygonUSDC.connect(testUser_1_Signer).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
-    // preparation for transferFrom, testUser_1 allows owner to handle 100 BNJI 
-    await benjaminsContract.connect(testUser_1_Signer).approve(deployer, 100);    
+    expect(await balBNJI(deployer)).to.equal(282830); 
+        
     // when paused is active, contract owner can use transferFrom to move 10 BNJI from testUser_1 to testUser_3
     expect(await balBNJI(deployer)).to.equal(282830); 
     expect(await balBNJI(testUser_1)).to.equal(510); 
     expect(await balBNJI(testUser_3)).to.equal(0); 
-    await benjaminsContract.connect(deployerSigner).transferFrom(testUser_1, testUser_3, 10);
+    await testTransfer(10, deployer, testUser_3, true, testUser_1 );
     expect(await balBNJI(deployer)).to.equal(282830); 
     expect(await balBNJI(testUser_1)).to.equal(500); 
-    expect(await balBNJI(testUser_3)).to.equal(10); 
-    
+    expect(await balBNJI(testUser_3)).to.equal(10);    
+
     // when paused is active, contract owner can use mint
     expect(await balBNJI(deployer)).to.equal(282830); 
-    await benjaminsContract.connect(deployerSigner).mint(12);
+    await testMinting("Test 24.2, minting 12 BNJI to caller", 12, deployer, deployer);  
     expect(await balBNJI(deployer)).to.equal(282842); 
 
     // when paused is active, contract owner can use mintTo to mint 14 BNJI to testUser_2
     expect(await balBNJI(deployer)).to.equal(282842); 
     expect(await balBNJI(testUser_2)).to.equal(10);
-    await benjaminsContract.connect(deployerSigner).mintTo(14, testUser_2);
+    await testMinting("Test 24.2, minting 14 BNJI to testUser_2", 14, deployer, testUser_2); 
     expect(await balBNJI(deployer)).to.equal(282842);
     expect(await balBNJI(testUser_2)).to.equal(24);    
     
-    // when paused is active, contract owner can use burn
+    // when paused is active, contract owner can use burn to burn 11 token for themself
     expect(await balBNJI(deployer)).to.equal(282842);
-    await benjaminsContract.connect(deployerSigner).burn(11);
+    await testBurning("Test 24.3, burning 11 BNJI", 11, deployer, deployer);
     expect(await balBNJI(deployer)).to.equal(282831);
 
-    // when paused is active, contract owner can use burnTo
+    // when paused is active, contract owner can use burnTo to burn 16 token for testUser_2
     expect(await balBNJI(deployer)).to.equal(282831);
-    expect(await balUSDCinCents(testUser_2)).to.equal(300000);        
-    await benjaminsContract.connect(deployerSigner).burnTo(16, testUser_2);       
+    expect(await balUSDCinCents(testUser_2)).to.equal(300000);  
+    await testBurning("Test 24.3, burning 16 BNJI for testUser_2", 16, deployer, testUser_2);   
     expect(await balUSDCinCents(testUser_2)).to.equal(300000+1128);
 
     // when paused is active, contract owner can use quoteUSDC
@@ -1352,7 +1345,7 @@ describe("Benjamins Test", function () {
     // owner deactivates pause()
     await benjaminsContract.connect(deployerSigner).unpause();
     expect(await benjaminsContract.paused()).to.equal(false);
-
+      
     await countAllCents();
     
   });
@@ -1429,11 +1422,11 @@ describe("Benjamins Test", function () {
     await countAllCents();
   });  
 
+
   // todo: rename the following tests, should be the last 2
-
   it("Test 27. Owner can add additional funds to contract's amUSDC balance", async function () { 
-
-    await countAllCents();
+    
+    // Note: Not using countAllCents here, as $10 of USDC will be converted into amUSDC, which are not tracked the same way.
 
     // getting contracts amUSDC balance
     const contractAMUSDCbalBeforeInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
@@ -1448,7 +1441,6 @@ describe("Benjamins Test", function () {
     // expecting that the new balance is $100 bigger than the old one
     expect(afterRoundedToCents).to.equal(beforeRoundedToCents+10000);  
 
-    await countAllCents();
   });
 
   it("Test 28. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
