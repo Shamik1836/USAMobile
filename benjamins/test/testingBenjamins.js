@@ -20,9 +20,13 @@ let burnReturnWOfeeInUSDCWasPaidNowGlobalV;
 let burnFeeInUSDCWasPaidNowGlobalV;
 let transferFeeWasPaidNowInUSDCcentsGlobalV;
 
-const scale6dec = 1000000;
+let protocolUSDCbalWithoutInterestInCentsGlobalV = 0;
 
 let testUserAddressesArray = [];
+let totalUSDCcentsEntriesArr = [];
+let liquidCentsArray = [];
+
+const scale6dec = 1000000;
 
 const baseFee = 2;
 const levelDiscountsArray = [ 0,  5, 10,  20,  40,   75];       
@@ -129,12 +133,6 @@ function bigNumberToNumber(bignumber) {
   return convertedNumber;
 }
 
-// converting from 6dec to USDC
-function divideFrom6decToUSDC (largeNumber) {
-  const numberInUSDC = Number( largeNumber / (10**6) );      
-  return numberInUSDC;    
-}
-
 // converting from 6dec to USDC cents
 function dividefrom6decToUSDCcents (largeNumber) {
   const numberInUSDC = Number( largeNumber / (10**4) );      
@@ -171,17 +169,87 @@ async function depositAdditionalUSDC(amountUSDCin6dec) {
   await polygonLendingPool.connect(deployerSigner).deposit(polygonUSDCaddress, amountUSDCin6dec, benjaminsContract.address, 0);       
 }
 
-async function testTransfer(amountBNJIsToTransfer, callingAccAddress, receivingAddress){
+// checking balances and adding them up
+async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBool){
+  let totalUSDCcentsInTestAccs = 0;
+
+  for (let index = 0; index < testUserAddressesArray.length; index++) {
+    const testUserAddress = testUserAddressesArray[index];  
+    const testAccUSDCcentsbal = await balUSDCinCents(testUserAddress);
+    const testAccMATICbal = await getMaticBalance(testUserAddress);
+    const testAccBNJIbal = await balBNJI(testUserAddress);
+
+    // if arg 'expectBool' was sent in as true, verify preparation did work as expected
+    if (expectBool == true){       
+      expect(testAccUSDCcentsbal).to.equal(amountUSDC*100);
+      expect(testAccMATICbal).to.equal(amountMatic);
+      expect(testAccBNJIbal).to.equal(amountBNJI);
+    }  
+    // add each account's amount of USDCcents onto the counter
+    totalUSDCcentsInTestAccs += testAccUSDCcentsbal;    
+  }
+  let nowUSDCcentsInAllTestAccs = totalUSDCcentsInTestAccs;
+  // keep log of all USDCcents found in testaccounts, save each reound of queries to totalUSDCcentsEntriesArr
+  totalUSDCcentsEntriesArr.push(totalUSDCcentsInTestAccs);   
+ 
+  return nowUSDCcentsInAllTestAccs;
+}
+
+
+async function countAllCents() {
+  const centsInAllTestUsers = await checkTestAddresses();
+  const feeReceiverCents = await balUSDCinCents(feeReceiver); 
+  const protocolCents = protocolUSDCbalWithoutInterestInCentsGlobalV;  
+  const deployerCents = await balUSDCinCents(deployer);
+
+  const allLiquidCents = centsInAllTestUsers + feeReceiverCents + protocolCents + deployerCents;  
+
+  liquidCentsArray.push(allLiquidCents);  
+
+  console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
+
+  // verifying that amount of counted cents is always the same
+  // starts at second array entry and compares all entries to the one before
+  for (let index = 1; index < liquidCentsArray.length; index++) {
+    expect(liquidCentsArray[index]).to.equal(liquidCentsArray[index-1]);    
+  };
+
+}
+
+async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
   
   const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
 
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-  const feeInCentsRoundedDown = await calcBurnVariables(amountBNJIsToTransfer, callingAccAddress, true);  
- 
-  await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
-  // calling transfer function on benjaminscontract  
-  await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJIsToTransfer);
+  const feeInCentsRoundedDown = await calcBurnVariables(amountBNJItoTransfer, callingAccAddress, true);  
+   
+  if (isTransferFrom == false) {
+    // showing the necessary fee: if USDC allowance is not given, transfer call will throw
+    await expect( benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJItoTransfer) ).to.be.revertedWith(
+      "ERC20: transfer amount exceeds allowance"
+    );  
+
+    await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));
+    // calling transfer function on benjaminscontract  
+    await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJItoTransfer);
+  } else {
+
+    // showing the necessary fee for transferFrom: if USDC allowance is not given, transferFrom call will throw
+    await expect( benjaminsContract.connect(callingAccSigner).transferFrom(fromSenderAddress, receivingAddress, amountBNJItoTransfer) ).to.be.revertedWith(
+      "ERC20: transfer amount exceeds allowance"
+    );  
+
+    // BNJI owner gives necessary USDC approval for fee to benjaminsContract
+    const fromSenderSigner = await ethers.provider.getSigner(fromSenderAddress);   
+    await polygonUSDC.connect(fromSenderSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));  
+
+    // BNJI owner allows callingAccAddress to handle amountBNJItoTransfer BNJI 
+    await benjaminsContract.connect(fromSenderSigner).approve(callingAccAddress, amountBNJItoTransfer);  
+    
+    // now transferFrom can be carried out by callingAccAddress on behalf of fromSenderAddress
+    benjaminsContract.connect(callingAccSigner).transferFrom(fromSenderAddress, receivingAddress, amountBNJItoTransfer)
+  }
 
   const feeReceiverUSDCBalancAfterTransferIn6dec = await balUSDCin6decBN(feeReceiver);
 
@@ -221,7 +289,11 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
  
   const feeReceiverUSDCdiffMintInCents = feeReceiverUSDCBalanceAfterMintInCents - feeReceiverUSDCBalanceBeforeMintInCents;     
   
-  
+  // since amUSDC amounts change due to interest accrued, transfer amount WITHOUT fees are saved globally for comparison
+  // here, transfer amount refers to USDC cents amounts of funds received by the protocol, from the user
+  const againstInterestDistortionInCents = callingAccMintPricePaidInCents - feeReceiverUSDCdiffMintInCents;
+  protocolUSDCbalWithoutInterestInCentsGlobalV += againstInterestDistortionInCents;  
+
   mintPriceTotalInUSDCWasPaidNowGlobalV = fromCentsToUSDC(callingAccMintPricePaidInCents);
   mintFeeInUSDCWasPaidNowGlobalV = feeReceiverUSDCdiffMintInCents/100;
   tokensExistQueriedGlobalV = totalSupplyAfterMint;
@@ -235,8 +307,6 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   const receivingAddressUSDCBalanceBeforeBurnInCents = await balUSDCinCents(receivingAddress); 
   const feeReceiverUSDCBalanceBeforeBurnInCents = await balUSDCinCents(feeReceiver); 
   
-  const contractAMUSDCbalanceBeforeBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
 
   await calcBurnVariables(amountToBurn, callingAccAddress);
@@ -245,13 +315,17 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);    
 
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress); 
-   
+  const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress);    
   
   const feeReceiverUSDCBalanceAfterBurnInCents = await balUSDCinCents(feeReceiver); 
   
   const receivingAccBurnReturnReceivedInCents = receivingAccUSDCBalanceAfterBurnInCents - receivingAddressUSDCBalanceBeforeBurnInCents;  
   const feeReceiverUSDCdiffBurnInCents = feeReceiverUSDCBalanceAfterBurnInCents - feeReceiverUSDCBalanceBeforeBurnInCents;       
+
+  // since amUSDC amounts change due to interest accrued, transfer amount WITHOUT fees are saved globally for comparison
+  // here, transfer amount refers to USDC cents amounts of funds paid out by the protocol, to the user, plus fees, paid by protocol to feeReceiver
+  const againstInterestDistortionInCents = receivingAccBurnReturnReceivedInCents + feeReceiverUSDCdiffBurnInCents;
+  protocolUSDCbalWithoutInterestInCentsGlobalV -= againstInterestDistortionInCents;
 
   burnReturnWOfeeInUSDCWasPaidNowGlobalV = fromCentsToUSDC(receivingAccBurnReturnReceivedInCents);
   burnFeeInUSDCWasPaidNowGlobalV = feeReceiverUSDCdiffBurnInCents/100;
@@ -276,6 +350,8 @@ function resetTrackers(){
   burnReturnWOfeeInUSDCWasPaidNowGlobalV = 0;
   burnFeeInUSDCWasPaidNowGlobalV = 0;
   transferFeeWasPaidNowInUSDCcentsGlobalV = 0;
+
+
 
 } 
 
@@ -327,7 +403,6 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   const amountOfTokensBeforeBurn = bigNumberToNumber(await benjaminsContract.totalSupply());  
   const amountOfTokensAfterBurn = amountOfTokensBeforeBurn - amountToBurn;
 
-  const usersTokenAtStart = await balBNJI(accountBurning);
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountBurning)); 
   
   
@@ -339,8 +414,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
 
   const toReceiveTotalInCents = burnReturnRoundedDownInCents - burnFeeInCentsRoundedDown;
   const toReceiveTotalInUSDC = toReceiveTotalInCents / 100;
-  const toReceiveTotalIn6dec = toReceiveTotalInCents * 10000;
-  
+   
   if (isTransfer==false){
     tokensShouldExistNowGlobalV = amountOfTokensAfterBurn;
     burnReturnWOfeeInUSDCShouldBeNowGlobalV = toReceiveTotalInUSDC;
@@ -360,7 +434,11 @@ describe("Benjamins Test", function () {
 
     ({ deployer, feeReceiver, accumulatedReceiver, testUser_1, testUser_2, testUser_3, testUser_4, testUser_5 } = await getNamedAccounts());
 
-    
+    testUserAddressesArray = [];
+    totalUSDCcentsEntriesArr = [];
+    liquidCentsArray = [];
+    protocolUSDCbalWithoutInterestInCentsGlobalV = 0;
+
     deployerSigner = await ethers.provider.getSigner(deployer);   
     testUser_1_Signer = await ethers.provider.getSigner(testUser_1); 
     testUser_2_Signer = await ethers.provider.getSigner(testUser_2); 
@@ -474,17 +552,16 @@ describe("Benjamins Test", function () {
     
     await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);    
         
-    for (let index = 0; index < 2; index++) {
-      const testingUser = testUserAddressesArray[index];
+    for (let index = 0; index < testUserAddressesArray.length; index++) {
+      const testingUser = testUserAddressesArray[index];      
 
       await deployerSigner.sendTransaction({
         to: testingUser,
         value: ethers.utils.parseEther("10") // 10 Matic
       })
-
-      if (testingUser == testUser_1){
-        await polygonUSDC.connect(deployerSigner).transfer(testingUser, (3000*scale6dec) );
-      }       
+      
+      await polygonUSDC.connect(deployerSigner).transfer(testingUser, (3000*scale6dec) );
+             
     } 
 
     polygonLendingPool = new ethers.Contract(
@@ -495,18 +572,29 @@ describe("Benjamins Test", function () {
       ], 
       deployerSigner
     );  
+
+    await countAllCents();    
+    await checkTestAddresses(3000,10,0, true);
   })      
-  
-  
-  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {      
-     
+  /*
+  it("Preparation verification: each of the 10 test users has 3000 USDC, 10 Matic and 0 BNJI", async function () {    
+        
+    await countAllCents();    
+    await checkTestAddresses(3000,10,0, true);
+    
+  });*/
+  /*
+  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {   
+    await countAllCents();     
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);    
-    
+    await countAllCents();    
   });
   
   it("Test 2. testUser_1 should mint 10 BNJI for themself, then do the same again in the next block", async function () { 
-        
+    
+    await countAllCents(); 
+
     await addUserAccDataPoints(testUser_1);        
     await testMinting("Test 2.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);        
     await mintBlocks(1);
@@ -521,6 +609,8 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,0,5];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents(); 
   });
       
   it("Test 3. Owner can pause and unpause contract", async function () {
@@ -542,7 +632,9 @@ describe("Benjamins Test", function () {
   });
   
   
-  it.only("Test 4. Owner can withdraw MATIC and ERC20 tokens that were sent to the contract directly, by mistake", async function () { 
+  it("Test 4. Owner can withdraw MATIC and ERC20 tokens that were sent to the contract directly, by mistake", async function () { 
+
+    await countAllCents(); 
 
     const contractMaticStart = await getMaticBalance(benjaminsContract.address);  
     const deployerMaticStart = await getMaticBalance(deployer);
@@ -572,14 +664,16 @@ describe("Benjamins Test", function () {
     const deployerMaticAfterCleanedTips = await getMaticBalance(deployer);
     const deployerMaticcAfterCleanedTipsRounded = deployerMaticAfterCleanedTips - (deployerMaticAfterCleanedTips%1);
     expect(deployerMaticcAfterCleanedTipsRounded).to.equal(deployerMaticcAfterSendRounded+20);
-    console.log(deployerMaticcAfterCleanedTipsRounded, 'deployerMaticcAfterCleanedTipsRounded');
+    console.log(deployerMaticcAfterCleanedTipsRounded, 'deployerMaticcAfterCleanedTipsRounded');    
 
-    
+    await countAllCents(); 
   });    
 
   
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
     
+    await countAllCents(); 
+
     expect(await balBNJI(testUser_1)).to.equal(0); 
     expect(await balUSDC(testUser_1)).to.equal(3000); 
 
@@ -596,23 +690,30 @@ describe("Benjamins Test", function () {
     expect(await balBNJI(testUser_1)).to.equal(0);
     expect(await balUSDC(testUser_1)).to.equal(3000-costInUSDC1+returnInUSDC1); 
 
+    await countAllCents();     
   });    
   
   it("Test 6. Should REVERT: testUser_1 tries to burn more tokens than they have", async function () {   
     
+    await countAllCents(); 
+
     await testMinting("Test 6.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(10);     
     await mintBlocks(11);    
 
-    await expect( testBurning("Test 6.2, should REVERT, burning more BNJIs than user has", 12, testUser_1, testUser_1) ).to.be.revertedWith(
+    await expect( testBurning("Test 6.2, should REVERT, burning more BNJI than user has", 12, testUser_1, testUser_1) ).to.be.revertedWith(
       "Insufficient Benjamins."
     );
 
     expect(await balBNJI(testUser_1)).to.equal(10);
+
+    await countAllCents(); 
   }); 
 
-  it("Test 7. Token price should increase following bonding curve", async function () {      
+  it("Test 7. Token price should increase following bonding curve", async function () {  
+    
+    await countAllCents(); 
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);
    
@@ -644,9 +745,13 @@ describe("Benjamins Test", function () {
 
     expect(firstPriceForTenInCents).to.equal(costInCents1);
     expect(secondPriceForTenInCents).to.equal(costInCents2); 
+
+    await countAllCents(); 
   });  
   
-  it("Test 8. Account levels and discounts should not be triggered below threshold", async function () {   
+  it("Test 8. Account levels and discounts should not be triggered below threshold", async function () { 
+    
+    await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 8.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
@@ -684,9 +789,12 @@ describe("Benjamins Test", function () {
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
 
+    await countAllCents(); 
   });  
   
   it("Test 9. Account levels should be triggered when reaching threshold", async function () {   
+
+    await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1);  
     await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
@@ -721,10 +829,14 @@ describe("Benjamins Test", function () {
 
     const expectedUser1Levels = [0,1,2,3,4,5];
     const expectedUser1Discounts = [0,5,10,20,40,75];          
-    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);     
+    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);    
+    
+    await countAllCents(); 
   });  
   
   it("Test 10. Account Level 2 can be purchased in one go ", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 10, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
@@ -734,10 +846,14 @@ describe("Benjamins Test", function () {
 
     const expectedUser1Levels = [0,2];
     const expectedUser1Discounts = [0,10];          
-    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
+    
+    await countAllCents();
   });  
 
-  it("Test 11. Account Level 3 can be purchased in one go ", async function () {   
+  it("Test 11. Account Level 3 can be purchased in one go ", async function () {  
+    
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);  
     await testMinting("Test 11, minting 100 BNJI to caller", 100, testUser_1, testUser_1);    
@@ -748,9 +864,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,3];
     const expectedUser1Discounts = [0,20];    
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents();
   });  
 
   it("Test 12. Account Level 4 can be purchased in one go ", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 12, minting 500 BNJI to caller", 500, testUser_1, testUser_1);    
@@ -761,9 +881,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,4];
     const expectedUser1Discounts = [0,40]; 
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents();
   });  
 
   it("Test 13. Account Level 5 can be purchased in one go ", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 13, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
@@ -774,9 +898,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,5];
     const expectedUser1Discounts = [0,75];    
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents();
   });  
 
   it("Test 14. Minting inside of levels works as expected", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 14.1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);    
@@ -793,10 +921,14 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,0,0];
     const expectedUser1Discounts = [0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents();
   });  
   
   
   it("Test 15. Account Level 1 is purchased by buying more than threshold, less than next threshold ", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 15, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
@@ -807,9 +939,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,1];
     const expectedUser1Discounts = [0,5];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+
+    await countAllCents();
   });  
 
-  it("Test 15. Larger purchases do not trigger more than account level 5 ", async function () {   
+  it("Test 15. Larger purchases do not trigger more than account level 5 ", async function () {  
+    
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 15.1, minting 2500 BNJI to caller", 2500, testUser_1, testUser_1);    
@@ -827,11 +963,15 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,75,75];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
+
+    await countAllCents();
   });  
   
   
   it("Test 16. There is no time-lock for buying and discounts are effective immediately upon having the needed balance ", async function () {   
 
+    await countAllCents();
+    
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 16.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
     
@@ -853,9 +993,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,5,10,10];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);       
+
+    await countAllCents();
   });  
 
-  it("Test 17. It is possible to skip levels by minting larger amounts of tokens", async function () {   
+  it("Test 17. It is possible to skip levels by minting larger amounts of tokens", async function () {
+    
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 17.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
@@ -873,40 +1017,15 @@ describe("Benjamins Test", function () {
     const expectedUser1Discounts = [0,5,20];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+
+    await countAllCents();
   });  
   
-  it("Test 18. It is possible to transfer tokens", async function () {   
-
-    expect(await balBNJI(testUser_1)).to.equal(0);  
-    expect(await balBNJI(testUser_2)).to.equal(0);    
-
-    await addUserAccDataPoints(testUser_1);
-    await addUserAccDataPoints(testUser_2);     
-
-    await testMinting("Test 18.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
-    
-    expect(await balBNJI(testUser_1)).to.equal(120); 
-    await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(60); 
-
-    await testTransfer(40, testUser_1, testUser_2);
-    
-    expect(await balBNJI(testUser_1)).to.equal(80);    
-    expect(await balBNJI(testUser_2)).to.equal(40);     
-        
-    await addUserAccDataPoints(testUser_1); 
-    await addUserAccDataPoints(testUser_2); 
-    
-    const expectedUser1Levels = [0,3,2];
-    const expectedUser1Discounts = [0,20,10];          
-    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
-
-    const expectedUser2Levels = [0,1];
-    const expectedUser2Discounts = [0,5];    
-    confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
-  });  
+  // TODO put in another test here as test 18
   
   it("Test 19. It is possible to mint tokens to another account", async function () {   
+
+    await countAllCents();
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
     expect(await balBNJI(testUser_2)).to.equal(0);    
@@ -930,9 +1049,13 @@ describe("Benjamins Test", function () {
     const expectedUser2Levels = [0,3];
     const expectedUser2Discounts = [0,20];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
+
+    await countAllCents();
   });  
   
   it("Test 20. It is possible to burn tokens and reward the USDC to another account", async function () {   
+
+    await countAllCents();
 
     expect(await balBNJI(testUser_1)).to.equal(0);  
     expect(await balBNJI(testUser_2)).to.equal(0);         
@@ -957,14 +1080,18 @@ describe("Benjamins Test", function () {
     const user_2_USDCbalAfter = await balUSDC(testUser_2);      
         
     expect(user_1_USDCbalBefore).to.equal(3000-costInUSDC1);    
-    expect(user_2_USDCbalBefore).to.equal(0);
+    expect(user_2_USDCbalBefore).to.equal(3000);
 
     expect(user_1_USDCbalAfter).to.equal(user_1_USDCbalBefore);   
-    expect(user_2_USDCbalAfter).to.equal(0 + returnInUSDC1);    
+    expect(user_2_USDCbalAfter).to.equal(user_2_USDCbalBefore + returnInUSDC1);    
+
+    await countAllCents();
       
-  });  
+  });  */
   
   it("Test 21. Should first REVERT: testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2); 
@@ -973,19 +1100,18 @@ describe("Benjamins Test", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(60);
     expect(await balBNJI(testUser_2)).to.equal(0);
+    
+    await addUserAccDataPoints(testUser_1); 
 
-    await addUserAccDataPoints(testUser_1);   
-    await mintBlocks(10);  
-
-    await expect( testTransfer(30, testUser_1, testUser_2) ).to.be.revertedWith(
+    await expect( testTransfer(30, testUser_1, testUser_2, false, 0) ).to.be.revertedWith(
       "Discount level withdraw timeout in effect."
     );
-
+      
     expect(await balBNJI(testUser_1)).to.equal(60);
     expect(await balBNJI(testUser_2)).to.equal(0);
-    await mintBlocks(4); 
+    await mintBlocks(14); 
 
-    await testTransfer(30,testUser_1, testUser_2);
+    await testTransfer(30, testUser_1, testUser_2, false, 0); 
 
     expect(await balBNJI(testUser_1)).to.equal(30);
     expect(await balBNJI(testUser_2)).to.equal(30);
@@ -1000,9 +1126,13 @@ describe("Benjamins Test", function () {
     const expectedUser2Levels = [0,1];
     const expectedUser2Discounts = [0,5];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
+
+    await countAllCents();
   });  
   
   it("Test 22. It is possible to skip levels by burning larger amounts of tokens", async function () {
+
+    await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 22.1, minting 600 BNJI to caller", 600, testUser_1, testUser_1);    
@@ -1019,9 +1149,13 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,4,1];
     const expectedUser1Discounts = [0,40,5];        
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);        
+
+    await countAllCents();
   });  
   
   it("Test 23. Downgrading accounts works as intended", async function () { 
+
+    await countAllCents();
 
     expect(await balBNJI(testUser_1)).to.equal(0); 
     await addUserAccDataPoints(testUser_1);        
@@ -1067,12 +1201,16 @@ describe("Benjamins Test", function () {
     const expectedUser1Levels = [0,5,4,3,2,1,0];
     const expectedUser1Discounts = [0,75,40,20,10,5,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+
+    await countAllCents();
     
   });
   
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
     
-    // setup for test, testUser_1 mints 510 BNJIs and waits 180 blocks,
+    await countAllCents();
+
+    // setup for test, testUser_1 mints 510 BNJI and waits 180 blocks,
     // after that, user would normally be able to transfer, burn etc
     await addUserAccDataPoints(testUser_1);        
     await testMinting("Test 24.1, minting 510 BNJI to caller", 510, testUser_1, testUser_1);  
@@ -1153,9 +1291,9 @@ describe("Benjamins Test", function () {
     
     // preparation for transferFrom, testUser_1 gives more than necessary USDC approval to benjaminsContract
     await polygonUSDC.connect(testUser_1_Signer).approve(benjaminsContract.address, multiplyFromUSDCto6dec(10000));  
-    // preparation for transferFrom, testUser_1 allows owner to handle 100 BNJIs 
+    // preparation for transferFrom, testUser_1 allows owner to handle 100 BNJI 
     await benjaminsContract.connect(testUser_1_Signer).approve(deployer, 100);    
-    // when paused is active, contract owner can use transferFrom to move 10 BNJIs from testUser_1 to testUser_3
+    // when paused is active, contract owner can use transferFrom to move 10 BNJI from testUser_1 to testUser_3
     expect(await balBNJI(deployer)).to.equal(282830); 
     expect(await balBNJI(testUser_1)).to.equal(510); 
     expect(await balBNJI(testUser_3)).to.equal(0); 
@@ -1169,7 +1307,7 @@ describe("Benjamins Test", function () {
     await benjaminsContract.connect(deployerSigner).mint(12);
     expect(await balBNJI(deployer)).to.equal(282842); 
 
-    // when paused is active, contract owner can use mintTo to mint 14 BNJIs to testUser_2
+    // when paused is active, contract owner can use mintTo to mint 14 BNJI to testUser_2
     expect(await balBNJI(deployer)).to.equal(282842); 
     expect(await balBNJI(testUser_2)).to.equal(10);
     await benjaminsContract.connect(deployerSigner).mintTo(14, testUser_2);
@@ -1183,9 +1321,9 @@ describe("Benjamins Test", function () {
 
     // when paused is active, contract owner can use burnTo
     expect(await balBNJI(deployer)).to.equal(282831);
-    expect(await balUSDCinCents(testUser_2)).to.equal(0);        
+    expect(await balUSDCinCents(testUser_2)).to.equal(300000);        
     await benjaminsContract.connect(deployerSigner).burnTo(16, testUser_2);       
-    expect(await balUSDCinCents(testUser_2)).to.equal(1128);
+    expect(await balUSDCinCents(testUser_2)).to.equal(300000+1128);
 
     // when paused is active, contract owner can use quoteUSDC
     const tokenValueIn6dec = await benjaminsContract.connect(deployerSigner).quoteUSDC(100, true);
@@ -1214,10 +1352,89 @@ describe("Benjamins Test", function () {
     // owner deactivates pause()
     await benjaminsContract.connect(deployerSigner).unpause();
     expect(await benjaminsContract.paused()).to.equal(false);
+
+    await countAllCents();
     
   });
 
-  it("Test 25. Owner can add additional funds to contract's amUSDC balance", async function () { 
+  it("Test 25. It is possible to transfer tokens, which costs a USDC fee (paid by sender)", async function () {   
+
+    await countAllCents();
+
+    expect(await balBNJI(testUser_1)).to.equal(0);  
+    expect(await balBNJI(testUser_2)).to.equal(0);    
+
+    await addUserAccDataPoints(testUser_1);
+    await addUserAccDataPoints(testUser_2);     
+
+    await testMinting("Test 25.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
+    
+    expect(await balBNJI(testUser_1)).to.equal(120); 
+    await addUserAccDataPoints(testUser_1); 
+    await mintBlocks(60); 
+
+    // testUser_1 calls transfer to send 40 BNJI from themselves to testUser_2
+    await testTransfer(40, testUser_1, testUser_2, false, 0);
+    
+    expect(await balBNJI(testUser_1)).to.equal(80);    
+    expect(await balBNJI(testUser_2)).to.equal(40);     
+        
+    await addUserAccDataPoints(testUser_1); 
+    await addUserAccDataPoints(testUser_2); 
+    
+    const expectedUser1Levels = [0,3,2];
+    const expectedUser1Discounts = [0,20,10];          
+    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+
+    const expectedUser2Levels = [0,1];
+    const expectedUser2Discounts = [0,5];    
+    confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
+
+    await countAllCents();
+  });  
+
+  it("Test 26. It is possible to use transferFrom on tokens, which costs a USDC fee (paid by original BNJI owner/sender)", async function () {
+    
+    await countAllCents();
+
+    expect(await balBNJI(testUser_1)).to.equal(0);  
+    expect(await balBNJI(testUser_2)).to.equal(0);    
+
+    await addUserAccDataPoints(testUser_1);
+    await addUserAccDataPoints(testUser_2);     
+
+    await testMinting("Test 26.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
+    
+    expect(await balBNJI(testUser_1)).to.equal(120); 
+    await addUserAccDataPoints(testUser_1); 
+    await mintBlocks(60); 
+
+    // testUser_3 calls transferFrom to send 30 BNJI from testUser_1 to testUser_2
+    await testTransfer(30, testUser_3, testUser_2, true, testUser_1);
+    
+    expect(await balBNJI(testUser_1)).to.equal(90);    
+    expect(await balBNJI(testUser_2)).to.equal(30);     
+        
+    await addUserAccDataPoints(testUser_1); 
+    await addUserAccDataPoints(testUser_2); 
+    
+    const expectedUser1Levels = [0,3,2];
+    const expectedUser1Discounts = [0,20,10];          
+    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
+
+    const expectedUser2Levels = [0,1];
+    const expectedUser2Discounts = [0,5];    
+    confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
+
+    await countAllCents();
+  });  
+
+  // todo: rename the following tests, should be the last 2
+
+  it("Test 27. Owner can add additional funds to contract's amUSDC balance", async function () { 
+
+    await countAllCents();
+
     // getting contracts amUSDC balance
     const contractAMUSDCbalBeforeInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
     // since it constantly changes in tiny amounts, due to accruing interest, rounding it down to whole cents
@@ -1230,10 +1447,13 @@ describe("Benjamins Test", function () {
     const afterRoundedToCents = contractAMUSDCbalAfterInCents - (contractAMUSDCbalAfterInCents%1); 
     // expecting that the new balance is $100 bigger than the old one
     expect(afterRoundedToCents).to.equal(beforeRoundedToCents+10000);  
+
+    await countAllCents();
   });
 
+  it("Test 28. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
-  it("Test 26. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
+    await countAllCents();
 
     for (let index = 0; index < testUserAddressesArray.length; index++) {
       const callingAcc = testUserAddressesArray[index];
@@ -1255,7 +1475,9 @@ describe("Benjamins Test", function () {
 
     const totalSupplyExisting = bigNumberToNumber(await benjaminsContract.totalSupply()); 
     expect(totalSupplyExisting).to.equal(0);
+
+    await countAllCents();
   });
 
-  // TODO put in reentrancy guard test
+  // TODO put in reentrancy guard test*/
 }); 

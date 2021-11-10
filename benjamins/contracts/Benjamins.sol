@@ -40,8 +40,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
     uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
     
-    uint256 curveFactor = 800000;           // Inverse slope of the bonding curve.
-    uint16  baseFee = 2;                    // in percent as an integer  // TODO: change to real value, this is for testing
+    uint256 public curveFactor = 800000;    // Inverse slope of the bonding curve.
+    uint16  public baseFee = 2;             // in percent as an integer  // TODO: change to real value, this is for testing
 
     // Manage Discounts
     uint32[] public levelAntes;                    // how many BNJI are needed for each level;

@@ -361,7 +361,7 @@ async function minimizedMint(){
   const tokensMintingNow = totalSupplyAfterMinting - totalSupplyExisting;
 
   const roundedToInteger = Math.ceil(tokensMintingNow);
-  //console.log(roundedToInteger,'trying to mint this amount of BNJIs');
+  //console.log(roundedToInteger,'trying to mint this amount of BNJI');
   return roundedToInteger;
 
 }
@@ -454,8 +454,8 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
   console.log('at the end of all loops so far, this many tokens exist:', endTokenBalance);  
 
   if (endTokenBalance >= 2000){
-    const valueBNJIsExistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
-    console.log(valueBNJIsExistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
+    const valueBNJIexistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
+    console.log(valueBNJIexistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
   } else {
     console.log(`if all these tokens were burnt, they would be worth less than $5, before fees (to take off)`);
   }

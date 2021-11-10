@@ -221,22 +221,11 @@ async function testMinting(mintName, amountToMint, callingAccAddress, receivingA
   confirmMint();
 };
 
-async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) { 
-
-  const callingAccountName = findUsernameForAddress(callingAccAddress);
-  
-  const receivingAccountName = findUsernameForAddress(receivingAddress);  
-
-  const totalSupplyBeforeBurn = bigNumberToNumber( await benjaminsContract.totalSupply() );
-
-  const callingAddressBNJIbalBeforeBurn = await balBNJI(callingAccAddress);
-  const contractBNJIbalBefore = await balBNJI(benjaminsContract.address); 
+async function testBurning(burnName, amountToBurn, callingAccAddress, receivingAddress) {  
 
   const receivingAddressUSDCBalanceBeforeBurnInCents = await balUSDCinCents(receivingAddress); 
   const feeReceiverUSDCBalanceBeforeBurnInCents = await balUSDCinCents(feeReceiver); 
   
-  const contractAMUSDCbalanceBeforeBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
 
   await calcBurnVariables(amountToBurn, callingAccAddress);
@@ -244,17 +233,11 @@ async function testBurning(burnName, amountToBurn, callingAccAddress, receivingA
   await benjaminsContract.connect(callingAccSigner).burnTo(amountToBurn, receivingAddress);  
  
   const totalSupplyAfterBurn = bigNumberToNumber( await benjaminsContract.totalSupply() ); 
-  const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress); 
-    
-  const callingAccBNJIbalAfter = await balBNJI(callingAccAddress); 
-  const feeReceiverUSDCBalanceAfterBurnInCents = await balUSDCinCents(feeReceiver); 
+  const receivingAccUSDCBalanceAfterBurnInCents = await balUSDCinCents(receivingAddress);     
+ 
+  const feeReceiverUSDCBalanceAfterBurnInCents = await balUSDCinCents(feeReceiver);   
   
-  const contractAMUSDCbalanceAfterBurnInCents = dividefrom6decToUSDCcents (bigNumberToNumber (await polygonAmUSDC.balanceOf(benjaminsContract.address)));
-  
-  const contractBNJIbalAfter = await balBNJI(benjaminsContract.address); 
-
   const receivingAccBurnReturnReceivedInCents = receivingAccUSDCBalanceAfterBurnInCents - receivingAddressUSDCBalanceBeforeBurnInCents;
-  const contractAMUSDCdiffBurnInCents = contractAMUSDCbalanceBeforeBurnInCents - contractAMUSDCbalanceAfterBurnInCents ;
   const feeReceiverUSDCdiffBurnInCents = feeReceiverUSDCBalanceAfterBurnInCents - feeReceiverUSDCBalanceBeforeBurnInCents;     
 
   // since amUSDC amounts change due to interest accrued, transfer amount WITHOUT fees are saved globally for comparison
@@ -376,8 +359,7 @@ async function storeAddr(){
 // checking balances and adding them up
 async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBool){
   for (let index = 0; index < 10; index++) {
-    const testUserAddress = testUserAddressesArray[index];     
-    const callingAccountName = findUsernameForAddress(testUserAddress);
+    const testUserAddress = testUserAddressesArray[index];  
     const testAccUSDCcentsbal = await balUSDCinCents(testUserAddress);
     const testAccMATICbal = await getMaticBalance(testUserAddress);
     const testAccBNJIbal = await balBNJI(testUserAddress);
@@ -411,6 +393,12 @@ async function countAllCents() {
   const allLiquidCents = centsInAllTestUsers + feeReceiverCents + protocolCents + deployerCents;  
 
   liquidCentsArray.push(allLiquidCents);  
+
+  // verifying that amount of counted cents is always the same
+  // starts at second array entry and compares all entries to the one before
+  for (let index = 1; index < liquidCentsArray.length; index++) {
+    expect(liquidCentsArray[index]).to.equal(liquidCentsArray[index-1]);    
+  }
 
   console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
 }
@@ -457,7 +445,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
 
     const balUSDCcentsAtStart = await balUSDCinCents(accNow);
     
-    const balBNJIsAtStart = await balBNJI(accNow);
+    const balBNJIatStart = await balBNJI(accNow);
     
     // MINTING
     // if runMint == true, mint. 
@@ -504,7 +492,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
     // if runMint == false, burn.
     else {     
       
-      let burnNow = Math.floor (balBNJIsAtStart * 0.2); // this means burning 20% of their tokens per call      
+      let burnNow = Math.floor (balBNJIatStart * 0.2); // this means burning 20% of their tokens per call      
              
       calcBurnVariables(burnNow, accNow, false); // this returns fee not value
 
@@ -535,10 +523,10 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
   const feeReceiverUSDCbalAfterTestsInCents = dividefrom6decToUSDCcents( bigNumberToNumber (await polygonUSDC.balanceOf(feeReceiver)) );
   
   const endTokenBalance = bigNumberToNumber(await benjaminsContract.totalSupply() );
-  const valueBNJIsExistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
+  const valueBNJIexistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
 
   console.log('at the end of all loops so far, this many tokens exist:', endTokenBalance);  
-  console.log(valueBNJIsExistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
+  console.log(valueBNJIexistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
   console.log(protocolUSDCbalWithoutInterestInCentsGlobalV/100, 'protocol should have this many (am)USDC, without interest so far');
   const reserveTracked = await showReserveInCents();
   expect(reserveTracked).to.equal(protocolUSDCbalWithoutInterestInCentsGlobalV); 
