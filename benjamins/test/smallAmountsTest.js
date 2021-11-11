@@ -102,7 +102,7 @@ async function balBNJI(userToQuery) {
 }
 
 async function showReserveInCents(){
-  const reserveInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await benjaminsContract.showReserveIn6dec()));
+  const reserveInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await benjaminsContract.getReserveIn6dec()));
   console.log(reserveInCents, 'contract tracker shows this amount in USDC cents as reserve');
   return reserveInCents;
 }
@@ -586,6 +586,8 @@ describe("Small Amounts Test", function () {
     })
 
     await polygonUSDC.connect(deployerSigner).transfer(testUser_1, (200000*scale6dec) );      
+
+    //await testMinting(889000, deployer, deployer);
   })      
 
   it("Preparation and verification: ", async function () {    
@@ -598,7 +600,7 @@ describe("Small Amounts Test", function () {
     await checkTestAddresses(200000,10,0, true);
     
     // Preparation: testUser1 buys to highest level, from there on will interact in smallest way possible
-    await testMinting(5000, testUser_1, testUser_1);  
+    await testMinting(6330, testUser_1, testUser_1);  
 
     expect(await benjaminsContract.discountLevel(testUser_1)).to.equal(5);
        
@@ -662,11 +664,13 @@ describe("Small Amounts Test", function () {
     waitFor(4000);
   });
   
-  it("10.: Small amounts test: 100 burns", async function () {  
+  it("10.: Small amounts test: 100 burns, last loop burns all remaining tokens", async function () {  
     await runMintOrBurnLoop(100, false, testUser_1, 'Test 10', true, 100);
     await countAllCents();
     expect(await benjaminsContract.discountLevel(testUser_1)).to.equal(0);
     console.log((await balUSDCinCents(testUser_1)/100), 'end balance of testUser_1 in USDC');
     
+    const totalSupplyExistingAtEnd = bigNumberToNumber(await benjaminsContract.totalSupply()); 
+    expect(totalSupplyExistingAtEnd).to.equal(0);
   });// */  
 }); 
