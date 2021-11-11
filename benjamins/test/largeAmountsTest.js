@@ -408,7 +408,7 @@ async function randomizedMint(callingAcc){
   //  tokenAmountMintingNow = totalSupplyAfterMinting - totalSupplyBeforeMinting
 
   const balUSDCofCaller = await balUSDC(callingAcc);
-  const mintNow = Math.floor(balUSDCofCaller * 0.3);   // this means minting for 30% of their total funds each time
+  const mintNow = Math.floor(balUSDCofCaller * 0.35);   // this means minting for 35% of their total funds each time
   const totalSupplyExisting = await benjaminsContract.totalSupply();
 
   const totalSupplyAfterMinting = Math.sqrt((mintNow * 8000000) + (totalSupplyExisting * totalSupplyExisting));
@@ -490,7 +490,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
     // if runMint == false, burn.
     else {     
       
-      let burnNow = Math.floor (balBNJIatStart * 0.3); // this means burning 30% of their tokens per call      
+      let burnNow = Math.floor (balBNJIatStart * 0.35); // this means burning 35% of their tokens per call      
              
       calcBurnVariables(burnNow, accNow, false); // this returns fee not value
 
@@ -604,7 +604,7 @@ describe("Benjamins Test", function () {
           
     await whaleSigner.sendTransaction({
       to: deployer,
-      value: ethers.utils.parseEther("5001000") // 5,001,000 Matic
+      value: ethers.utils.parseEther("5201000") // 5,001,000 Matic
     })
 
     await hre.network.provider.request({
@@ -617,12 +617,16 @@ describe("Benjamins Test", function () {
       [
         'function approve(address guy, uint wad) public returns (bool)',
         'function transfer(address dst, uint wad) public returns (bool)',
+        'function balanceOf(address account) external view returns (uint256)',
         'function deposit() public payable',            
       ], 
       deployerSigner
     );      
     
-    await polygonWMATIC.deposit( {value: ethers.utils.parseEther("4000000")} );
+    await polygonWMATIC.connect(deployerSigner).deposit( {value: ethers.utils.parseEther("5200000")} );
+
+    const balWMATIC = bigNumberToNumber(await polygonWMATIC.connect(deployerSigner).balanceOf(deployer));
+    console.log(balWMATIC, "balWMATIC");
 
     polygonQuickswapRouter = new ethers.Contract(
       polygonQuickswapRouterAddress,
@@ -637,12 +641,12 @@ describe("Benjamins Test", function () {
     );   
     
     //function approve(address spender, uint value) external returns (bool);
-    await polygonWMATIC.approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
+    await polygonWMATIC.connect(deployerSigner).approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("82000000000") );
 
     //function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)
-    const amountToReceiveUSDCIn6dec = 4000000 * (10**6);
-    const amountInMaxInWEI = ethers.utils.parseEther("4000000"); //4000000 * (10**18);   
-    await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
+    const amountToReceiveUSDCIn6dec = 4210000 * (10**6);
+    const amountInMaxInWEI = ethers.utils.parseEther("6000000"); //82000000 * (10**18);   
+    await polygonQuickswapRouter.connect(deployerSigner).swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
    
   
     await benjaminsContract.connect(deployerSigner).unpause(); 
@@ -672,17 +676,17 @@ describe("Benjamins Test", function () {
         value: ethers.utils.parseEther("10") // 10 Matic
       })
 
-      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (280000*scale6dec) );      
+      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (400000*scale6dec) );      
           
     }     
     
   })      
 
-  it.only("Preparation verification: each of the 10 test users has 280k USDC, 10 Matic and 0 BNJI", async function () {    
+  it("Preparation verification: each of the 10 test users has 400k USDC, 10 Matic and 0 BNJI", async function () {    
         
     await countAllCents();
     waitFor(4000);
-    await checkTestAddresses(280000,10,0, true);
+    await checkTestAddresses(400000,10,0, true);
     
   });
   
