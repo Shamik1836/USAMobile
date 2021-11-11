@@ -1,0 +1,20 @@
+{ 
+  "name":"usawallet",
+  "displayName":"usawallet",
+  "version":"1.0.0",
+  "expo": {
+    "ios": {
+      "bundleIdentifier": "com.usawallet"
+    },
+    "android": {
+      "package": "com.usawallet"
+    },
+    "scheme": "usawallet",
+    "icon": "assets/image/app-icon.png",
+    "splash": {
+      "image": "assets/image/app-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#222222"
+    }
+  }
+}
