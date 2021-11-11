@@ -16,6 +16,11 @@ export const ActionsProvider = (props) => {
         fromToken,
         fromAddress: fromToken?.tokenAddress,
         fromSymbol: fromToken?.symbol,
+        fromTokenType:
+          fromToken?.tokenAddress ===
+          '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+            ? 'native'
+            : 'erc20',
         setToToken,
         toToken,
         toAddress: toToken?.address,
