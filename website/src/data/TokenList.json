@@ -3,7 +3,7 @@
     "networkId": "137",
     "name": "Polygon (Matic)",
     "symbol": "MATIC",
-    "address": "0x0000000000000000000000000000000000001010",
+    "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     "description": "Native crypto currency of the Polygon network",
     "type": "native",
     "image": "https://assets.coingecko.com/coins/images/4713/thumb/matic-token-icon.png?1624446912"
