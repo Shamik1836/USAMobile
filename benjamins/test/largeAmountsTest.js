@@ -46,8 +46,6 @@ const polygonUSDCaddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
 let polygonAmUSDC;
 const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
-const polygonWETHaddress = '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619';
-
 let polygonWMATIC;
 const polygonWMATICaddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 
@@ -117,7 +115,7 @@ async function balBNJI(userToQuery) {
 }
 
 async function showReserveInCents(){
-  const reserveInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await benjaminsContract.showReserveIn6dec()));
+  const reserveInCents = dividefrom6decToUSDCcents(bigNumberToNumber(await benjaminsContract.getReserveIn6dec()));
   console.log(reserveInCents, 'contract tracker shows this amount in USDC cents as reserve');
   return reserveInCents;
 }
@@ -296,7 +294,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const accName = findUsernameForAddress(accountMinting);
  
   // starting with minting costs, then rounding down to cents
-  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
+  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 8000000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
@@ -324,7 +322,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountBurning)); 
   
   
-  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
+  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 8000000;
   const burnReturnInCents = burnReturnInUSDC * 100;
   const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
   
@@ -406,14 +404,14 @@ async function countAllCents() {
 async function randomizedMint(callingAcc){
 
   //  formula for minting for a specified amount of currency (totalPriceForTokensMintingNow) :
-  //  totalSupplyAfterMinting = SquareRootOf ( (totalPriceForTokensMintingNow * 800000) + (totalSupplyBeforeMinting ^2) )
+  //  totalSupplyAfterMinting = SquareRootOf ( (totalPriceForTokensMintingNow * 8000000) + (totalSupplyBeforeMinting ^2) )
   //  tokenAmountMintingNow = totalSupplyAfterMinting - totalSupplyBeforeMinting
 
   const balUSDCofCaller = await balUSDC(callingAcc);
-  const mintNow = Math.floor(balUSDCofCaller * 0.2);   // this means minting for 20% of their total funds each time
+  const mintNow = Math.floor(balUSDCofCaller * 0.3);   // this means minting for 30% of their total funds each time
   const totalSupplyExisting = await benjaminsContract.totalSupply();
 
-  const totalSupplyAfterMinting = Math.sqrt((mintNow * 800000) + (totalSupplyExisting * totalSupplyExisting));
+  const totalSupplyAfterMinting = Math.sqrt((mintNow * 8000000) + (totalSupplyExisting * totalSupplyExisting));
 
   const tokensMintingNow = totalSupplyAfterMinting - totalSupplyExisting;
 
@@ -492,7 +490,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accOrderArray, testNr) {
     // if runMint == false, burn.
     else {     
       
-      let burnNow = Math.floor (balBNJIatStart * 0.2); // this means burning 20% of their tokens per call      
+      let burnNow = Math.floor (balBNJIatStart * 0.3); // this means burning 30% of their tokens per call      
              
       calcBurnVariables(burnNow, accNow, false); // this returns fee not value
 
@@ -606,7 +604,7 @@ describe("Benjamins Test", function () {
           
     await whaleSigner.sendTransaction({
       to: deployer,
-      value: ethers.utils.parseEther("5000000") // 5,000,000 Matic
+      value: ethers.utils.parseEther("5001000") // 5,001,000 Matic
     })
 
     await hre.network.provider.request({
@@ -636,24 +634,13 @@ describe("Benjamins Test", function () {
        'function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)',       
       ], 
       deployerSigner
-    );
-
-    polygonWETH = new ethers.Contract(
-      polygonWETHaddress,
-      [
-        'function approve(address spender, uint256 amount) external returns (bool)',
-        'function allowance(address owner, address spender) external view returns (uint256)',
-        'function balanceOf(address account) external view returns (uint256)',
-        'function transfer(address recipient, uint256 amount) external returns (bool)',
-      ], 
-      deployerSigner
-    );
+    );   
     
     //function approve(address spender, uint value) external returns (bool);
     await polygonWMATIC.approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
 
     //function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)
-    const amountToReceiveUSDCIn6dec = 3000000 * (10**6);
+    const amountToReceiveUSDCIn6dec = 4000000 * (10**6);
     const amountInMaxInWEI = ethers.utils.parseEther("4000000"); //4000000 * (10**18);   
     await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
    
@@ -670,7 +657,7 @@ describe("Benjamins Test", function () {
     console.log(protocolUSDCbalWithoutInterestInCentsGlobalV, "protocol bal in Cents, 1");    
     await showReserveInCents();
 
-    await testMinting("First Setup mint for 100k USDC", 282840, deployer, deployer);   
+    await testMinting("First Setup mint for 100k USDC", 889000, deployer, deployer);   
     
     console.log(await balUSDCinCents(feeReceiver), "feeReceiver bal in Cents, 2");
     console.log(await balUSDCinCents(deployer), "deployer bal in Cents, 2");
@@ -685,17 +672,17 @@ describe("Benjamins Test", function () {
         value: ethers.utils.parseEther("10") // 10 Matic
       })
 
-      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (200000*scale6dec) );      
+      await polygonUSDC.connect(deployerSigner).transfer(testUserAddress, (280000*scale6dec) );      
           
     }     
     
   })      
 
-  it("Preparation verification: each of the 10 test users has 200k USDC, 10 Matic and 0 BNJI", async function () {    
+  it.only("Preparation verification: each of the 10 test users has 280k USDC, 10 Matic and 0 BNJI", async function () {    
         
     await countAllCents();
     waitFor(4000);
-    await checkTestAddresses(200000,10,0, true);
+    await checkTestAddresses(280000,10,0, true);
     
   });
   
