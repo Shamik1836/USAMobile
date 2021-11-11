@@ -10,7 +10,7 @@ import tokenList from '../../data/TokenList.json';
 export const ToSelect = () => {
   const { fromSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
-  const { setQuoteValid } = useQuote();
+  const { setQuote } = useQuote();
   const { networkId } = useNetwork();
   const tokens = useMemo(
     () =>
@@ -44,7 +44,7 @@ export const ToSelect = () => {
       setToToken();
       setDialog('Select a token to receive from the pull-down menu.');
     }
-    setQuoteValid('false');
+    setQuote();
   };
 
   const filterOptions = (options, { inputValue }) => {

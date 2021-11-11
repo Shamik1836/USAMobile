@@ -13,15 +13,7 @@ export const RequestQuote = () => {
   const { networkAlias } = useNetwork();
   const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
     useActions();
-  const {
-    setQuoteValid,
-    setFromToken,
-    setFromTokenAmount,
-    setProtocols,
-    setToToken,
-    setToTokenAmount,
-    setEstimatedGas,
-  } = useQuote();
+  const { setQuote } = useQuote();
   const { setDialog } = useExperts();
   const { colorMode } = useColorMode();
   const { fetch, isFetching, data, error } = useQuoteAction({
@@ -41,28 +33,12 @@ export const RequestQuote = () => {
 
   useEffect(() => {
     if (data) {
-      setFromToken(data.fromToken);
-      setFromTokenAmount(data.fromTokenAmount);
-      setProtocols(data.protocols[0]);
-      setToToken(data.toToken);
-      setToTokenAmount(data.toTokenAmount);
-      setEstimatedGas(data.estimatedGas);
-      setQuoteValid('true');
+      setQuote(data);
       setDialog(
         "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
       );
     }
-  }, [
-    data,
-    setFromToken,
-    setFromTokenAmount,
-    setProtocols,
-    setToToken,
-    setToTokenAmount,
-    setEstimatedGas,
-    setQuoteValid,
-    setDialog,
-  ]);
+  }, [data, setQuote, setDialog]);
 
   useEffect(() => {
     if (error) {

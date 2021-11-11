@@ -12,7 +12,7 @@ import useSwapAction from '../../actions/useSwapAction';
 export const DoItButton = () => {
   const { user } = useMoralis();
   const { networkAlias } = useNetwork();
-  const { setQuoteValid } = useQuote();
+  const { setQuote } = useQuote();
   const { fromToken, fromAddress, toAddress, txAmount } = useActions();
   const { setDialog } = useExperts();
   const { fetch, isFetching, isApproved, data, error } = useSwapAction({
@@ -41,10 +41,10 @@ export const DoItButton = () => {
 
   useEffect(() => {
     if (data) {
-      setQuoteValid(0);
+      setQuote();
       setDialog('Swap success.');
     }
-  }, [data, setDialog, setQuoteValid]);
+  }, [data, setQuote, setDialog]);
 
   useEffect(() => {
     if (error) {

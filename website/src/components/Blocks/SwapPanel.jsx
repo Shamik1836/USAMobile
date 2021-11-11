@@ -39,7 +39,7 @@ export const SwapPanel = () => {
             <RequestQuote />
           </>
         )}
-        {quoteValid === 'true' && <QuotePanel />}
+        {quoteValid && <QuotePanel />}
       </Stack>
     </Box>
   );
