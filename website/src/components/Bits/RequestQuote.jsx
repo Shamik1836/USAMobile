@@ -1,70 +1,59 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { Box, FormControl, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useMoralis } from 'react-moralis';
 
 import { useActions } from '../../contexts/actionsContext';
 import { useExperts } from '../../contexts/expertsContext';
 import { useQuote } from '../../contexts/quoteContext';
 import { useColorMode } from '../../contexts/colorModeContext';
 import { useNetwork } from '../../contexts/networkContext';
+import useQuoteAction from '../../actions/useQuoteAction';
 
 export const RequestQuote = () => {
-  const { Moralis } = useMoralis();
   const { networkAlias } = useNetwork();
-  const [loading, setLoading] = useState(false);
-  const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
-    useActions();
   const {
-    setQuoteValid,
-    setFromToken,
-    setFromTokenAmount,
-    setProtocols,
-    setToToken,
-    setToTokenAmount,
-    setEstimatedGas,
-  } = useQuote();
+    fromTokenSymbol,
+    fromTokenAddress,
+    toTokenSymbol,
+    toTokenAddress,
+    txAmount,
+  } = useActions();
+  const { setQuote } = useQuote();
   const { setDialog } = useExperts();
   const { colorMode } = useColorMode();
+  const { fetch, isFetching, data, error } = useQuoteAction({
+    chain: networkAlias,
+    fromTokenAddress,
+    toTokenAddress,
+    amount: txAmount,
+  });
 
-  const handlePress = async () => {
-    setDialog(
-      'Estimating costs to swap ' + fromSymbol + ' to ' + toSymbol + ' ... '
-    );
-
-    setLoading(true);
-
-    try {
-      const quote = await Moralis.Plugins.oneInch.quote({
-        chain: networkAlias,
-        fromTokenAddress: fromAddress,
-        toTokenAddress: toAddress,
-        amount: txAmount,
-      });
-
-      if (quote.protocols !== undefined) {
-        setFromToken(quote.fromToken);
-        setFromTokenAmount(quote.fromTokenAmount);
-        setProtocols(quote.protocols[0]);
-        setToToken(quote.toToken);
-        setToTokenAmount(quote.toTokenAmount);
-        setEstimatedGas(quote.estimatedGas);
-        setQuoteValid('true');
-        setDialog(
-          "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
-        );
-      } else {
-        setDialog(
-          'Something went wrong: ' + quote.error + ' re: ' + quote.message
-        );
-        setQuoteValid('false');
-      }
-    } catch (e) {
-      console.log(e);
+  useEffect(() => {
+    if (isFetching) {
+      setDialog(
+        'Estimating costs to swap ' +
+          fromTokenSymbol +
+          ' to ' +
+          toTokenSymbol +
+          ' ... '
+      );
     }
+  }, [isFetching, fromTokenSymbol, toTokenSymbol, setDialog]);
 
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (data) {
+      setQuote(data);
+      setDialog(
+        "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
+      );
+    }
+  }, [data, setQuote, setDialog]);
+
+  useEffect(() => {
+    if (error) {
+      setDialog('Something went wrong: ' + error.message);
+    }
+  }, [error, setDialog]);
 
   return (
     <Box>
@@ -72,11 +61,11 @@ export const RequestQuote = () => {
         <Tooltip title="Preview token transmission.">
           <span>
             <LoadingButton
-              disabled={!txAmount || !toSymbol}
+              disabled={!txAmount || !toTokenSymbol}
               variant={colorMode === 'light' ? 'outlined' : 'contained'}
               sx={{ boxShadow: 'var(--boxShadow)' }}
-              loading={loading}
-              onClick={handlePress}
+              loading={isFetching}
+              onClick={fetch}
             >
               Get Swap Quote
             </LoadingButton>

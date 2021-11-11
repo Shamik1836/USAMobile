@@ -77,7 +77,6 @@ export const SendReceive = () => {
       </Stack>
       <br />
       {localMode === 'send' && <SendPanel />}
-      <br />
       {localMode === 'receive' && <AddressPanel />}
     </Box>
   );

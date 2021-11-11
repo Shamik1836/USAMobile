@@ -15,7 +15,6 @@ export const AddressPanel = () => {
   const { Moralis, isAuthenticated } = useMoralis();
   const { colorMode } = useColorMode();
   const { setDialog } = useExperts();
-  // const { toSymbol, toAddress, txAmount } = useActions();
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState('0x0');
   const user = Moralis.User.current();
