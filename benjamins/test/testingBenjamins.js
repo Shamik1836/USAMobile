@@ -39,8 +39,6 @@ const polygonUSDCaddress = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
 let polygonAmUSDC;
 const polygonAmUSDCAddress = '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F';
 
-const polygonWETHaddress = '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619';
-
 let polygonWMATIC;
 const polygonWMATICaddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 
@@ -121,7 +119,7 @@ async function balBNJI(userToQuery) {
   return bigNumberToNumber (await benjaminsContract.balanceOf(userToQuery));
 }
 
-async function getMaticBalance(adress) {    
+async function getMATICbalance(adress) {    
   const balanceInWEI = await ethers.provider.getBalance(adress); 
   const balanceInMATIC = Number(balanceInWEI / (10**18) );        
   return balanceInMATIC;
@@ -176,7 +174,7 @@ async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBoo
   for (let index = 0; index < testUserAddressesArray.length; index++) {
     const testUserAddress = testUserAddressesArray[index];  
     const testAccUSDCcentsbal = await balUSDCinCents(testUserAddress);
-    const testAccMATICbal = await getMaticBalance(testUserAddress);
+    const testAccMATICbal = await getMATICbalance(testUserAddress);
     const testAccBNJIbal = await balBNJI(testUserAddress);
 
     // if arg 'expectBool' was sent in as true, verify preparation did work as expected
@@ -200,14 +198,13 @@ async function countAllCents() {
   const centsInAllTestUsers = await checkTestAddresses();
   const feeReceiverCents = await balUSDCinCents(feeReceiver); 
   const deployerCents = await balUSDCinCents(deployer);
-  const protocolCents = protocolUSDCbalWithoutInterestInCentsGlobalV;  
-  console.log(protocolUSDCbalWithoutInterestInCentsGlobalV, `protocolUSDCbalWithoutInterestInCentsGlobalV: `); 
+  const protocolCents = protocolUSDCbalWithoutInterestInCentsGlobalV;    
 
   const allLiquidCents = centsInAllTestUsers + feeReceiverCents + protocolCents + deployerCents;  
 
   liquidCentsArray.push(allLiquidCents);  
 
-  console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
+  //console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
 
   // verifying that amount of counted cents is always the same
   // starts at second array entry and compares all entries to the one before
@@ -218,8 +215,7 @@ async function countAllCents() {
 }
 
 async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
-  
-  console.log(callingAccAddress, "callingAccAddress");
+    
   const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
 
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
@@ -504,7 +500,7 @@ describe("Benjamins Test", function () {
       
     await whaleSigner.sendTransaction({
       to: deployer,
-      value: ethers.utils.parseEther("5000000") // 5,000,000 Matic
+      value: ethers.utils.parseEther("5000000") // 5,000,000 MATIC
     })
 
     await hre.network.provider.request({
@@ -517,13 +513,14 @@ describe("Benjamins Test", function () {
       [
         'function approve(address guy, uint wad) public returns (bool)',
         'function transfer(address dst, uint wad) public returns (bool)',
+        'function balanceOf(address account) external view returns (uint256)',
         'function deposit() public payable',            
       ], 
       deployerSigner
     );
     
-    await polygonWMATIC.deposit( {value: ethers.utils.parseEther("4000000")} );
-
+    await polygonWMATIC.connect(deployerSigner).deposit( {value: ethers.utils.parseEther("4000000")} );
+  
     polygonQuickswapRouter = new ethers.Contract(
       polygonQuickswapRouterAddress,
       [
@@ -534,24 +531,13 @@ describe("Benjamins Test", function () {
        'function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)',       
       ], 
       deployerSigner
-    );
+    );     
 
-    polygonWETH = new ethers.Contract(
-      polygonWETHaddress,
-      [
-        'function approve(address spender, uint256 amount) external returns (bool)',
-        'function allowance(address owner, address spender) external view returns (uint256)',
-        'function balanceOf(address account) external view returns (uint256)',
-        'function transfer(address recipient, uint256 amount) external returns (bool)',
-      ], 
-      deployerSigner
-    );
-        
-    await polygonWMATIC.approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
+    await polygonWMATIC.connect(deployerSigner).approve( polygonQuickswapRouterAddress, ethers.utils.parseEther("15000000") );
 
     const amountToReceiveUSDCIn6dec = 1000000 * (10**6)
-    const amountInMaxInWEI = ethers.utils.parseEther("4000000");   
-    await polygonQuickswapRouter.swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
+    const amountInMaxInWEI = ethers.utils.parseEther("3999950");   
+    await polygonQuickswapRouter.connect(deployerSigner).swapTokensForExactTokens( amountToReceiveUSDCIn6dec, amountInMaxInWEI , [polygonWMATICaddress, polygonUSDCaddress], deployer, 1665102928);  
                  
     await benjaminsContract.connect(deployerSigner).unpause(); 
 
@@ -564,7 +550,7 @@ describe("Benjamins Test", function () {
 
       await deployerSigner.sendTransaction({
         to: testingUser,
-        value: ethers.utils.parseEther("10") // 10 Matic
+        value: ethers.utils.parseEther("10") // 10 MATIC
       })
       
       await polygonUSDC.connect(deployerSigner).transfer(testingUser, (3000*scale6dec) );
@@ -585,8 +571,8 @@ describe("Benjamins Test", function () {
   })      
   
   
-  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {   
-    await countAllCents();     
+  it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
+    await countAllCents();         
     await testMinting("Test 1, minting 10 BNJI to caller", 10, testUser_1, testUser_1);      
     expect(await balBNJI(testUser_1)).to.equal(10);    
     await countAllCents();    
@@ -632,44 +618,7 @@ describe("Benjamins Test", function () {
    expect(await benjaminsContract.paused()).to.equal(false);
   });
   
-  
-  it("Test 4. Owner can withdraw MATIC and ERC20 tokens that were sent to the contract directly, by mistake", async function () { 
-
-    await countAllCents(); 
-
-    const contractMaticStart = await getMaticBalance(benjaminsContract.address);  
-    const deployerMaticStart = await getMaticBalance(deployer);
-    const deployerMaticStartRounded = deployerMaticStart - (deployerMaticStart%1); 
-    console.log(deployerMaticStartRounded, 'deployerMaticStartRounded');
-
-    expect(contractMaticStart).to.equal(0); 
-    
-    await deployerSigner.sendTransaction({
-      to: benjaminsContract.address,
-      value: ethers.utils.parseEther("20") // 20 Matic
-    })
-
-    const contractMaticAfterSend = await getMaticBalance(benjaminsContract.address); 
-    expect(contractMaticAfterSend).to.equal(contractMaticStart+20); 
-
-    const deployerMaticAfterSend = await getMaticBalance(deployer);
-    const deployerMaticcAfterSendRounded = deployerMaticAfterSend - (deployerMaticAfterSend%1);
-    expect(deployerMaticcAfterSendRounded).to.equal(deployerMaticStartRounded-20);    
-    console.log(deployerMaticcAfterSendRounded, 'deployerMaticcAfterSendRounded'); 
-    
-    await benjaminsContract.connect(deployerSigner).cleanTips();
-  
-    const contractMaticAfterCleanedTips = await getMaticBalance(benjaminsContract.address); 
-    expect(contractMaticAfterCleanedTips).to.equal(0); 
-
-    const deployerMaticAfterCleanedTips = await getMaticBalance(deployer);
-    const deployerMaticcAfterCleanedTipsRounded = deployerMaticAfterCleanedTips - (deployerMaticAfterCleanedTips%1);
-    expect(deployerMaticcAfterCleanedTipsRounded).to.equal(deployerMaticcAfterSendRounded+20);
-    console.log(deployerMaticcAfterCleanedTipsRounded, 'deployerMaticcAfterCleanedTipsRounded');    
-
-    await countAllCents(); 
-  });    
-
+  // Todo: put in another test here 
   
   it("Test 5. testUser_1 mints 19 tokens, then burns them after 11 blocks waiting time", async function () {   
     
@@ -1422,9 +1371,72 @@ describe("Benjamins Test", function () {
     await countAllCents();
   });  
 
+  it("Test 27. Owner can withdraw MATIC tokens that were sent to the contract directly, by mistake", async function () { 
+
+    await countAllCents(); 
+
+    const contractMATICstart = await getMATICbalance(benjaminsContract.address);  
+    const deployerMATICstart = await getMATICbalance(deployer);
+    const deployerMATICstartRounded = deployerMATICstart - (deployerMATICstart%1); 
+    
+    expect(contractMATICstart).to.equal(0); 
+    
+    await deployerSigner.sendTransaction({
+      to: benjaminsContract.address,
+      value: ethers.utils.parseEther("20") // 20 Matic
+    })
+
+    const contractMATICafterSend = await getMATICbalance(benjaminsContract.address); 
+    expect(contractMATICafterSend).to.equal(contractMATICstart+20); 
+
+    const deployerMATICafterSend = await getMATICbalance(deployer);
+    const deployerMATICafterSendRounded = deployerMATICafterSend - (deployerMATICafterSend%1);
+    expect(deployerMATICafterSendRounded).to.equal(deployerMATICstartRounded-20);   
+    
+    await benjaminsContract.connect(deployerSigner).cleanMATICtips();
+  
+    const contractMATICafterCleanedTips = await getMATICbalance(benjaminsContract.address); 
+    expect(contractMATICafterCleanedTips).to.equal(0); 
+
+    const deployerMATICafterCleanedTips = await getMATICbalance(deployer);
+    const deployerMATICafterCleanedTipsRounded = deployerMATICafterCleanedTips - (deployerMATICafterCleanedTips%1);
+    expect(deployerMATICafterCleanedTipsRounded).to.equal(deployerMATICafterSendRounded+20);
+       
+    await countAllCents(); 
+  });    
+
+  it("Test 28. Owner can withdraw ERC20 tokens that were sent by mistake - but not USDC or amUSDC", async function () { 
+  
+    await countAllCents(); 
+
+    const contractWMATICstart = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(benjaminsContract.address)));  
+    const deployerWMATICstart = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(deployer)));
+
+    expect(contractWMATICstart).to.equal(0);  
+
+    const amountWMATICtoSend = ethers.utils.parseEther("50");
+    await polygonWMATIC.connect(deployerSigner).transfer(benjaminsContract.address, amountWMATICtoSend);
+
+    const contractWMATICafterSend = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(benjaminsContract.address)));  
+    const deployerWMATICafterSend = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(deployer)));
+
+    expect(contractWMATICafterSend).to.equal(contractWMATICstart+50);  
+    expect(deployerWMATICafterSend).to.equal(deployerWMATICstart-50);     
+
+    await benjaminsContract.connect(deployerSigner).cleanERC20Tips(polygonWMATICaddress);
+
+    const contractWMATICafterCleanERC20 = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(benjaminsContract.address)));  
+    const deployerWMATICafterCleanERC20 = Number(ethers.utils.formatEther(await polygonWMATIC.balanceOf(deployer)));
+
+    expect(contractWMATICafterCleanERC20).to.equal(0);  
+    expect(deployerWMATICafterCleanERC20).to.equal(deployerWMATICafterSend+50);
+    
+    await countAllCents(); 
+
+  });  
 
   // todo: rename the following tests, should be the last 2
-  it("Test 27. Owner can add additional funds to contract's amUSDC balance", async function () { 
+  it("Test 29. Owner can add additional funds to contract's amUSDC balance", async function () { 
     
     // Note: Not using countAllCents here, as $10 of USDC will be converted into amUSDC, which are not tracked the same way.
 
@@ -1443,7 +1455,7 @@ describe("Benjamins Test", function () {
 
   });
 
-  it("Test 28. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
+  it("Test 30. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
     await countAllCents();
 
@@ -1471,5 +1483,5 @@ describe("Benjamins Test", function () {
     await countAllCents();
   });
 
-  // TODO put in reentrancy guard test*/
+  // TODO put in reentrancy guard test? */
 }); 

@@ -425,31 +425,28 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit ProfitTaken(availableIn6dec, _amountIn6dec);
     }
 
-    // TODO: Rename?
-    // function for owner to withdraw errant ERC20 tokens // TODO: Rename?
-    function cleanERC20Tip(address ERC20ContractAddress) public onlyOwner {
-        IERC20 USDCcontractIF = IERC20(ERC20ContractAddress);
-        uint256 accumulatedTokens = USDCcontractIF.balanceOf(address(this));
-        USDCcontractIF.transferFrom(address(this), feeReceiver, accumulatedTokens);
-    }
-
     // Shows the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
     // to be 100% backed against burning at all times
     function showReserveIn6dec() public view returns (uint256) {
         return reserveInUSDCin6dec;
     }
-
-    // TODO: Rename to clean
-    // TODO: needs testing, (is not supposed to call the imported ERC20 transfer function!, but instead the original Ethereum function to transfer network native funds, MATIC)
-    // now uses "call" instead of "transfer" to safeguard against calling the wrong function by mistake
-    // function for owner to withdraw all errant MATIC to feeReceiver
-    function cleanTips() public onlyOwner {
+      
+    // function for owner to withdraw MATIC that were sent directly to contract by mistake
+    function cleanMATICtips() public onlyOwner {
         address payable receiver = payable(msg.sender);
         uint256 accumulatedMatic = address(this).balance;
         (bool success, ) = receiver.call{value: accumulatedMatic}("");
         require(success, "Transfer failed.");
     }
     
+    // function for owner to withdraw ERC20 tokens that were sent directly to contract by mistake
+    function cleanERC20Tips(address erc20ContractAddress) public onlyOwner {
+        require(erc20ContractAddress != 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174); // ERC20 address cannot be USDC
+        require(erc20ContractAddress != 0x1a13F4Ca1d028320A707D99520AbFefca3998b7F); // ERC20 address cannot be amUSDC
+        IERC20 erc20contract = IERC20(erc20ContractAddress);
+        uint256 accumulatedTokens = erc20contract.balanceOf(address(this));
+        erc20contract.transferFrom(address(this), msg.sender, accumulatedTokens);
+    }
 
     // Fallback receives all incoming funds of any type.
     receive() external payable {
