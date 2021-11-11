@@ -40,7 +40,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
     uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
     
-    uint256 public curveFactor = 800000;    // Inverse slope of the bonding curve.
+    uint256 public curveFactor = 8000000;    // Inverse slope of the bonding curve.
     uint16  public baseFee = 2;             // in percent as an integer  // TODO: change to real value, this is for testing
 
     // Manage Discounts
@@ -425,10 +425,38 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit ProfitTaken(availableIn6dec, _amountIn6dec);
     }
 
-    // Shows the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
-    // to be 100% backed against burning at all times
-    function showReserveIn6dec() public view returns (uint256) {
+    // Returns the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
+    // to be 100% backed against burning tokens at all times
+    function getReserveIn6dec() public view returns (uint256 reserveInUSDCin6decNow) {
         return reserveInUSDCin6dec;
+    }
+    
+    function getFeeReceiver() public view returns (address feeReceiverNow) {
+        return feeReceiver;           
+    } 
+
+    function getPolygonUSDC() public view returns (address addressNow) {
+        return address(polygonUSDC);           
+    }
+
+    function getPolygonAMUSDC() public view returns (address addressNow) {
+        return address(polygonAMUSDC);           
+    }
+
+    function getBlocksPerDay() public view returns (uint256 amountOfBlocksPerDayNow) {
+        return blocksPerDay;           
+    }
+
+    function getLevelAntes() public view returns (uint32[] memory levelAntesNow) {
+        return levelAntes;           
+    }
+
+    function getLevelHolds() public view returns (uint16[] memory levelHoldsNow) {
+        return levelHolds;           
+    }
+
+    function getLevelDiscounts() public view returns (uint8[] memory levelDiscountsNow) {
+        return levelDiscounts;           
     }
       
     // function for owner to withdraw MATIC that were sent directly to contract by mistake
@@ -483,13 +511,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function updateFeeReceiver(address newFeeReceiver) public onlyOwner {
         feeReceiver = newFeeReceiver;     
         emit AddressUpdate(newFeeReceiver, "feeReceiver");           
-    }   
+    }  
 
     // Update the USDC token address on Polygon.
     function updatePolygonUSDC(address newAddress) public onlyOwner {
         polygonUSDC = IERC20(newAddress);
         emit AddressUpdate(newAddress, "polygonUSDC");
-    }
+    }  
 
     // Update the amUSDC token address on Polygon.
     function updatePolygonAMUSDC(address newAddress) public onlyOwner {
@@ -525,6 +553,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
         levelDiscounts = newLevelDiscounts;
         emit LevelDiscountsUpdate(newLevelDiscounts);
-    }
+    }   
 
 }

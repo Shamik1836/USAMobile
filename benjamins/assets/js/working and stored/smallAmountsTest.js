@@ -248,7 +248,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountMinting));  
  
   // starting with minting costs, then rounding down to cents
-  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 800000;
+  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 8000000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
@@ -273,7 +273,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
  
   const userLevel = bigNumberToNumber (await benjaminsContract.discountLevel(accountBurning));   
   
-  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 800000;
+  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 8000000;
   const burnReturnInCents = burnReturnInUSDC * 100;
   const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
   
@@ -349,14 +349,10 @@ async function countAllCents() {
 
 async function minimizedMint(){
 
-  //  formula for minting for a specified amount of currency (totalPriceForTokensMintingNow) :
-  //  totalSupplyAfterMinting = SquareRootOf ( (totalPriceForTokensMintingNow * 800000) + (totalSupplyBeforeMinting ^2) )
-  //  tokenAmountMintingNow = totalSupplyAfterMinting - totalSupplyBeforeMinting  
-
   const currencyToSpendNow = 5;   // this means minting for $5 each time
   const totalSupplyExisting = await benjaminsContract.totalSupply();
 
-  const totalSupplyAfterMinting = Math.sqrt((currencyToSpendNow * 800000) + (totalSupplyExisting * totalSupplyExisting));
+  const totalSupplyAfterMinting = Math.sqrt((currencyToSpendNow * 8000000) + (totalSupplyExisting * totalSupplyExisting));
 
   const tokensMintingNow = totalSupplyAfterMinting - totalSupplyExisting;
 
@@ -367,16 +363,13 @@ async function minimizedMint(){
 }
 
 async function minimizedBurn() {
-  // formula for burning to get a specified amount of currency
-  // totalSupplyAfterBurning = SquareRootOf ( (totalSupplyBeforeBurning ^2) - (totalCurrencyForTokensBurningNow * 800000) )
-  // amountOfTokensBurningNow = totalSupplyBeforeBurning - totalSupplyAfterBurning
-
+ 
   const currencyToBePaidOutNow = 5.01;   // this means burning for $5 each time
   const totalSupplyExisting = await benjaminsContract.totalSupply(); 
 
   if (totalSupplyExisting < 2000) {not5USDCworthCounter += 1};
 
-    const totalSupplyAfterBurning = Math.sqrt( (totalSupplyExisting * totalSupplyExisting) - (currencyToBePaidOutNow * 800000) );
+    const totalSupplyAfterBurning = Math.sqrt( (totalSupplyExisting * totalSupplyExisting) - (currencyToBePaidOutNow * 8000000) );
 
     const tokensToBurnNow = totalSupplyExisting - totalSupplyAfterBurning;
 
