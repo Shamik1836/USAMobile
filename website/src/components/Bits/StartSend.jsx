@@ -1,27 +1,17 @@
 import { useEffect } from 'react';
 import { Box, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useMoralis } from 'react-moralis';
 import { useActions } from '../../contexts/actionsContext';
 import { useExperts } from '../../contexts/expertsContext';
 import useTransferAction from '../../actions/useTransferAction';
 
 export const StartSend = () => {
-  const { Moralis } = useMoralis();
   const { setDialog } = useExperts();
-  const {
-    fromToken,
-    fromTokenType,
-    fromTokenAddress,
-    toTokenAddress,
-    txAmount,
-  } = useActions();
+  const { fromToken, fromTokenAddress, toTokenAddress, txAmount } =
+    useActions();
   const { fetch, isFetching, data, error } = useTransferAction({
-    type: fromTokenType,
-    amount:
-      fromTokenType === 'native'
-        ? Moralis.Units.ETH(Number(txAmount), fromToken?.decimals)
-        : Moralis.Units.Token(txAmount, fromToken?.decimals),
+    amount: txAmount,
+    decimals: fromToken?.decimals,
     receiver: toTokenAddress,
     contractAddress: fromTokenAddress,
   });

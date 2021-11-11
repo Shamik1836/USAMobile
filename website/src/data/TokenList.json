@@ -3,7 +3,6 @@
     "networkId": "137",
     "name": "Polygon (Matic)",
     "symbol": "MATIC",
-    "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     "description": "Native crypto currency of the Polygon network",
     "type": "native",
     "image": "https://assets.coingecko.com/coins/images/4713/thumb/matic-token-icon.png?1624446912"
@@ -23,7 +22,7 @@
     "symbol": "ETH",
     "address": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
     "description": "Ethereum token on Polygon. Biggest and most important smart contract platform",
-    "type": "native",
+    "type": "erc20",
     "image": "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png?1595348880"
   },
   {
