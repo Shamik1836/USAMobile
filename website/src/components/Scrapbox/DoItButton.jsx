@@ -13,12 +13,13 @@ export const DoItButton = () => {
   const { user } = useMoralis();
   const { networkAlias } = useNetwork();
   const { setQuote } = useQuote();
-  const { fromToken, fromAddress, toAddress, txAmount } = useActions();
+  const { fromTokenAddress, fromTokenSymbol, toTokenAddress, txAmount } =
+    useActions();
   const { setDialog } = useExperts();
   const { fetch, isFetching, isApproved, data, error } = useSwapAction({
     chain: networkAlias,
-    fromTokenAddress: fromAddress,
-    toTokenAddress: toAddress,
+    fromTokenAddress,
+    toTokenAddress,
     amount: txAmount,
     fromAddress: user.attributes.ethAddress,
     slippage: 3,
@@ -27,11 +28,13 @@ export const DoItButton = () => {
   useEffect(() => {
     if (isFetching) {
       setDialog(
-        'Retrieving pre-approval codes to swap ' + txAmount + ' of your ',
-        fromToken.symbol.toUpperCase()
+        'Retrieving pre-approval codes to swap ' +
+          txAmount +
+          ' of your ' +
+          fromTokenSymbol
       );
     }
-  }, [isFetching, fromToken, txAmount, setDialog]);
+  }, [isFetching, fromTokenSymbol, txAmount, setDialog]);
 
   useEffect(() => {
     if (isApproved) {

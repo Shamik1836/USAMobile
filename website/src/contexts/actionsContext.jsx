@@ -14,8 +14,8 @@ export const ActionsProvider = (props) => {
       value={{
         setFromToken,
         fromToken,
-        fromAddress: fromToken?.tokenAddress,
-        fromSymbol: fromToken?.symbol,
+        fromTokenAddress: fromToken?.tokenAddress,
+        fromTokenSymbol: fromToken?.symbol,
         fromTokenType:
           fromToken?.tokenAddress ===
           '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -23,8 +23,8 @@ export const ActionsProvider = (props) => {
             : 'erc20',
         setToToken,
         toToken,
-        toAddress: toToken?.address,
-        toSymbol: toToken?.symbol,
+        toTokenAddress: toToken?.address,
+        toTokenSymbol: toToken?.symbol,
         setTxAmount,
         txAmount,
       }}

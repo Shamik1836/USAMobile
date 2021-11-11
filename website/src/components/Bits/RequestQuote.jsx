@@ -11,25 +11,34 @@ import useQuoteAction from '../../actions/useQuoteAction';
 
 export const RequestQuote = () => {
   const { networkAlias } = useNetwork();
-  const { fromSymbol, fromAddress, toSymbol, toAddress, txAmount } =
-    useActions();
+  const {
+    fromTokenSymbol,
+    fromTokenAddress,
+    toTokenSymbol,
+    toTokenAddress,
+    txAmount,
+  } = useActions();
   const { setQuote } = useQuote();
   const { setDialog } = useExperts();
   const { colorMode } = useColorMode();
   const { fetch, isFetching, data, error } = useQuoteAction({
     chain: networkAlias,
-    fromTokenAddress: fromAddress,
-    toTokenAddress: toAddress,
+    fromTokenAddress,
+    toTokenAddress,
     amount: txAmount,
   });
 
   useEffect(() => {
     if (isFetching) {
       setDialog(
-        'Estimating costs to swap ' + fromSymbol + ' to ' + toSymbol + ' ... '
+        'Estimating costs to swap ' +
+          fromTokenSymbol +
+          ' to ' +
+          toTokenSymbol +
+          ' ... '
       );
     }
-  }, [isFetching, fromSymbol, toSymbol, setDialog]);
+  }, [isFetching, fromTokenSymbol, toTokenSymbol, setDialog]);
 
   useEffect(() => {
     if (data) {
@@ -52,7 +61,7 @@ export const RequestQuote = () => {
         <Tooltip title="Preview token transmission.">
           <span>
             <LoadingButton
-              disabled={!txAmount || !toSymbol}
+              disabled={!txAmount || !toTokenSymbol}
               variant={colorMode === 'light' ? 'outlined' : 'contained'}
               sx={{ boxShadow: 'var(--boxShadow)' }}
               loading={isFetching}

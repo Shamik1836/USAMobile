@@ -8,7 +8,7 @@ import { useNetwork } from '../../contexts/networkContext';
 import tokenList from '../../data/TokenList.json';
 
 export const ToSelect = () => {
-  const { fromSymbol, setToToken } = useActions();
+  const { fromTokenSymbol, setToToken } = useActions();
   const { setDialog } = useExperts();
   const { setQuote } = useQuote();
   const { networkId } = useNetwork();
@@ -18,9 +18,9 @@ export const ToSelect = () => {
         (item) =>
           // eslint-disable-next-line eqeqeq
           item.networkId == networkId &&
-          item.symbol.toLowerCase() !== fromSymbol.toLowerCase()
+          item.symbol.toLowerCase() !== fromTokenSymbol.toLowerCase()
       ),
-    [networkId, fromSymbol]
+    [networkId, fromTokenSymbol]
   );
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export const ToSelect = () => {
       setDialog(
         "Press the 'Get Swap Quote' " +
           'to get a quote to swap ' +
-          fromSymbol +
+          fromTokenSymbol +
           ' to ' +
           value.symbol +
           '.'

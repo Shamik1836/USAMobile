@@ -12,7 +12,7 @@ import { RequestQuote } from '../Bits/RequestQuote';
 import { QuotePanel } from '../Scrapbox/QuotePanel';
 
 export const SwapPanel = () => {
-  const { fromSymbol } = useActions();
+  const { fromToken } = useActions();
   const { quoteValid } = useQuote();
 
   return (
@@ -32,7 +32,7 @@ export const SwapPanel = () => {
         spacing={3}
       >
         <FromSelect />
-        {!!fromSymbol && (
+        {!!fromToken && (
           <>
             <AmountSelect />
             <ToSelect />

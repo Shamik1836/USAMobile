@@ -9,16 +9,21 @@ import useTransferAction from '../../actions/useTransferAction';
 export const StartSend = () => {
   const { Moralis } = useMoralis();
   const { setDialog } = useExperts();
-  const { fromToken, fromAddress, toAddress, txAmount, fromTokenType } =
-    useActions();
+  const {
+    fromToken,
+    fromTokenType,
+    fromTokenAddress,
+    toTokenAddress,
+    txAmount,
+  } = useActions();
   const { fetch, isFetching, data, error } = useTransferAction({
     type: fromTokenType,
     amount:
       fromTokenType === 'native'
         ? Moralis.Units.ETH(Number(txAmount), fromToken?.decimals)
         : Moralis.Units.Token(txAmount, fromToken?.decimals),
-    receiver: toAddress,
-    contractAddress: fromAddress,
+    receiver: toTokenAddress,
+    contractAddress: fromTokenAddress,
   });
 
   useEffect(() => {
@@ -45,7 +50,7 @@ export const StartSend = () => {
         <span>
           <LoadingButton
             variant="contained"
-            disabled={!txAmount || !toAddress}
+            disabled={!txAmount || !toTokenAddress}
             loading={isFetching}
             onClick={fetch}
             sx={{ boxShadow: 'var(--boxShadow)' }}

@@ -11,7 +11,7 @@ export const AmountSelect = ({ type }) => {
   const [amount, setAmount] = useState(0);
   const [usdAmount, setUSDAmount] = useState(0);
   const [isUSDMode, setIsUSDMode] = useState(false);
-  const { fromSymbol, fromToken, setTxAmount } = useActions();
+  const { fromToken, setTxAmount } = useActions();
   const { setDialog } = useExperts();
   const { price, tokens = 0, decimals = 18, symbol } = fromToken || {};
 
@@ -113,7 +113,7 @@ export const AmountSelect = ({ type }) => {
               min="0"
             />
           </div>
-          <label htmlFor="amount-input">{isUSDMode ? 'USD' : fromSymbol}</label>
+          <label htmlFor="amount-input">{isUSDMode ? 'USD' : symbol}</label>
         </div>
         <label
           htmlFor="amount-input"
@@ -122,7 +122,7 @@ export const AmountSelect = ({ type }) => {
           <span>
             {price
               ? isUSDMode
-                ? `≈ ${amount.toPrecision(3)} ${fromSymbol}`
+                ? `≈ ${amount.toPrecision(3)} ${symbol}`
                 : `≈ $ ${usdAmount.toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
