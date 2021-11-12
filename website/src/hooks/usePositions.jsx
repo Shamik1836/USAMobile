@@ -10,65 +10,47 @@ const geckoTail = '&order=market_cap_desc&per_page=100&page=1&sparkline=false';
 
 export const usePositions = () => {
   const { isInitialized, isAuthenticated, Moralis } = useMoralis();
-  const { networkId } = useNetwork();
+  const { networkName } = useNetwork();
   const [positions, setPositions] = useState(emptyList);
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
-  // const [allPositions, setAllPositions] = useState(emptyList);
 
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      // Bring back a list of all tokens the user has
-      //Moralis.Web3.getAllERC20({ usePost: true, chain: networkName }).then(
-      let chain = `0X${networkId.toString(16)}`;
-      Moralis.Web3.getAllERC20({ chain })
+      Moralis.Web3.getAllERC20({ chain: networkName })
         .then((allPositions) => {
           const ids = allPositions
-            .map((token) =>
-              token.name.toLowerCase() === 'ether'
-                ? coinGeckoList['ethereum'].id
-                : coinGeckoList[token.name.toLowerCase()]?.id
-            )
+            .map((token) => coinGeckoList[token.symbol.toLowerCase()]?.id)
             .filter((id) => Boolean(id))
             .join(',');
-          const url = `${geckoHead}?vs_currency=usd&ids=${ids}` + geckoTail;
-          // Call CoinGecko API:
-          fetch(url)
+
+          fetch(`${geckoHead}?vs_currency=usd&ids=${ids}` + geckoTail)
             .then((response) => response.json())
             .then((data) => {
-              // Convert to a 'dictionary' array of objects.
-              const marketData = {};
-              data.forEach((d) => (marketData[d.symbol.toUpperCase()] = d));
-              return marketData;
-            })
-            .then((data) => {
+              const objects = {};
+              data.forEach((d) => (objects[d.symbol.toUpperCase()] = d));
+
               let runningTotal = 0;
               const newList = allPositions.map((token) => {
-                // Merge position data with market data and augment.
-                const { symbol } = token;
-                const output = { ...token };
-                const tokenData = data[symbol];
-                output.image = tokenData?.image;
-                output.id = tokenData?.id;
-                output.price = tokenData?.current_price;
-                output.tokens = token.balance
-                  ? token.balance / 10 ** token.decimals
-                  : 0;
-                output.value = output.price ? output.tokens * output.price : 0;
-                runningTotal += output.value;
-                output.valueString = [
-                  parseFloat(output?.tokens).toPrecision(3) +
-                    ' @ $' +
-                    parseFloat(tokenData?.current_price).toFixed(2) +
-                    '/' +
-                    symbol +
-                    ' = $' +
-                    parseFloat(output?.value).toFixed(2),
-                ];
-                return output;
+                const { symbol, balance, decimals } = token;
+                const {
+                  id,
+                  image,
+                  current_price: price,
+                } = objects[symbol] || {};
+                const tokens = balance ? balance / 10 ** decimals : 0;
+                const value = price ? tokens * price : 0;
+                runningTotal += value;
+                return {
+                  ...token,
+                  id,
+                  image,
+                  price,
+                  tokens,
+                  value,
+                };
               });
-              // Done.  Report back to states.
               setPositions(newList);
               setTotalValue(runningTotal);
               setIsLoading(0);
@@ -79,12 +61,10 @@ export const usePositions = () => {
           setIsLoading(0);
         });
     } else {
-      // No authentication.  Report blanks.
       setPositions(emptyList);
       setIsLoading(0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Moralis.Web3, isAuthenticated, isInitialized, networkId]);
+  }, [Moralis, isAuthenticated, isInitialized, networkName]);
 
   return { positions, isLoading, totalValue };
 };
