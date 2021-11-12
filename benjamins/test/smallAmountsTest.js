@@ -36,6 +36,7 @@ let loopCounterTotal = 0;
 let mintCounterTotal = 0;
 let burnCounterTotal = 0;
 let not5USDCworthCounter = 0;
+let lessThan2000BNJIbal = 0;
 
 // estimates of USDC cents spent and returned during runMintOrBurnLoop
 let totalSpentInCents = 0;
@@ -66,23 +67,6 @@ const polygonWMATICaddress = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 
 let polygonQuickswapRouter;
 const polygonQuickswapRouterAddress = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
-
-let testUserAddressesArray = [];
-
-// helper function to console log for testing/debugging: looking up the accounts[] variable for an address 
-function findUsernameForAddress(addressToLookup){
-  for (let findInd = 0; findInd < testUserAddressesArray.length; findInd++) {
-    if (testUserAddressesArray[findInd] == addressToLookup) {
-      return "testUser_" +`${findInd}`;
-    } else if (addressToLookup == '0x0000000000000000000000000000000000000000' ) {
-      return "Zero address: 0x0000000000000000000000000000000000000000"      
-    }  else if (addressToLookup == '0xE51c8401fe1E70f78BBD3AC660692597D33dbaFF' ) {
-      return "feeReceiver"      
-    }  else if (addressToLookup == '0xCE74Ae6D4C53E1cC118Bd2549295Bc4e27923DA0' ) {
-      return "deployer"      
-    }   
-  }  
-}; 
 
 // simulate the passing of blocks
 async function mintBlocks (amountOfBlocksToMint) {
@@ -292,10 +276,6 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   
 }
 
-async function storeAddr(){   
-  testUserAddressesArray.push(testUser_1);  
-}
-
 // checking balances and adding them up
 async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBool){  
   const testUserAddress = testUser_1;  
@@ -319,9 +299,7 @@ async function checkTestAddresses(amountUSDC, amountMatic, amountBNJI, expectBoo
 
   // keeping log of all USDCcents found in testaccounts, saving each round of queries as snapshot to totalUSDCcentsInTestAccArr
   totalUSDCcentsInTestAccArr.push(totalUSDCcentsInTestAccs);  
- 
-  console.log(`These are the entries each time testUser_1's USDCcents were counted: `, totalUSDCcentsInTestAccArr);
-
+   
   // resetting counter for next round of queries
   totalUSDCcentsInTestAccs = 0;
   return nowUSDCcentsInAllTestAccs;
@@ -344,7 +322,7 @@ async function countAllCents() {
     expect(liquidCentsArray[index]).to.equal(liquidCentsArray[index-1]);    
   }
 
-  console.log(`These are the entries each time all USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
+  console.log(`These are the entries each time all USDCcents were counted: `, liquidCentsArray); 
 }
 
 async function minimizedMint(){
@@ -367,7 +345,7 @@ async function minimizedBurn() {
   const currencyToBePaidOutNow = 5.01;   // this means burning for $5 each time
   const totalSupplyExisting = await benjaminsContract.totalSupply(); 
 
-  if (totalSupplyExisting < 2000) {not5USDCworthCounter += 1};
+  if (totalSupplyExisting < 6327) {not5USDCworthCounter += 1};
 
     const totalSupplyAfterBurning = Math.sqrt( (totalSupplyExisting * totalSupplyExisting) - (currencyToBePaidOutNow * 8000000) );
 
@@ -385,9 +363,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
   let burnCounter = 0;  
 
   // running either minting or burning, this many loops: loopsToRun
-  for (loopCounter = 1; loopCounter <= loopsToRun; loopCounter++) {
-         
-    const accNowName = findUsernameForAddress(accNow);     
+  for (loopCounter = 1; loopCounter <= loopsToRun; loopCounter++) {         
     
     // MINTING
     // if runMint == true, mint. 
@@ -398,7 +374,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
             
       await calcMintApprovalAndPrep(minAmountMinting, accNow);    
 
-      console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} MINTS this many tokens:`, minAmountMinting);
+      console.log(`In ${testNr}, operation nr: ${loopCounter} testUser_1 MINTS this many tokens:`, minAmountMinting);
 
       mintCounter++;
       
@@ -420,7 +396,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
       await calcBurnVariables(minAmountBurning, accNow, false); // this returns fee not value     
 
       if (burnReturnStillInclFeesInUSDCcentsGlobalV >= 500) {
-        console.log(`In ${testNr}, operation nr: ${loopCounter} ${accNowName} BURNS this many tokens:`, minAmountBurning);        
+        console.log(`In ${testNr}, operation nr: ${loopCounter} $testUser_1 BURNS this many tokens:`, minAmountBurning);        
        
         await testBurning(minAmountBurning, accNow, accNow);
         
@@ -429,6 +405,11 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
       }
             
     }    
+
+    if (await balBNJI(testUser_1)<2000) { 
+      lessThan2000BNJIbal +=1;
+      console.log("HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE ");      
+    };
     
   }
   
@@ -446,7 +427,7 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
   const endTokenBalance = bigNumberToNumber(await benjaminsContract.totalSupply() );
   console.log('at the end of all loops so far, this many tokens exist:', endTokenBalance);  
 
-  if (endTokenBalance >= 2000){
+  if (endTokenBalance >= 6327){
     const valueBNJIexistingInCents = dividefrom6decToUSDCcents(await benjaminsContract.quoteUSDC(endTokenBalance, false));
     console.log(valueBNJIexistingInCents/100, `if all these tokens were burnt, they would be worth this much USDC, before fees (to take off)`);
   } else {
@@ -458,6 +439,8 @@ async function runMintOrBurnLoop(loopsToRun, runMint, accNow, testNr, sellAll, b
   console.log(feeReceiverUSDCbalAfterTestsInCents/100, `feeReceiver's USDC balance at the end of all loops so far`);
   const reserveTracked = await showReserveInCents();
   expect(reserveTracked).to.equal(protocolUSDCbalWithoutInterestInCentsGlobalV); 
+
+  console.log(lessThan2000BNJIbal, 'this often, testUser_1 had less than 2000 BNJI (discount level 5). Once is expected for sell all at end.')
 } 
 
 
@@ -476,8 +459,6 @@ describe("Small Amounts Test", function () {
     } = await getNamedAccounts());
     
     deployerSigner = await ethers.provider.getSigner(deployer); 
-
-    await storeAddr();   
     
     // Deploy contract
     await fixture(["Benjamins"]);
@@ -600,7 +581,7 @@ describe("Small Amounts Test", function () {
     await checkTestAddresses(200000,10,0, true);
     
     // Preparation: testUser1 buys to highest level, from there on will interact in smallest way possible
-    await testMinting(6330, testUser_1, testUser_1);  
+    await testMinting(6327, testUser_1, testUser_1);  
 
     expect(await benjaminsContract.discountLevel(testUser_1)).to.equal(5);
        
@@ -621,7 +602,7 @@ describe("Small Amounts Test", function () {
     waitFor(4000);
   });
   
-  /*
+  
   it("3.: Small amount test: 100 mints", async function () {
     await runMintOrBurnLoop(100, true, testUser_1, 'Test 3', false, 0);
     await countAllCents();    
@@ -664,8 +645,8 @@ describe("Small Amounts Test", function () {
     waitFor(4000);
   });
   
-  it("10.: Small amounts test: 100 burns, last loop burns all remaining tokens", async function () {  
-    await runMintOrBurnLoop(100, false, testUser_1, 'Test 10', true, 100);
+  it("10.: Small amounts test: 99 burns, last loop burns all remaining tokens", async function () {  
+    await runMintOrBurnLoop(99, false, testUser_1, 'Test 10', true, 99);
     await countAllCents();
     expect(await benjaminsContract.discountLevel(testUser_1)).to.equal(0);
     console.log((await balUSDCinCents(testUser_1)/100), 'end balance of testUser_1 in USDC');

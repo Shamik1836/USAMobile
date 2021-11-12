@@ -204,7 +204,7 @@ async function countAllCents() {
 
   liquidCentsArray.push(allLiquidCents);  
 
-  console.log(`These are the entries each time all liquid USDCcents were counted, liquidCentsArray: `, liquidCentsArray); 
+  console.log(`These are the entries each time all liquid USDCcents were counted: `, liquidCentsArray); 
 
   // verifying that amount of counted cents is always the same
   // starts at second array entry and compares all entries to the one before
