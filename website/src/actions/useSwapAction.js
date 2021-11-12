@@ -3,6 +3,8 @@ import { useMoralis } from 'react-moralis';
 
 import useUpdaters from './_useUpdaters';
 
+const NATIVE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
 const useSwapAction = ({
   chain,
   fromTokenAddress,
@@ -32,7 +34,7 @@ const useSwapAction = ({
     try {
       await Moralis.Plugins.oneInch.approve({
         chain,
-        tokenAddress: fromTokenAddress,
+        tokenAddress: fromTokenAddress || NATIVE_ADDRESS,
         fromAddress,
       });
 
@@ -40,8 +42,8 @@ const useSwapAction = ({
 
       const data = await Moralis.Plugins.oneInch.swap({
         chain,
-        fromTokenAddress,
-        toTokenAddress,
+        fromTokenAddress: fromTokenAddress || NATIVE_ADDRESS,
+        toTokenAddress: toTokenAddress || NATIVE_ADDRESS,
         amount,
         fromAddress,
         slippage,

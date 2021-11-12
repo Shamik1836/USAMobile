@@ -66,10 +66,6 @@ export const usePositions = () => {
                     ' = $' +
                     parseFloat(output?.value).toFixed(2),
                 ];
-                if (!output.tokenAddress) {
-                  output.tokenAddress =
-                    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-                }
                 return output;
               });
               // Done.  Report back to states.

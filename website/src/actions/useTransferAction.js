@@ -3,7 +3,7 @@ import { useMoralis } from 'react-moralis';
 
 import useUpdaters from './_useUpdaters';
 
-const useTransferAction = ({ type, amount, receiver, contractAddress }) => {
+const useTransferAction = ({ amount, decimals, receiver, contractAddress }) => {
   const { Moralis } = useMoralis();
   const [isFetching, setIsFetching] = useState(false);
   const [data, setData] = useState();
@@ -20,12 +20,16 @@ const useTransferAction = ({ type, amount, receiver, contractAddress }) => {
     updaters.current?.setError();
 
     try {
-      const data = await Moralis.transfer({
-        type,
-        amount,
-        receiver,
-        contractAddress,
-      });
+      const options = { receiver };
+      if (contractAddress) {
+        options.type = 'erc20';
+        options.amount = Moralis.Units.Token(amount, decimals);
+        options.contractAddress = contractAddress;
+      } else {
+        options.type = 'native';
+        options.amount = Moralis.Units.ETH(amount, decimals);
+      }
+      const data = await Moralis.transfer(options);
 
       updaters.current?.setData(data);
     } catch (e) {
@@ -33,7 +37,7 @@ const useTransferAction = ({ type, amount, receiver, contractAddress }) => {
     }
 
     updaters.current?.setIsFetching(false);
-  }, [type, amount, receiver, contractAddress, updaters, Moralis]);
+  }, [amount, decimals, receiver, contractAddress, updaters, Moralis]);
 
   return { fetch, isFetching, data, error };
 };

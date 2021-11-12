@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMoralis } from 'react-moralis';
-import { Button, Drawer, IconButton, Tooltip } from '@mui/material';
+import { Button, Drawer, Tooltip } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 

@@ -3,6 +3,8 @@ import { useMoralis } from 'react-moralis';
 
 import useUpdaters from './_useUpdaters';
 
+const NATIVE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
 const useQuoteAction = ({
   chain,
   fromTokenAddress,
@@ -27,8 +29,8 @@ const useQuoteAction = ({
     try {
       const data = await Moralis.Plugins.oneInch.quote({
         chain,
-        fromTokenAddress,
-        toTokenAddress,
+        fromTokenAddress: fromTokenAddress || NATIVE_ADDRESS,
+        toTokenAddress: toTokenAddress || NATIVE_ADDRESS,
         amount,
       });
 
