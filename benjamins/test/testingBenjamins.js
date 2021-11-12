@@ -618,11 +618,24 @@ describe("Benjamins Test", function () {
    expect(await benjaminsContract.paused()).to.equal(false);
   });
   
-  it("Test 4. Calling mint and burn works as expected ", async function () {
+  it("Test 4. User can call mint and burn functions directly ", async function () {
 
-    // BenjaminsContract is unpaused in the beginning
-    expect(await benjaminsContract.paused()).to.equal(false);
+    await countAllCents(); 
+
+    expect(await balBNJI(testUser_1)).to.equal(0); 
+
+    const amountToApproveIn6dec = await calcMintApprovalAndPrep(4000, testUser_1); 
+    await polygonUSDC.connect(testUser_1_Signer).approve(benjaminsContract.address, amountToApproveIn6dec);    
+    await benjaminsContract.connect(testUser_1_Signer).mint(4000);  
+
+    expect(await balBNJI(testUser_1)).to.equal(4000); 
+
+    await mintBlocks(720);
+
+    await benjaminsContract.connect(testUser_1_Signer).burn(4000);  
     
+    expect(await balBNJI(testUser_1)).to.equal(0); 
+
   });
 
 
