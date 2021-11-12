@@ -7,7 +7,7 @@ import { DoItButton } from './DoItButton';
 
 export const QuotePanel = () => {
   const {
-    setQuoteValid,
+    setQuote,
     fromToken,
     fromTokenAmount,
     toToken,
@@ -18,7 +18,7 @@ export const QuotePanel = () => {
   const { setDialog } = useExperts();
 
   const handleCancel = (e) => {
-    setQuoteValid('false');
+    setQuote();
     setDialog('Change your swap settings to recieve a new quote.');
   };
 

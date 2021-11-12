@@ -8,7 +8,7 @@ import { StartSend } from '../Bits/StartSend';
 import { ToAddress } from '../Bits/ToAddress';
 
 export const SendPanel = () => {
-  const { fromSymbol } = useActions();
+  const { fromToken } = useActions();
 
   return (
     <Box
@@ -33,7 +33,7 @@ export const SendPanel = () => {
         spacing={3}
       >
         <FromSelect />
-        {!!fromSymbol && (
+        {!!fromToken && (
           <>
             <AmountSelect type="send" />
             <ToAddress />
