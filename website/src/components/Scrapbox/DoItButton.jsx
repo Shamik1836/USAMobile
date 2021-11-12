@@ -11,13 +11,13 @@ import useSwapAction from '../../actions/useSwapAction';
 
 export const DoItButton = () => {
   const { user } = useMoralis();
-  const { networkAlias } = useNetwork();
+  const { networkName } = useNetwork();
   const { setQuote } = useQuote();
   const { fromTokenAddress, fromTokenSymbol, toTokenAddress, txAmount } =
     useActions();
   const { setDialog } = useExperts();
   const { fetch, isFetching, isApproved, data, error } = useSwapAction({
-    chain: networkAlias,
+    chain: networkName,
     fromTokenAddress,
     toTokenAddress,
     amount: txAmount,
