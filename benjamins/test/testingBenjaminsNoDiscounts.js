@@ -428,9 +428,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   }  
 }
 
-
-
-describe("Benjamins Test", function () {
+describe("Testing Benjamins Smart Contract, without discounts", function () {
 
   // setting instances of contracts
   beforeEach(async function() {   

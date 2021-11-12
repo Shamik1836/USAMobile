@@ -51,6 +51,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
     mapping (address => uint256) lastUpgradeBlockHeight;
 
+    // This mapping keeps track of the users accounts' locking. 
+    // Locking activates withdraw/burning timeout periods and grants discounts
+    mapping (address => bool) lockingIsEnganged;    
+
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
         _decimals = 0;                      // Benjamins have 0 decimals, only full tokens exist.
@@ -70,24 +74,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // calling OpenZeppelin's (pausable) pause function for initial preparations after deployment
         pause();
     }
-
-    // event for updating these addresses: feeReceiver, polygonUSDC, polygonAMUSDC
-    event AddressUpdate(address newAddress, string typeOfUpdate); 
-
-    // event for updating the amounts of blocks mined on Polygon network per day
-    event BlocksPerDayUpdate(uint256 newAmountOfBlocksPerDay);
-
-    // event for updating the contract's approval to Aave's USDC lending pool
-    event LendingPoolApprovalUpdate(uint256 amountToApproveIn6dec);
-
-    // event for updating the table of necessary BNJI amounts for the respective account level
-    event LevelAntesUpdate(uint32[] newLevelAntes);
-
-    // event for updating the table of necessary holding periods for the respective account level
-    event LevelHoldsUpdate(uint16[] newLevelHolds);
-
-    // event for updating the table of discounts for the respective account level
-    event LevelDiscountsUpdate(uint8[] newLevelDiscounts);
+    
+    // event for engaging and disengaging the account's locking features
+    event LockStatus(address account, bool acccountIsLocked);   
 
     // event for exchanging USDC and BNJI // TODO:include mint or burn bool or type string 
     event Exchanged(
@@ -109,6 +98,24 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // event for withdrawals from the lending pool
     event LendingPoolWithdrawal (uint256 amountUSDCBeforeFeein6dec, address payee);
 
+    // event for updating these addresses: feeReceiver, polygonUSDC, polygonAMUSDC
+    event AddressUpdate(address newAddress, string typeOfUpdate); 
+
+    // event for updating the amounts of blocks mined on Polygon network per day
+    event BlocksPerDayUpdate(uint256 newAmountOfBlocksPerDay);
+
+    // event for updating the contract's approval to Aave's USDC lending pool
+    event LendingPoolApprovalUpdate(uint256 amountToApproveIn6dec);
+
+    // event for updating the table of necessary BNJI amounts for the respective account level
+    event LevelAntesUpdate(uint32[] newLevelAntes);
+
+    // event for updating the table of necessary holding periods for the respective account level
+    event LevelHoldsUpdate(uint16[] newLevelHolds);
+
+    // event for updating the table of discounts for the respective account level
+    event LevelDiscountsUpdate(uint8[] newLevelDiscounts);
+
     // owner overrides paused.
     modifier whenAvailable() {        
         require(!paused() || (msg.sender == owner()), "Benjamins is paused.");
@@ -123,13 +130,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Has the user held past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
-        // blockHeight right now
-        uint256 blockNum = block.number;
-        // amount of time that has passed since last account level upgrade, measured in blocks
-        uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];       
-        // checking result against the withdrawal timeout period required by user's account level
-        require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)],
-            'Discount level withdraw timeout in effect.');
+        if (lockingIsEnganged[userToCheck] == true) {
+            // blockHeight right now
+            uint256 blockNum = block.number;
+            // amount of time that has passed since last account level upgrade, measured in blocks
+            uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];       
+            // checking result against the withdrawal timeout period required by user's account level
+            require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 'Discount level withdraw timeout in effect.');                
+        }
         _;
     }
 
@@ -164,6 +172,16 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Overriding OpenZeppelin's ERC20 function
     function decimals() public view override returns (uint8) {
         return _decimals;
+    }
+
+     function engageLock() public whenAvailable {
+        lockingIsEnganged[msg.sender] = true;
+        emit LockStatus(msg.sender, true);
+    }
+
+    function disengageLock() public whenAvailable {
+        lockingIsEnganged[msg.sender] = false;
+        emit LockStatus(msg.sender, false);
     }
 
     // calculating fees for transfers
@@ -317,15 +335,19 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Return address discount level as an uint8 as a function of balance.
-    function discountLevel(address _whom) public view whenAvailable returns(uint8) {
-        uint256 userBalance = balanceOf(_whom); // lookup once.
-        uint8 currentLevel = 0;
-        for (uint8 index = 0; index < levelAntes.length ; index++){
-            if (userBalance >= levelAntes[index]) {
-                currentLevel++;
+    function discountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
+        if (lockingIsEnganged[_userToCheck] == true) {
+            uint256 userBalance = balanceOf(_userToCheck); // lookup once.
+            uint8 currentLevel = 0;
+            for (uint8 index = 0; index < levelAntes.length ; index++){
+                if (userBalance >= levelAntes[index]) {
+                    currentLevel++;
+                }
             }
+            return currentLevel;
+        } else {
+            return 0;
         }
-        return currentLevel;
     }
 
     // Quote % fee the given user will be charged based on their
