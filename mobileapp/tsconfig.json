@@ -10,6 +10,9 @@
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "typeRoots": [
+      "index.d.ts"
+    ],
     "types": [
       "node",
       "jest"

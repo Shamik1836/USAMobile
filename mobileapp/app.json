@@ -1,7 +1,4 @@
-{ 
-  "name":"usawallet",
-  "displayName":"usawallet",
-  "version":"1.0.0",
+{   
   "expo": {
     "ios": {
       "bundleIdentifier": "com.usawallet"

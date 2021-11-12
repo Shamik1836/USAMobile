@@ -9,8 +9,7 @@
     "build",
     "coverage",
     "babel.config.js",
-    "metro.config.js",
-    "__tests__/contracts"
+    "metro.config.js"
   ],
   "plugins": [
     "import",
