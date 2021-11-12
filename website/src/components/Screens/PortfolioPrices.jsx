@@ -9,6 +9,7 @@ import { Heading } from '../UW/Heading';
 import { useExperts } from '../../contexts/expertsContext';
 import { useNetwork } from '../../contexts/networkContext';
 import { usePolygonNetwork } from '../../hooks/usePolygonNetwork';
+import ABI from '../../data/FLATSIM_ABI.json';
 
 export const PortfolioPrices = () => {
   const { setActionMode, setDialog } = useExperts();
