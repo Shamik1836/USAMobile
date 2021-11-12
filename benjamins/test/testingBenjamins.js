@@ -618,8 +618,14 @@ describe("Benjamins Test", function () {
    expect(await benjaminsContract.paused()).to.equal(false);
   });
   
-  // Todo: put in another test here 
-  
+  it("Test 4. Calling mint and burn works as expected ", async function () {
+
+    // BenjaminsContract is unpaused in the beginning
+    expect(await benjaminsContract.paused()).to.equal(false);
+    
+  });
+
+
   it("Test 5. testUser_1 mints 59 tokens, then burns them after 2* blocksPerDay waiting time", async function () {   
     
     await countAllCents(); 
