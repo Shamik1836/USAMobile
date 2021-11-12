@@ -1,53 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Box, Tooltip } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useMoralis } from 'react-moralis';
 import { useActions } from '../../contexts/actionsContext';
 import { useExperts } from '../../contexts/expertsContext';
+import useTransferAction from '../../actions/useTransferAction';
 
-export const StartSend = (props) => {
-  const { fromToken, toAddress, txAmount } = useActions();
+export const StartSend = () => {
   const { setDialog } = useExperts();
-  const { Moralis } = useMoralis();
-  const [options, setOptions] = useState({});
-  const [tokenType, setTokenType] = useState('native');
-  const [isTxLoading, setIsTxLoading] = useState(false);
+  const { fromToken, fromTokenAddress, toTokenAddress, txAmount } =
+    useActions();
+  const { fetch, isFetching, data, error } = useTransferAction({
+    amount: txAmount,
+    decimals: fromToken?.decimals,
+    receiver: toTokenAddress,
+    contractAddress: fromTokenAddress,
+  });
 
   useEffect(() => {
-    setTokenType(
-      fromToken.tokenAddress === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-        ? 'native'
-        : 'erc20'
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromToken]);
+    if (isFetching) {
+      setDialog('Sending Tx for a wallet signature...');
+    }
+  }, [isFetching, setDialog]);
 
   useEffect(() => {
-    setOptions({
-      type: tokenType,
-      amount:
-        tokenType === 'native'
-          ? Moralis.Units.ETH(Number(txAmount), fromToken.decimals)
-          : Moralis.Units.Token(txAmount, fromToken.decimals),
-      receiver: toAddress,
-      contractAddress: fromToken.tokenAddress,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toAddress, txAmount, tokenType]);
+    if (data) {
+      setDialog('Your signed transaction was sent to network!');
+    }
+  }, [data, setDialog]);
 
-  const pushIt = async (e) => {
-    setIsTxLoading(true);
-    setDialog('Sending Tx for a wallet signature...');
-    Moralis.transfer(options)
-      .then((results) => {
-        setIsTxLoading(false);
-        setDialog('Your signed transaction was sent to network!');
-      })
-      .catch((e) => {
-        setDialog('Oops! ' + e.message);
-        setIsTxLoading(false);
-      });
-  };
+  useEffect(() => {
+    if (error) {
+      setDialog('Something went wrong: ' + error.message);
+    }
+  }, [error, setDialog]);
 
   return (
     <Box>
@@ -55,9 +40,9 @@ export const StartSend = (props) => {
         <span>
           <LoadingButton
             variant="contained"
-            disabled={!txAmount || !toAddress}
-            loading={isTxLoading}
-            onClick={pushIt}
+            disabled={!txAmount || !toTokenAddress}
+            loading={isFetching}
+            onClick={fetch}
             sx={{ boxShadow: 'var(--boxShadow)' }}
           >
             Preview Send Order

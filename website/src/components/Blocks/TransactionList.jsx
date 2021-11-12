@@ -28,7 +28,7 @@ export const TransactionList = (props) => {
   const [isLoading, setIsLoading] = useState(1);
 
   useEffect(() => {
-    if (props.tokenAddress !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+    if (props.tokenAddress) {
       setTxs(ERC20Txs);
       setIsLoading(ERC20IsLoading);
     } else {

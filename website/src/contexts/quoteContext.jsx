@@ -5,31 +5,19 @@ const QuoteContext = React.createContext();
 export const useQuote = () => useContext(QuoteContext);
 
 export const QuoteProvider = (props) => {
-  const [quoteValid, setQuoteValid] = useState('false');
-  const [fromToken, setFromToken] = useState({});
-  const [fromTokenAmount, setFromTokenAmount] = useState(0);
-  const [protocols, setProtocols] = useState([]);
-  const [toToken, setToToken] = useState({});
-  const [toTokenAmount, setToTokenAmount] = useState(0);
-  const [estimatedGas, setEstimatedGas] = useState('');
+  const [quote, setQuote] = useState();
 
   return (
     <QuoteContext.Provider
       value={{
-        quoteValid,
-        setQuoteValid,
-        fromToken,
-        setFromToken,
-        fromTokenAmount,
-        setFromTokenAmount,
-        protocols,
-        setProtocols,
-        toToken,
-        setToToken,
-        toTokenAmount,
-        setToTokenAmount,
-        estimatedGas,
-        setEstimatedGas,
+        quoteValid: !!quote,
+        fromToken: quote?.fromToken,
+        fromTokenAmount: quote?.fromTokenAmount,
+        protocols: quote ? quote.protocols[0] : null,
+        toToken: quote?.toToken,
+        toTokenAmount: quote?.toTokenAmount,
+        estimatedGas: quote?.estimatedGas,
+        setQuote,
       }}
     >
       {props.children}
