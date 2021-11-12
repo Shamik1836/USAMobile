@@ -6,12 +6,10 @@ const networks = {
   1: {
     name: 'eth',
     chainID: 1,
-    alias: 'eth',
   },
   137: {
-    name: 'matic',
+    name: 'polygon',
     chainID: 137,
-    alias: 'polygon',
   },
 };
 
@@ -27,7 +25,6 @@ export const NetworkProvider = (props) => {
         setNetworkId,
         networkId,
         networkName: networks[networkId]?.name,
-        networkAlias: networks[networkId]?.alias,
         isPolygon: networkId === 137,
         setAccounts,
         accounts,

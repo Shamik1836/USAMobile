@@ -5,13 +5,13 @@ import { useNetwork } from '../contexts/networkContext';
 
 export const use1InchTokenList = () => {
   const { Moralis } = useMoralis();
-  const { networkAlias } = useNetwork();
+  const { networkName } = useNetwork();
   const [tokenList, setTokenList] = useState([]);
 
   useEffect(() => {
     Moralis.Plugins.oneInch
       .getSupportedTokens({
-        chain: networkAlias, // The blockchain you want to use (eth/bsc/polygon)
+        chain: networkName, // The blockchain you want to use (eth/bsc/polygon)
       })
       .then((data) => {
         const tokens = Object.values(data.tokens);
@@ -20,7 +20,7 @@ export const use1InchTokenList = () => {
       .catch((err) => {
         console.error(err);
       });
-  }, [Moralis, networkAlias]);
+  }, [Moralis, networkName]);
 
   return tokenList;
 };
