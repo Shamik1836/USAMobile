@@ -96,13 +96,6 @@ function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUse
   
 }
 
-// simulate the passing of blocks
-async function mintBlocks (amountOfBlocksToMint) {
-  for (let i = 0; i < amountOfBlocksToMint; i++) {
-    await ethers.provider.send("evm_mine");
-  }
-}
-
 async function balUSDCinCents(userToQuery) {
   return dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(userToQuery)));
 }
@@ -581,8 +574,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1);        
-    await testMinting("Test 2.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);        
-    await mintBlocks(1);
+    await testMinting("Test 2.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1); 
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 2.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);       
@@ -590,8 +582,8 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(80);
     await addUserAccDataPoints(testUser_1);    
     
-    const expectedUser1Levels = [0,1,2];
-    const expectedUser1Discounts = [0,5,10];    
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
@@ -628,8 +620,6 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
 
     expect(await balBNJI(testUser_1)).to.equal(4000); 
 
-    await mintBlocks(720);
-
     await benjaminsContract.connect(testUser_1_Signer).burn(4000);  
     
     expect(await balBNJI(testUser_1)).to.equal(0); 
@@ -637,7 +627,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
   });
 
 
-  it("Test 5. testUser_1 mints 59 tokens, then burns them after 2* blocksPerDay waiting time", async function () {   
+  it("Test 5. testUser_1 mints 59 tokens, no need for waiting time", async function () {   
     
     await countAllCents(); 
 
@@ -648,8 +638,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
 
     const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100;
     expect(await balBNJI(testUser_1)).to.equal(59); 
-    expect(await balUSDC(testUser_1)).to.equal(3000-costInUSDC1);
-    await mintBlocks(4); 
+    expect(await balUSDC(testUser_1)).to.equal(3000-costInUSDC1);   
               
     await testBurning("Test 5.2, burning after 11 blocks", 59, testUser_1, testUser_1);
 
@@ -666,8 +655,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
 
     await testMinting("Test 6.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(40);     
-    await mintBlocks(11);    
+    expect(await balBNJI(testUser_1)).to.equal(40);    
 
     await expect( testBurning("Test 6.2, should REVERT, burning more BNJI than user has", 42, testUser_1, testUser_1) ).to.be.revertedWith(
       "Insufficient Benjamins."
@@ -687,8 +675,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);
    
     expect(await balBNJI(testUser_1)).to.equal(2000);
-    await mintBlocks(1);  
-    
+        
     const balanceUSDCbefore1stBN = await balUSDCin6decBN(testUser_1); 
     await testMinting("Test 7.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
@@ -697,13 +684,11 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
 
     const balanceUSDCafter1stBN = await balUSDCin6decBN(testUser_1);
     const firstPriceFor40InCents = dividefrom6decToUSDCcents(balanceUSDCbefore1stBN-balanceUSDCafter1stBN);  
-    await mintBlocks(1);    
-
+    
     await testMinting("Test 7.3, minting 1000 BNJI to caller", 1000, testUser_1, testUser_1);   
     
     expect(await balBNJI(testUser_1)).to.equal(3040);
-    await mintBlocks(1);    
-
+   
     const balanceUSDCbefore2ndBN = await balUSDCin6decBN(testUser_1);
     await testMinting("Test 7.4, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     const costInCents2 = mintAllowanceInUSDCCentsShouldBeNowGlobalV;
@@ -718,7 +703,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await countAllCents(); 
   });  
   
-  it("Test 8. Account levels and discounts should not be triggered below threshold", async function () { 
+  it("Test 8. Account levels and discounts should not be triggered at all while not using locking", async function () { 
     
     await testMinting("Preparation mint", 200000, deployer, deployer);    
 
@@ -727,43 +712,38 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 8.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(19);         
-    await mintBlocks(1);     
+    expect(await balBNJI(testUser_1)).to.equal(19);  
     await addUserAccDataPoints(testUser_1); 
 
     await testMinting("Test 8.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(59);         
-    await mintBlocks(1);    
+    expect(await balBNJI(testUser_1)).to.equal(59);  
     await addUserAccDataPoints(testUser_1); 
 
     await testMinting("Test 8.3, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(99);             
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(99); 
     await addUserAccDataPoints(testUser_1); 
 
     await testMinting("Test 8.4, minting 400 BNJI to caller", 400, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(499);         
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(499);  
     await addUserAccDataPoints(testUser_1); 
 
     await testMinting("Test 8.5, minting 1500 BNJI to caller", 1500, testUser_1, testUser_1);     
 
     expect(await balBNJI(testUser_1)).to.equal(1999); 
-    await mintBlocks(1);    
     await addUserAccDataPoints(testUser_1);  
 
-    const expectedUser1Levels = [0,0,1,2,3,4];
-    const expectedUser1Discounts = [0,0,5,10,20,40];    
+    const expectedUser1Levels = [0,0,0,0,0,0];
+    const expectedUser1Discounts = [0,0,0,0,0,0];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
 
     await countAllCents(); 
   });  
   
-  it("Test 9. Account levels should be triggered when reaching threshold", async function () {   
+  it("Test 9. Account levels should not be triggered when reaching threshold, when not using locking", async function () {   
 
     await testMinting("Preparation mint", 200000, deployer, deployer);   
 
@@ -772,42 +752,37 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await addUserAccDataPoints(testUser_1);  
     await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(20);         
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(20); 
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 9.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(60);         
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(60); 
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 9.3, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(100);             
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(100);
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 9.4, minting 400 BNJI to caller", 400, testUser_1, testUser_1);    
     
-    expect(await balBNJI(testUser_1)).to.equal(500);         
-    await mintBlocks(1);      
+    expect(await balBNJI(testUser_1)).to.equal(500); 
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 9.5, minting 1500 BNJI to caller", 1500, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(2000);
-    await mintBlocks(1);      
     await addUserAccDataPoints(testUser_1); 
 
-    const expectedUser1Levels = [0,1,2,3,4,5];
-    const expectedUser1Discounts = [0,5,10,20,40,75];          
+    const expectedUser1Levels = [0,0,0,0,0,0];
+    const expectedUser1Discounts = [0,0,0,0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);    
     
     await countAllCents(); 
   });  
   
-  it("Test 10. Account Level 2 can be purchased in one go ", async function () {   
+  it("Test 10. Account Level 2 cannot be purchased when not using locking", async function () {   
 
     await countAllCents();
 
@@ -817,14 +792,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(60);   
     await addUserAccDataPoints(testUser_1);   
 
-    const expectedUser1Levels = [0,2];
-    const expectedUser1Discounts = [0,10];          
+    const expectedUser1Levels = [0,0];
+    const expectedUser1Discounts = [0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
     
     await countAllCents();
   });  
 
-  it("Test 11. Account Level 3 can be purchased in one go ", async function () {  
+  it("Test 11. Account Level 3 cannot be purchased when not using locking", async function () {  
     
     await countAllCents();
 
@@ -834,14 +809,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(100); 
     await addUserAccDataPoints(testUser_1);   
 
-    const expectedUser1Levels = [0,3];
-    const expectedUser1Discounts = [0,20];    
+    const expectedUser1Levels = [0,0];
+    const expectedUser1Discounts = [0,0];    
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
     await countAllCents();
   });  
 
-  it("Test 12. Account Level 4 can be purchased in one go ", async function () {   
+  it("Test 12. Account Level 4 cannot be purchased when not using locking", async function () {   
 
     await countAllCents();
 
@@ -851,14 +826,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(500);     
     await addUserAccDataPoints(testUser_1);    
 
-    const expectedUser1Levels = [0,4];
-    const expectedUser1Discounts = [0,40]; 
+    const expectedUser1Levels = [0,0];
+    const expectedUser1Discounts = [0,0]; 
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
     await countAllCents();
   });  
 
-  it("Test 13. Account Level 5 can be purchased in one go ", async function () {   
+  it("Test 13. Account Level 5 cannot be purchased when not using locking", async function () {   
 
     await countAllCents();
 
@@ -868,8 +843,8 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(2000);  
     await addUserAccDataPoints(testUser_1);
 
-    const expectedUser1Levels = [0,5];
-    const expectedUser1Discounts = [0,75];    
+    const expectedUser1Levels = [0,0];
+    const expectedUser1Discounts = [0,0];    
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
     await countAllCents();
@@ -884,22 +859,21 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(100);
     await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(1); 
 
     await testMinting("Test 14.1, minting 9 BNJI to caller", 90, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(190);     
     await addUserAccDataPoints(testUser_1);    
 
-    const expectedUser1Levels = [0,3,3];
-    const expectedUser1Discounts = [0,20,20];          
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
     await countAllCents();
   });  
   
   
-  it("Test 15. Account Level 1 is purchased by buying more than threshold, less than next threshold ", async function () {   
+  it("Test 15. Account Level 1 is not purchased by buying more than threshold, less than next threshold, when not using lock ", async function () {   
 
     await countAllCents();
 
@@ -909,14 +883,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(25);   
     await addUserAccDataPoints(testUser_1);   
 
-    const expectedUser1Levels = [0,1];
-    const expectedUser1Discounts = [0,5];          
+    const expectedUser1Levels = [0,0];
+    const expectedUser1Discounts = [0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
     await countAllCents();
   });  
 
-  it("Test 15. Larger purchases do not trigger more than account level 5 ", async function () {  
+  it("Test 15. Larger purchases do not trigger account levels, when not using lock", async function () {  
     
     await countAllCents();
 
@@ -925,15 +899,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(2500); 
     await addUserAccDataPoints(testUser_1);
-    await mintBlocks(1); 
 
     await testMinting("Test 15.2, minting 2500 BNJI to caller", 1500, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(4000);  
     await addUserAccDataPoints(testUser_1);
 
-    const expectedUser1Levels = [0,5,5];
-    const expectedUser1Discounts = [0,75,75];    
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);
 
@@ -950,7 +923,6 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(25);   
     await addUserAccDataPoints(testUser_1);  
-    await mintBlocks(1); 
 
     await testMinting("Test 16.2, minting 35 BNJI to caller", 35, testUser_1, testUser_1);    
     
@@ -962,15 +934,15 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(99); 
     await addUserAccDataPoints(testUser_1); 
 
-    const expectedUser1Levels = [0,1,2,2];
-    const expectedUser1Discounts = [0,5,10,10];    
+    const expectedUser1Levels = [0,0,0,0];
+    const expectedUser1Discounts = [0,0,0,0];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);       
 
     await countAllCents();
   });  
 
-  it("Test 17. It is possible to skip levels by minting larger amounts of tokens", async function () {
+  it("Test 17. It is not possible to skip levels by minting larger amounts of tokens, without lock", async function () {
     
     await countAllCents();
 
@@ -979,15 +951,14 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(25);       
     await addUserAccDataPoints(testUser_1);  
-    await mintBlocks(1); 
 
     await testMinting("Test 17.2, minting 75 BNJI to caller", 75, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(100);  
     await addUserAccDataPoints(testUser_1); 
 
-    const expectedUser1Levels = [0,1,3];
-    const expectedUser1Discounts = [0,5,20];    
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];    
       
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
@@ -1013,14 +984,13 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2); 
-    await mintBlocks(1);     
 
     const expectedUser1Levels = [0,0];
     const expectedUser1Discounts = [0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
-    const expectedUser2Levels = [0,3];
-    const expectedUser2Discounts = [0,20];          
+    const expectedUser2Levels = [0,0];
+    const expectedUser2Discounts = [0,0];          
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
 
     await countAllCents();
@@ -1037,8 +1007,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100; 
     expect(await balBNJI(testUser_1)).to.equal(120); 
-    expect(await balBNJI(testUser_2)).to.equal(0);  
-    await mintBlocks(60);    
+    expect(await balBNJI(testUser_2)).to.equal(0);
     
     const user_1_USDCbalBefore = await balUSDC(testUser_1);
     const user_2_USDCbalBefore = await balUSDC(testUser_2);
@@ -1062,7 +1031,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
       
   }); 
   
-  it("Test 21. Should first REVERT: testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
+  it("Test 21. Without lock, there is no holding period", async function () {   
 
     await countAllCents();
 
@@ -1074,15 +1043,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balBNJI(testUser_1)).to.equal(60);
     expect(await balBNJI(testUser_2)).to.equal(0);
     
-    await addUserAccDataPoints(testUser_1); 
-
-    await expect( testTransfer(30, testUser_1, testUser_2, false, 0) ).to.be.revertedWith(
-      "Discount level withdraw timeout in effect."
-    );
-      
-    expect(await balBNJI(testUser_1)).to.equal(60);
-    expect(await balBNJI(testUser_2)).to.equal(0);
-    await mintBlocks(14); 
+    await addUserAccDataPoints(testUser_1);    
 
     await testTransfer(30, testUser_1, testUser_2, false, 0); 
 
@@ -1092,18 +1053,18 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2);
     
-    const expectedUser1Levels = [0,2,1];
-    const expectedUser1Discounts = [0,10,5];    
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];    
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
 
-    const expectedUser2Levels = [0,1];
-    const expectedUser2Discounts = [0,5];    
+    const expectedUser2Levels = [0];
+    const expectedUser2Discounts = [0];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts); 
 
     await countAllCents();
   });  
   
-  it("Test 22. It is possible to skip levels by burning larger amounts of tokens", async function () {
+  it("Test 22. It is not possible to skip levels by burning larger amounts of tokens, without lock", async function () {
 
     await countAllCents();
 
@@ -1112,21 +1073,20 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(600);
     await addUserAccDataPoints(testUser_1);    
-    await mintBlocks(180);        
   
     await testBurning("Test 22.2, burning 570 tokens after needed amount of blocks", 570, testUser_1, testUser_1);     
 
     expect(await balBNJI(testUser_1)).to.equal(30);  
     await addUserAccDataPoints(testUser_1); 
 
-    const expectedUser1Levels = [0,4,1];
-    const expectedUser1Discounts = [0,40,5];        
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];        
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);        
 
     await countAllCents();
   });  
   
-  it("Test 23. Downgrading accounts works as intended", async function () { 
+  it("Test 23. Downgrading accounts is not triggrered, as intended, without locking", async function () { 
 
     await testMinting("Preparation mint", 200000, deployer, deployer); 
 
@@ -1138,50 +1098,42 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await testMinting("Test 23.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);  
 
     expect(await balBNJI(testUser_1)).to.equal(2000); 
-    await addUserAccDataPoints(testUser_1);
-    await mintBlocks(10);  
-
-    await expect(testBurning("Test 23.2, burning 1500 tokens, too early", 1500, testUser_1, testUser_1)).to.be.revertedWith(
-      "Discount level withdraw timeout in effect."
-    );
-
-    expect(await balBNJI(testUser_1)).to.equal(2000); 
-
-    await mintBlocks(720);  
-    await testBurning("Test 23.3, burning 1500 tokens, after needed blocks", 1500, testUser_1, testUser_1);
+    await addUserAccDataPoints(testUser_1);   
+    
+    await testBurning("Test 23.2, burning 1500 tokens, no needed blocks", 1500, testUser_1, testUser_1);
 
     expect(await balBNJI(testUser_1)).to.equal(500); 
     await addUserAccDataPoints(testUser_1);
     
-    await testBurning("Test 23.4, burning 400 tokens, no extra waiting needed", 400, testUser_1, testUser_1);
+    await testBurning("Test 23.3, burning 400 tokens, no extra waiting needed", 400, testUser_1, testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(100); 
     await addUserAccDataPoints(testUser_1);
 
-    await testBurning("Test 23.5, burning 40 tokens, no extra waiting needed", 40, testUser_1, testUser_1);
+    await testBurning("Test 23.4, burning 40 tokens, no extra waiting needed", 40, testUser_1, testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(60); 
     await addUserAccDataPoints(testUser_1);
 
-    await testBurning("Test 23.6, burning 40 tokens, no extra waiting needed", 40, testUser_1, testUser_1);
+    await testBurning("Test 23.5, burning 40 tokens, no extra waiting needed", 40, testUser_1, testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(20); 
     await addUserAccDataPoints(testUser_1);
 
-    await testBurning("Test 23.7, burning 40 tokens, no extra waiting needed", 20, testUser_1, testUser_1);
+    await testBurning("Test 23.6, burning 40 tokens, no extra waiting needed", 20, testUser_1, testUser_1);
       
     await addUserAccDataPoints(testUser_1);  
     expect(await balBNJI(testUser_1)).to.equal(0);         
 
-    const expectedUser1Levels = [0,5,4,3,2,1,0];
-    const expectedUser1Discounts = [0,75,40,20,10,5,0];          
+    const expectedUser1Levels = [0,0,0,0,0,0,0];
+    const expectedUser1Discounts = [0,0,0,0,0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
     await countAllCents();
     
   });
   
-  it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
+  it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner", async function () { 
     
     await testMinting("Preparation mint", 200000, deployer, deployer); 
 
@@ -1191,8 +1143,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     // after that, user would normally be able to transfer, burn etc
     await addUserAccDataPoints(testUser_1);        
     await testMinting("Test 24.1, minting 510 BNJI to caller", 510, testUser_1, testUser_1);  
-    expect(await balBNJI(testUser_1)).to.equal(510);
-    await mintBlocks(180);
+    expect(await balBNJI(testUser_1)).to.equal(510);    
 
     // anybody who is not the owner cannot activate pause()
     await expect( benjaminsContract.connect(testUser_1_Signer).pause() ).to.be.revertedWith(
@@ -1254,8 +1205,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     // test preparation verification, contract owner should have 889000 tokens from "First Setup mint for 100k USDC"
     expect(await balBNJI(deployer)).to.equal(1089000);
-    // waiting for another 540 blocks, so that deployer can transfer and burn, since acc level 5
-    await mintBlocks(540);    
+       
     // when paused is active, contract owner can use transfer 40 BNJI from themself to testUser_2
     expect(await balBNJI(testUser_2)).to.equal(0);        
     await testTransfer(40, deployer, testUser_2, false,0 );
@@ -1293,7 +1243,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     expect(await balUSDCinCents(testUser_2)).to.equal(300000);  
     await testBurning("Test 24.3, burning 160 BNJI for testUser_2", 160, deployer, testUser_2);  
     expect(await balBNJI(deployer)).to.equal(1088840); 
-    expect(await balUSDCinCents(testUser_2)).to.equal(300000+4337);
+    expect(await balUSDCinCents(testUser_2)).to.equal(300000+4271);
 
     // when paused is active, contract owner can use quoteUSDC
     const tokenValueIn6dec = bigNumberToNumber(await benjaminsContract.connect(deployerSigner).quoteUSDC(100, true));
@@ -1301,15 +1251,15 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
 
     // when paused is active, contract owner can use discountLevel
     const accountLevel = bigNumberToNumber(await benjaminsContract.connect(deployerSigner).discountLevel(testUser_1));
-    expect(accountLevel).to.equal(3);
+    expect(accountLevel).to.equal(0);
 
     // when paused is active, contract owner can use quoteFeePercentage
     const feeModifier = bigNumberToNumber(await benjaminsContract.connect(deployerSigner).quoteFeePercentage(testUser_1));
-    expect(feeModifier).to.equal(baseFee*8000);
+    expect(feeModifier).to.equal(baseFee*10000);
 
     // when paused is active, contract owner can use calcTransportFee
     const transportFee = bigNumberToNumber(await benjaminsContract.connect(deployerSigner).calcTransportFee(100));
-    expect(transportFee).to.equal(130000);
+    expect(transportFee).to.equal(540000);
 
     // verifying once more that benjaminsContract is still paused
     expect(await benjaminsContract.paused()).to.equal(true);
@@ -1342,8 +1292,7 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await testMinting("Test 25.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
-    await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(60); 
+    await addUserAccDataPoints(testUser_1);     
 
     // testUser_1 calls transfer to send 40 BNJI from themselves to testUser_2
     await testTransfer(40, testUser_1, testUser_2, false, 0);
@@ -1354,12 +1303,12 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2); 
     
-    const expectedUser1Levels = [0,3,2];
-    const expectedUser1Discounts = [0,20,10];          
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
-    const expectedUser2Levels = [0,1];
-    const expectedUser2Discounts = [0,5];    
+    const expectedUser2Levels = [0,0];
+    const expectedUser2Discounts = [0,0];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
 
     await countAllCents();
@@ -1381,7 +1330,6 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
     await addUserAccDataPoints(testUser_1); 
-    await mintBlocks(60); 
 
     // testUser_3 calls transferFrom to send 30 BNJI from testUser_1 to testUser_2
     await testTransfer(30, testUser_3, testUser_2, true, testUser_1);
@@ -1392,12 +1340,12 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2); 
     
-    const expectedUser1Levels = [0,3,2];
-    const expectedUser1Discounts = [0,20,10];          
+    const expectedUser1Levels = [0,0,0];
+    const expectedUser1Discounts = [0,0,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
-    const expectedUser2Levels = [0,1];
-    const expectedUser2Discounts = [0,5];    
+    const expectedUser2Levels = [0,0];
+    const expectedUser2Discounts = [0,0];    
     confirmUserDataPoints(testUser_2, expectedUser2Levels, expectedUser2Discounts);
 
     await countAllCents();
@@ -1501,8 +1449,6 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
         expect(await balBNJI(callingAcc)).to.equal(0);
       }    
     }
-
-    await mintBlocks(720);
 
     const balBNJIdeployer = await balBNJI(deployer);
     await testBurning(`Endburn from deployer`, balBNJIdeployer, deployer, deployer);

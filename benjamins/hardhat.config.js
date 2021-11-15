@@ -31,7 +31,7 @@ module.exports = {
     }, 
     */   
     /*hardhat: {
-      // using forked MUMBAI TESTNET as default network, peg at blockNumber: 19907815
+      // using forked MUMBAI TESTNET as default network, peg at blockNumber: 20182000
       forking: {
         live: true,
         saveDeployments: true,

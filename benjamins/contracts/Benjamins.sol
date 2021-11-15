@@ -179,7 +179,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit LockStatus(msg.sender, true);
     }
 
-    function disengageLock() public whenAvailable {
+    function disengageLock() public whenAvailable withdrawAllowed(msg.sender) {
         lockingIsEnganged[msg.sender] = false;
         emit LockStatus(msg.sender, false);
     }
