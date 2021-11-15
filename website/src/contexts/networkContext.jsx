@@ -5,11 +5,19 @@ const NetworkContext = React.createContext();
 const networks = {
   1: {
     name: 'eth',
-    chainID: 1,
+    nativeToken: {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      decimals: 18,
+    },
   },
   137: {
     name: 'polygon',
-    chainID: 137,
+    nativeToken: {
+      name: 'Matic Token',
+      symbol: 'MATIC',
+      decimals: 18,
+    },
   },
 };
 
@@ -25,6 +33,7 @@ export const NetworkProvider = (props) => {
         setNetworkId,
         networkId,
         networkName: networks[networkId]?.name,
+        nativeToken: networks[networkId]?.nativeToken,
         isPolygon: networkId === 137,
         setAccounts,
         accounts,
