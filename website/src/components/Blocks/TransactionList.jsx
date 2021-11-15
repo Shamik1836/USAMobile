@@ -78,7 +78,7 @@ export const TransactionList = (props) => {
             </TableCell>
           </TableRow>
         ) : (
-          Txs?.map((Tx) => {
+          Txs?.filter((Tx) => Math.abs(Tx.amount) !== 0).map((Tx) => {
             Tx.timestamp = new Date(Tx.block_timestamp);
             return (
               <TableRow key={Tx.timestamp}>
