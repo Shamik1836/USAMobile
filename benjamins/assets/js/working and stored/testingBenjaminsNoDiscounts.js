@@ -421,7 +421,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   }  
 }
 
-describe("Testing Benjamins Smart Contract, without discounts", function () {
+describe("Testing Benjamins smart contract, without discounts", function () {
 
   // setting instances of contracts
   beforeEach(async function() {   
@@ -667,8 +667,6 @@ describe("Testing Benjamins Smart Contract, without discounts", function () {
   }); 
 
   it("Test 7. Token price should increase following bonding curve", async function () {  
-    
-    await testMinting("Preparation mint", 200000, deployer, deployer);   
 
     await countAllCents(); 
 

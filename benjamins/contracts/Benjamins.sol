@@ -49,11 +49,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8[]  public levelDiscounts;                 // percentage discount given by each level;
 
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
-    mapping (address => uint256) lastUpgradeBlockHeight;
+    mapping (address => uint256) discountLockBlockHeight;
 
     // This mapping keeps track of the users accounts' locking. 
     // Locking activates withdraw/burning timeout periods and grants discounts
-    mapping (address => bool) lockingIsEnganged;    
+    mapping (address => bool) lockEngaged;    
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
@@ -75,7 +75,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         pause();
     }
     
-    // event for engaging and disengaging the account's locking features
+    // event for engaging and disengaging the account's discount locking features
     event LockStatus(address account, bool acccountIsLocked);   
 
     // event for exchanging USDC and BNJI // TODO:include mint or burn bool or type string 
@@ -130,13 +130,23 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Has the user held past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
-        if (lockingIsEnganged[userToCheck] == true) {
+        if (lockEngaged[userToCheck] == true) {
             // blockHeight right now
-            uint256 blockNum = block.number;
+            uint256 blockNumNow = block.number;
+            uint256 discountBlock = discountLockBlockHeight[userToCheck]; 
+            require(discountBlock > 0, 'No registered holding time. Check if discounts lock is engaged.');                
+
             // amount of time that has passed since last account level upgrade, measured in blocks
-            uint256 holdTime = blockNum - lastUpgradeBlockHeight[userToCheck];       
+            uint256 holdTime = blockNumNow - discountBlock;  
+
+            console.log(msg.sender, 'msg.sender, withdrawAllowed, BNJ');
+            console.log(userToCheck, 'userToCheck, withdrawAllowed, BNJ');
+            console.log(blockNumNow, 'blockNumNow, withdrawAllowed, BNJ');
+            console.log(holdTime, 'holdTime, withdrawAllowed, BNJ');
+            console.log(blocksPerDay*levelHolds[discountLevel(userToCheck)], 'blocksPerDay*levelHolds[discountLevel(userToCheck)], withdrawAllowed, BNJ');
+                        
             // checking result against the withdrawal timeout period required by user's account level
-            require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 'Discount level withdraw timeout in effect.');                
+            require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 'Discount level withdraw timeout in effect.');
         }
         _;
     }
@@ -174,13 +184,16 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return _decimals;
     }
 
-     function engageLock() public whenAvailable {
-        lockingIsEnganged[msg.sender] = true;
+     function engageDiscountLock() public whenAvailable {
+        require(lockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
+        lockEngaged[msg.sender] = true;       
+        discountLockBlockHeight[msg.sender] = block.number;   
         emit LockStatus(msg.sender, true);
     }
 
-    function disengageLock() public whenAvailable withdrawAllowed(msg.sender) {
-        lockingIsEnganged[msg.sender] = false;
+    function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
+        require(lockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
+        lockEngaged[msg.sender] = false;
         emit LockStatus(msg.sender, false);
     }
 
@@ -206,7 +219,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         nonReentrant
         whenAvailable
         withdrawAllowed(_msgSender())
-        returns(bool) {
+        returns(bool) {        
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient);
 
@@ -219,7 +232,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
         // transferring BNJI
         _transfer(_msgSender(), recipient, amount);
-
+        
         //checking recipient's discount level after changes        
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times
@@ -239,7 +252,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         nonReentrant
         whenAvailable
         withdrawAllowed(sender)
-    returns (bool) {
+    returns (bool) {    
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient);
 
@@ -258,7 +271,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
         // decreasing BNJI allowance by transferred amount
         _approve(sender, _msgSender(), currentBNJIAllowance - amountBNJI);
-
+             
         //checking recipient's discount level after changes
         uint8 newUserDiscountLevel = discountLevel(recipient);
 
@@ -275,11 +288,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Buy BNJI with USDC for another address
-    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {
+    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {        
         // Checking user's discount level before mint
         uint8 originalUserDiscountLevel = discountLevel(_toWhom);
         // minting to user
-        changeSupply(_toWhom, _amount, true);
+        changeSupply(_toWhom, _amount, true);        
         // comparing user's discount level now to before
         uint8 newUserDiscountLevel = discountLevel(_toWhom);
         // if new discount level was reached, updating the holding time timeout
@@ -336,7 +349,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // Return address discount level as an uint8 as a function of balance.
     function discountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
-        if (lockingIsEnganged[_userToCheck] == true) {
+        // discount level is only applied if user has engaged the discounts lock
+        if (lockEngaged[_userToCheck] == true) {
             uint256 userBalance = balanceOf(_userToCheck); // lookup once.
             uint8 currentLevel = 0;
             for (uint8 index = 0; index < levelAntes.length ; index++){
@@ -431,11 +445,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
             // pushing USDC from this contract to user (_payee)
             polygonUSDC.transfer(_payee, _afterFeeUSDCin6dec);
         }
-    }
+    }    
 
     // Updating time counter measuring holding times, triggered when reaching new account level
     function newLevelReached(address _toWhom) internal whenAvailable returns (bool) {
-        lastUpgradeBlockHeight[_toWhom] = block.number;
+        discountLockBlockHeight[_toWhom] = block.number;
     }
 
     // TODO: test and look at in depth
@@ -445,6 +459,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         require(availableIn6dec > _amountIn6dec, "Insufficient funds.");
         polygonAMUSDC.transfer(feeReceiver, _amountIn6dec);
         emit ProfitTaken(availableIn6dec, _amountIn6dec);
+    }
+
+      function getDiscountLockStatus(address userToCheck) public view returns (bool) {
+        return lockEngaged[userToCheck];
     }
 
     // Returns the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),

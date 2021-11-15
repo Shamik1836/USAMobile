@@ -214,6 +214,13 @@ async function countAllCents() {
 
 }
 
+// callingAccAddress engages discount lock, now discounts and lockup timeouts are applied to their account
+async function engagingDiscountLock(callingAccAddress) {
+  const signerNow = await ethers.provider.getSigner(callingAccAddress);
+  await benjaminsContract.connect(signerNow).engageDiscountLock(); 
+  expect(await benjaminsContract.getDiscountLockStatus(callingAccAddress)).to.equal(true);
+}
+
 async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
     
   const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
@@ -430,7 +437,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
 
 
 
-describe("Testing Benjamins Smart Contract, with engaged discounts", function () {
+describe("Testing Benjamins smart montract, with engaged discounts", function () {
 
   // setting instances of contracts
   beforeEach(async function() {   
@@ -573,7 +580,11 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
   
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
     await countAllCents();         
-    await testMinting("Test 1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);      
+    await testMinting("Test 1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);   
+    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1); 
+
     expect(await balBNJI(testUser_1)).to.equal(40);    
     await countAllCents();    
   });
@@ -583,8 +594,10 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1);        
-    await testMinting("Test 2.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);        
-    await mintBlocks(1);
+    await testMinting("Test 2.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);
+
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 2.2, minting 40 BNJI to caller", 40, testUser_1, testUser_1);       
@@ -639,14 +652,17 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
   });
 
 
-  it("Test 5. testUser_1 mints 59 tokens, then burns them after 2* blocksPerDay waiting time", async function () {   
+  it("Test 5. testUser_1 mints 59 tokens, locks them, then burns them after 2* blocksPerDay waiting time", async function () {   
     
     await countAllCents(); 
 
     expect(await balBNJI(testUser_1)).to.equal(0); 
     expect(await balUSDC(testUser_1)).to.equal(3000); 
 
-    await testMinting("Test 5.1, minting 59 BNJI to caller", 59, testUser_1, testUser_1);        
+    await testMinting("Test 5.1, minting 59 BNJI to caller", 59, testUser_1, testUser_1);  
+
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
 
     const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100;
     expect(await balBNJI(testUser_1)).to.equal(59); 
@@ -667,6 +683,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents(); 
 
     await testMinting("Test 6.1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);    
+
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(40);     
     await mintBlocks(11);    
@@ -681,12 +700,12 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
   }); 
 
   it("Test 7. Token price should increase following bonding curve", async function () {  
-    
-    await testMinting("Preparation mint", 200000, deployer, deployer);   
-
+        
     await countAllCents(); 
 
     await testMinting("Test 7.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
    
     expect(await balBNJI(testUser_1)).to.equal(2000);
     await mintBlocks(1);  
@@ -727,8 +746,11 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1); 
-    await testMinting("Test 8.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);    
-    
+
+    await testMinting("Test 8.1, minting 19 BNJI to caller", 19, testUser_1, testUser_1);   
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
+
     expect(await balBNJI(testUser_1)).to.equal(19);         
     await mintBlocks(1);     
     await addUserAccDataPoints(testUser_1); 
@@ -772,7 +794,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents(); 
 
     await addUserAccDataPoints(testUser_1);  
-    await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);    
+    await testMinting("Test 9.1, minting 20 BNJI to caller", 20, testUser_1, testUser_1);   
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1); 
     
     expect(await balBNJI(testUser_1)).to.equal(20);         
     await mintBlocks(1);      
@@ -814,7 +838,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
-    await testMinting("Test 10, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
+    await testMinting("Test 10, minting 60 BNJI to caller", 60, testUser_1, testUser_1);   
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1); 
     
     expect(await balBNJI(testUser_1)).to.equal(60);   
     await addUserAccDataPoints(testUser_1);   
@@ -832,6 +858,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     await addUserAccDataPoints(testUser_1);  
     await testMinting("Test 11, minting 100 BNJI to caller", 100, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(100); 
     await addUserAccDataPoints(testUser_1);   
@@ -848,7 +876,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
-    await testMinting("Test 12, minting 500 BNJI to caller", 500, testUser_1, testUser_1);    
+    await testMinting("Test 12, minting 500 BNJI to caller", 500, testUser_1, testUser_1); 
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);   
     
     expect(await balBNJI(testUser_1)).to.equal(500);     
     await addUserAccDataPoints(testUser_1);    
@@ -865,7 +895,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
-    await testMinting("Test 13, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);    
+    await testMinting("Test 13, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1); 
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);   
     
     expect(await balBNJI(testUser_1)).to.equal(2000);  
     await addUserAccDataPoints(testUser_1);
@@ -883,6 +915,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 14.1, minting 100 BNJI to caller", 100, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(100);
     await addUserAccDataPoints(testUser_1); 
@@ -907,6 +941,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     await addUserAccDataPoints(testUser_1);
     await testMinting("Test 15, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(25);   
     await addUserAccDataPoints(testUser_1);   
@@ -923,7 +959,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
 
     await addUserAccDataPoints(testUser_1);
-    await testMinting("Test 15.1, minting 2500 BNJI to caller", 2500, testUser_1, testUser_1);    
+    await testMinting("Test 15.1, minting 2500 BNJI to caller", 2500, testUser_1, testUser_1);   
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1); 
     
     expect(await balBNJI(testUser_1)).to.equal(2500); 
     await addUserAccDataPoints(testUser_1);
@@ -949,6 +987,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 16.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(25);   
     await addUserAccDataPoints(testUser_1);  
@@ -978,6 +1018,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     await addUserAccDataPoints(testUser_1); 
     await testMinting("Test 17.1, minting 25 BNJI to caller", 25, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(25);       
     await addUserAccDataPoints(testUser_1);  
@@ -1008,7 +1050,10 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await addUserAccDataPoints(testUser_1); 
     await addUserAccDataPoints(testUser_2); 
 
-    await testMinting("Test 19, minting 120 BNJI from user 1 to user 2", 120, testUser_1, testUser_2);    
+    await testMinting("Test 19, minting 120 BNJI from user 1 to user 2", 120, testUser_1, testUser_2);   
+    
+    // receiving user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_2); 
     
     expect(await balBNJI(testUser_1)).to.equal(0); 
     expect(await balBNJI(testUser_2)).to.equal(120);       
@@ -1035,7 +1080,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     expect(await balBNJI(testUser_1)).to.equal(0);  
     expect(await balBNJI(testUser_2)).to.equal(0);         
 
-    await testMinting("Test 20, minting 120 BNJI by testUser_1 for testUser_1", 120, testUser_1, testUser_1);    
+    await testMinting("Test 20, minting 120 BNJI by testUser_1 for testUser_1", 120, testUser_1, testUser_1); 
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);   
     
     const costInUSDC1 = mintAllowanceInUSDCCentsShouldBeNowGlobalV/100; 
     expect(await balBNJI(testUser_1)).to.equal(120); 
@@ -1064,14 +1111,16 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
       
   }); 
   
-  it("Test 21. Should first REVERT: testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
+  it("Test 21. Should first REVERT: using the discount lock, testUser_1 tries to transfer tokens before holding period ends, then correctly", async function () {   
 
     await countAllCents();
 
-    await addUserAccDataPoints(testUser_1); 
+    await addUserAccDataPoints(testUser_1);  
     await addUserAccDataPoints(testUser_2); 
 
     await testMinting("Test 21, minting 60 BNJI to caller", 60, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(60);
     expect(await balBNJI(testUser_2)).to.equal(0);
@@ -1105,12 +1154,14 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
   });  
   
-  it("Test 22. It is possible to skip levels by burning larger amounts of tokens", async function () {
+  it("Test 22. It is possible to skip levels by burning larger amounts of tokens, while discount lock is engaged", async function () {
 
     await countAllCents();
 
     await addUserAccDataPoints(testUser_1); 
-    await testMinting("Test 22.1, minting 600 BNJI to caller", 600, testUser_1, testUser_1);    
+    await testMinting("Test 22.1, minting 600 BNJI to caller", 600, testUser_1, testUser_1);  
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);    
     
     expect(await balBNJI(testUser_1)).to.equal(600);
     await addUserAccDataPoints(testUser_1);    
@@ -1128,7 +1179,7 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await countAllCents();
   });  
   
-  it("Test 23. Downgrading accounts works as intended", async function () { 
+  it("Test 23. Downgrading accounts works as intended, using the discounts lock", async function () { 
 
     await testMinting("Preparation mint", 200000, deployer, deployer); 
 
@@ -1138,6 +1189,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await addUserAccDataPoints(testUser_1);        
 
     await testMinting("Test 23.1, minting 2000 BNJI to caller", 2000, testUser_1, testUser_1);  
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
 
     expect(await balBNJI(testUser_1)).to.equal(2000); 
     await addUserAccDataPoints(testUser_1);
@@ -1148,6 +1201,7 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     );
 
     expect(await balBNJI(testUser_1)).to.equal(2000); 
+    await addUserAccDataPoints(testUser_1);
 
     await mintBlocks(720);  
     await testBurning("Test 23.3, burning 1500 tokens, after needed blocks", 1500, testUser_1, testUser_1);
@@ -1175,8 +1229,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await addUserAccDataPoints(testUser_1);  
     expect(await balBNJI(testUser_1)).to.equal(0);         
 
-    const expectedUser1Levels = [0,5,4,3,2,1,0];
-    const expectedUser1Discounts = [0,75,40,20,10,5,0];          
+    const expectedUser1Levels = [0,5,5,4,3,2,1,0];
+    const expectedUser1Discounts = [0,75,75,40,20,10,5,0];          
     confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts);   
 
     await countAllCents();
@@ -1186,6 +1240,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
   it("Test 24. Activating pause() should lock public access to state changing functions, but allow owner.", async function () { 
     
     await testMinting("Preparation mint", 200000, deployer, deployer); 
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(deployer); 
 
     await countAllCents();
    
@@ -1193,6 +1249,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     // after that, user would normally be able to transfer, burn etc
     await addUserAccDataPoints(testUser_1);        
     await testMinting("Test 24.1, minting 510 BNJI to caller", 510, testUser_1, testUser_1);  
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     expect(await balBNJI(testUser_1)).to.equal(510);
     await mintBlocks(180);
 
@@ -1342,6 +1400,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await addUserAccDataPoints(testUser_2);     
 
     await testMinting("Test 25.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
     await addUserAccDataPoints(testUser_1); 
@@ -1349,6 +1409,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     // testUser_1 calls transfer to send 40 BNJI from themselves to testUser_2
     await testTransfer(40, testUser_1, testUser_2, false, 0);
+
+    // receiving user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_2);
     
     expect(await balBNJI(testUser_1)).to.equal(80);    
     expect(await balBNJI(testUser_2)).to.equal(40);     
@@ -1380,6 +1443,8 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
     await addUserAccDataPoints(testUser_2);     
 
     await testMinting("Test 26.1, minting 120 BNJI to user 1", 120, testUser_1, testUser_1);    
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1);
     
     expect(await balBNJI(testUser_1)).to.equal(120); 
     await addUserAccDataPoints(testUser_1); 
@@ -1387,6 +1452,9 @@ describe("Testing Benjamins Smart Contract, with engaged discounts", function ()
 
     // testUser_3 calls transferFrom to send 30 BNJI from testUser_1 to testUser_2
     await testTransfer(30, testUser_3, testUser_2, true, testUser_1);
+
+    // receiving user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_2); 
     
     expect(await balBNJI(testUser_1)).to.equal(90);    
     expect(await balBNJI(testUser_2)).to.equal(30);     
