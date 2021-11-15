@@ -1,10 +1,11 @@
+import * as React from "react";
+import { Linking, Platform } from "react-native";
+
 /* eslint-disable functional/no-throw-statement */
 import WalletConnect from "@walletconnect/client";
 import { ICreateSessionOptions, IWalletConnectSession } from "@walletconnect/types";
 import deepmerge from "deepmerge";
 import { KeyValueStorage, ReactNativeStorageOptions } from "keyvaluestorage";
-import * as React from "react";
-import { Linking, Platform } from "react-native";
 import useDeepCompareEffect from "use-deep-compare-effect";
 
 import { defaultRenderQrcodeModal, formatWalletServiceUrl } from "../constants";
@@ -35,7 +36,6 @@ export default function WalletConnectProvider({
   ...extras
 }: Partial<WalletConnectProviderProps>): JSX.Element {
   const { error: walletServicesError, data: walletServices } = useMobileRegistry();
-
   const [state, setState] = React.useState<State>(defaultState);
   const parentContext = useWalletConnectContext();
 
@@ -55,12 +55,15 @@ export default function WalletConnectProvider({
   const open = React.useCallback(
     async (uri: string, cb: unknown): Promise<unknown> => {
       if (Platform.OS === "android") {
+        console.log('uri:', uri);
         const canOpenURL = await Linking.canOpenURL(uri);
-        if (!canOpenURL) {
-          // Redirect the user to download a wallet.
-          Linking.openURL("https://walletconnect.org/wallets");
-          throw new Error("No wallets found.");
-        }
+        console.log('canOpenURL:', canOpenURL);
+        // Commenting this due to error.
+        // if (!canOpenURL) {
+        //   // Redirect the user to download a wallet.
+        //   Linking.openURL("https://walletconnect.org/wallets");
+        //   throw new Error("No wallets found.");
+        // }
         await Linking.openURL(uri);
       }
       setState({

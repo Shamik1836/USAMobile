@@ -1,0 +1,61 @@
+import React from "react";
+import { View, Text } from "react-native";
+
+// Interfaces
+interface IProps {}
+
+const Login: React.FC<IProps> = ()=>{
+  return(
+    <View>
+      <Text>This is Our Login Page, We will add Login Form Here.</Text>
+    </View>
+  );
+}
+
+export default Login;
+
+
+
+// import React, { useEffect } from "react";
+// import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+// import { useMoralis, useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis";
+// import { useWalletConnect } from "./WalletConnect";
+
+// const styles = StyleSheet.create({
+//   center: { alignItems: "center", justifyContent: "center" },
+//   white: { backgroundColor: "white" },
+//   margin: { marginBottom: 20 },
+//   marginLarge: { marginBottom: 35 },
+// });
+
+// function App(): JSX.Element {
+//   const connector = useWalletConnect();
+//   const { authenticate, authError, isAuthenticating, isAuthenticated, logout, Moralis } = useMoralis();
+
+//   return (
+//     <View style={[StyleSheet.absoluteFill, styles.center, styles.white]}>
+//       <View style={styles.marginLarge}>
+//         {authError && (
+//           <>
+//             <Text>Authentication error:</Text>
+//             <Text style={styles.margin}>{authError.message}</Text>
+//           </>
+//         )}
+//         {isAuthenticating && <Text style={styles.margin}>Authenticating...</Text>}
+//         {!isAuthenticated && (
+//           // @ts-ignore
+//           <TouchableOpacity onPress={() => authenticate({ connector })}>
+//             <Text>Authenticate</Text>
+//           </TouchableOpacity>
+//         )}
+//         {isAuthenticated && (
+//           <TouchableOpacity onPress={() => logout()}>
+//             <Text>Logout</Text>
+//           </TouchableOpacity>
+//         )}
+//       </View>
+//     </View>
+//   );
+// }
+
+// export default App;

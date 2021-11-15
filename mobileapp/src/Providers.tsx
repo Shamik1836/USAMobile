@@ -1,17 +1,15 @@
 import React from "react";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MoralisProvider } from "react-moralis";
 import Moralis from "moralis/react-native.js";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { enableViaWalletConnect } from "./Moralis/enableViaWalletConnect";
 import WalletConnectProvider, { WalletConnectProviderProps } from "./WalletConnect";
-import { Platform } from "react-native";
-// import Qrcode from "./Qrcode";
 import { expo } from "../app.json";
 
 interface ProvidersProps {
   readonly children: JSX.Element;
 }
-
 const { scheme } = expo;
 
 /**
@@ -23,9 +21,11 @@ const environment = "native";
 const getMoralis = () => Moralis;
 // Initialize Moralis with AsyncStorage to support react-native storage
 Moralis.setAsyncStorage(AsyncStorage);
+
 // Replace the enable function to use the react-native WalletConnect
 // @ts-ignore
 Moralis.setEnableWeb3(enableViaWalletConnect);
+
 
 const walletConnectOptions: WalletConnectProviderProps = {
   redirectUrl: Platform.OS === "web" ? window.location.origin : `${scheme}://`,
@@ -34,10 +34,8 @@ const walletConnectOptions: WalletConnectProviderProps = {
     asyncStorage: AsyncStorage,
   },
   qrcodeModalOptions: {
-    mobileLinks: ["rainbow", "metamask", "argent", "trust", "imtoken", "pillar"],
-  },
-  // Uncomment to show a QR-code to connect a wallet
-  // renderQrcodeModal: Qrcode,
+    mobileLinks: ["metamask"],
+  }
 };
 
 export const Providers = ({ children }: ProvidersProps) => {
