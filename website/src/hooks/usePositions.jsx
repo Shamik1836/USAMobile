@@ -9,7 +9,7 @@ const geckoHead =
 
 export const usePositions = () => {
   const { isInitialized, isAuthenticated, Moralis } = useMoralis();
-  const { networkName } = useNetwork();
+  const { networkName, nativeToken } = useNetwork();
   const [positions, setPositions] = useState(emptyList);
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
@@ -17,8 +17,19 @@ export const usePositions = () => {
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      Moralis.Web3.getAllERC20({ chain: networkName })
-        .then((allPositions) => {
+      const options = { chain: networkName };
+      Promise.all([
+        Moralis.Web3API.account.getNativeBalance(options),
+        Moralis.Web3API.account.getTokenBalances(options),
+      ])
+        .then(([native, erc20]) => {
+          const allPositions = [
+            {
+              ...nativeToken,
+              ...native,
+            },
+            ...erc20,
+          ];
           const ids = allPositions
             .map((token) => geckoCoinIds[token.symbol.toLowerCase()])
             .filter((id) => Boolean(id))
@@ -57,7 +68,7 @@ export const usePositions = () => {
               setIsLoading(0);
             });
         })
-        .catch((e) => {
+        .catch(() => {
           setPositions(emptyList);
           setIsLoading(0);
         });
@@ -65,7 +76,7 @@ export const usePositions = () => {
       setPositions(emptyList);
       setIsLoading(0);
     }
-  }, [Moralis, isAuthenticated, isInitialized, networkName]);
+  }, [Moralis, isAuthenticated, isInitialized, networkName, nativeToken]);
 
   return { positions, isLoading, totalValue };
 };
