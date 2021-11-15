@@ -221,6 +221,19 @@ async function engagingDiscountLock(callingAccAddress) {
   expect(await benjaminsContract.getDiscountLockStatus(callingAccAddress)).to.equal(true);
 }
 
+// callingAccAddress engages discount lock, now discounts and lockup timeouts are applied to their account
+async function disengagingDiscountLock(callingAccAddress) {
+  const signerNow = await ethers.provider.getSigner(callingAccAddress);
+  await benjaminsContract.connect(signerNow).disengageDiscountLock(); 
+  expect(await benjaminsContract.getDiscountLockStatus(callingAccAddress)).to.equal(false);
+}
+
+async function getAmountBlocksToWait(userToCheck){
+  blockAmount = bigNumberToNumber(await benjaminsContract.getWaitingTime(userToCheck));   
+  console.log(blockAmount, userToCheck, 'blockAmount, userToCheck, in function getAmountBlocksToWait');
+  return blockAmount;
+}
+
 async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
     
   const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
@@ -1536,9 +1549,65 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
     await countAllCents(); 
 
   });  
+  
+  it.only("Test 29. Holding times are reset by disengaging discount lock, even if user was level 5 and waiting time was over", async function () { 
+   
+    await countAllCents();
+    await addUserAccDataPoints(testUser_1); // expecting discount level 0
+
+    // user mints 2500 tokens to themself
+    await testMinting("Test 29.1, minting 2500 BNJI to caller", 2500, testUser_1, testUser_1);   
+    
+    expect(await balBNJI(testUser_1)).to.equal(2500); 
+    await addUserAccDataPoints(testUser_1); // expecting discount level 0, since user has not engaged discount lock
+
+    // user engages discount lock, now discounts and lockup timeouts are applied to their account
+    await engagingDiscountLock(testUser_1); 
+    const waitingTimeLeftAfterEngage = await getAmountBlocksToWait(testUser_1);
+    expect(waitingTimeLeftAfterEngage).to.equal(720); 
+    await addUserAccDataPoints(testUser_1);
+
+    await expect( testBurning("Test 29.2, burning all after discount timeout has passed", 2500, testUser_1, testUser_1) ).to.be.revertedWith(
+      "Discount level withdraw timeout in effect."
+    );
+
+    await mintBlocks(740);
+    await addUserAccDataPoints(testUser_1); // expecting discount level 5, since user has engaged discount lock
+
+    const waitingTimeBeforeDisengage = await getAmountBlocksToWait(testUser_1);    
+    expect(await balBNJI(testUser_1)).to.equal(2500); 
+    expect(waitingTimeBeforeDisengage).to.equal(0); 
+
+    await disengagingDiscountLock(testUser_1);    
+    await addUserAccDataPoints(testUser_1);
+
+    await engagingDiscountLock(testUser_1); 
+    const waitingTimeAfter2ndEngage = await getAmountBlocksToWait(testUser_1);
+    expect(waitingTimeAfter2ndEngage).to.equal(720); 
+
+    await expect( testBurning("Test 29.2, burning all after discount timeout has passed", 2500, testUser_1, testUser_1) ).to.be.revertedWith(
+      "Discount level withdraw timeout in effect."
+    );
+
+    await addUserAccDataPoints(testUser_1);    
+    await mintBlocks(720);
+    expect(await balBNJI(testUser_1)).to.equal(2500); 
+
+    await testBurning("Test 29.2, burning all after discount timeout has passed", 2500, testUser_1, testUser_1);
+    await addUserAccDataPoints(testUser_1);
+
+    expect(await balBNJI(testUser_1)).to.equal(0); 
+
+    const expectedUser1Levels =     [0, 0, 5, 5, 0, 5, 0];
+    const expectedUser1Discounts =  [0, 0,75,75, 0,75, 0];          
+    confirmUserDataPoints(testUser_1, expectedUser1Levels, expectedUser1Discounts); 
+
+    await countAllCents();
+  });  
+
 
   // todo: rename the following tests, should be the last 2
-  it("Test 29. Owner can add additional funds to contract's amUSDC balance", async function () { 
+  it("Test second last. Owner can add additional funds to contract's amUSDC balance", async function () { 
     
     // Note: Not using countAllCents here, as $10 of USDC will be converted into amUSDC, which are not tracked the same way.
 
@@ -1557,7 +1626,7 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
 
   });
 
-  it("Test 30. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
+  it("Test last. All tokens that exist can be burned, and the connected USDC paid out by the protocol", async function () { 
 
     await countAllCents();
 

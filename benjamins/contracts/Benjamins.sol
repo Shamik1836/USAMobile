@@ -131,6 +131,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // Has the user held past the withdraw timeout?
     modifier withdrawAllowed(address userToCheck) {
         if (lockEngaged[userToCheck] == true) {
+            uint256 blocksStillNecessary = getWaitingTime(userToCheck);
+            require(blocksStillNecessary <= 0, 'Discount level withdraw timeout in effect.');
+           
+            /*
             // blockHeight right now
             uint256 blockNumNow = block.number;
             uint256 discountBlock = discountLockBlockHeight[userToCheck]; 
@@ -138,15 +142,15 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
             // amount of time that has passed since last account level upgrade, measured in blocks
             uint256 holdTime = blockNumNow - discountBlock;  
-
+            
             console.log(msg.sender, 'msg.sender, withdrawAllowed, BNJ');
             console.log(userToCheck, 'userToCheck, withdrawAllowed, BNJ');
             console.log(blockNumNow, 'blockNumNow, withdrawAllowed, BNJ');
             console.log(holdTime, 'holdTime, withdrawAllowed, BNJ');
             console.log(blocksPerDay*levelHolds[discountLevel(userToCheck)], 'blocksPerDay*levelHolds[discountLevel(userToCheck)], withdrawAllowed, BNJ');
-                        
+            */           
             // checking result against the withdrawal timeout period required by user's account level
-            require(holdTime >  blocksPerDay*levelHolds[discountLevel(userToCheck)], 'Discount level withdraw timeout in effect.');
+            
         }
         _;
     }
@@ -194,6 +198,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
         require(lockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
         lockEngaged[msg.sender] = false;
+        discountLockBlockHeight[msg.sender] = 0;   
         emit LockStatus(msg.sender, false);
     }
 
@@ -461,8 +466,37 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         emit ProfitTaken(availableIn6dec, _amountIn6dec);
     }
 
-      function getDiscountLockStatus(address userToCheck) public view returns (bool) {
+    function getDiscountLockStatus(address userToCheck) public view returns (bool) {
         return lockEngaged[userToCheck];
+    }
+
+    // shows how many blocks the user still has to wait until they can burn, transfer tokens, or disengage discounts lock
+    // only affects users that have engaged the discounts lock to get discounts
+    function getWaitingTime(address userToCheck) public view returns (uint256 blocksNeeded) {
+        require(lockEngaged[userToCheck] == true, "Discount lock is not engaged.");
+
+        uint256 blockNumNow = block.number;
+        uint256 discountBlock = discountLockBlockHeight[userToCheck]; 
+        require(discountBlock > 0, 'No registered holding time. Check if discounts lock is engaged.');                
+
+        // amount of time that has passed since last account level upgrade or discount lock engagement
+        // measured in blocks
+        uint256 holdTime = blockNumNow - discountBlock;  
+        uint256 blocksNecessary = blocksPerDay*levelHolds[discountLevel(userToCheck)];
+
+        int256 difference = int256(blocksNecessary) - int256(holdTime);
+
+        uint256 blocksStillNeeded;
+
+        if(difference<0){
+            blocksStillNeeded = 0;
+        } else {
+            blocksStillNeeded = uint256(difference);
+        }
+
+        // number is positive if there is still time needed to wait
+        // number is zero if discount lock timeout period has ended
+        return blocksStillNeeded;
     }
 
     // Returns the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
