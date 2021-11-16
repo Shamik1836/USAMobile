@@ -23,8 +23,10 @@ const getMoralis = () => Moralis;
 Moralis.setAsyncStorage(AsyncStorage);
 
 // Replace the enable function to use the react-native WalletConnect
-// @ts-ignore
-Moralis.setEnableWeb3(enableViaWalletConnect);
+if (Platform.OS === 'web') {
+  // @ts-ignore
+  Moralis.setEnableWeb3(enableViaWalletConnect);
+}
 
 
 const walletConnectOptions: WalletConnectProviderProps = {
@@ -39,11 +41,21 @@ const walletConnectOptions: WalletConnectProviderProps = {
 };
 
 export const Providers = ({ children }: ProvidersProps) => {
-  return (
-    <WalletConnectProvider {...walletConnectOptions}>
-      <MoralisProvider appId={appId} serverUrl={serverUrl} environment={environment} getMoralis={getMoralis}>
-        {children}
-      </MoralisProvider>
-    </WalletConnectProvider>
-  );
+  if (Platform.OS === 'web') {
+    return (
+        <MoralisProvider appId={appId} serverUrl={serverUrl} environment={environment} getMoralis={getMoralis}>
+          {children}
+        </MoralisProvider>
+    );
+  } else {
+    return (
+      <WalletConnectProvider {...walletConnectOptions}>
+        <MoralisProvider appId={appId} serverUrl={serverUrl} environment={environment} getMoralis={getMoralis}>
+          {children}
+        </MoralisProvider>
+      </WalletConnectProvider>
+    );
+
+  }
+
 };

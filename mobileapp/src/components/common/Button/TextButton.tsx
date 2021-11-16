@@ -7,7 +7,7 @@ interface IProps extends TouchableHighlightProperties {
   disabled?: boolean;
   touchableStyle?:StyleProp<ViewStyle>
   textStyle?: StyleProp<TextStyle>,
-  onPress: () =>number;
+  onPress: () =>void;
 }
 
 
