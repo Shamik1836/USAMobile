@@ -12,7 +12,7 @@ interface IProps extends TouchableHighlightProperties {
 
 
 
-const TextButton = ({ label, disabled, onPress, touchableStyle, textStyle, ...props }:IProps) => (
+const OutlineButton = ({ label, disabled, onPress, touchableStyle, textStyle, ...props }:IProps) => (
     <TouchableHighlight
       onPress={onPress} 
       disabled={disabled}
@@ -23,13 +23,17 @@ const TextButton = ({ label, disabled, onPress, touchableStyle, textStyle, ...pr
     </TouchableHighlight>
 )
 
-export default TextButton;
+export default OutlineButton;
 
 const styles = StyleSheet.create({
   container:{
+    width: '100%',
     justifyContent: 'center',
     paddingHorizontal: 5,
-    minHeight: 40
+    minHeight: 40,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#00069b'
   }
 });
 

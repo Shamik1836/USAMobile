@@ -1,18 +1,62 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Image } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+
+import { Button, TextButton } from '../../common/button'
+import { TextField } from '../../common/forms'
+import styles from './styles';
+
 
 // Interfaces
-interface IProps {}
+interface IProps { }
 
-const Login: React.FC<IProps> = ()=>{
-  return(
-    <View>
-      <Text>This is Our Login Page, We will add Login Form Here.</Text>
+
+const Login: React.FC<IProps> = () => {
+  const navigation = useNavigation();
+
+  const handleSignupButtonClick = (screenName) => {
+    navigation.navigate(screenName);
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.logoWrapper}>
+        <Image style={styles.logo} source={require('../../../media/logo.png')} />
+      </View>
+      <View style={styles.bodyWrapper}>
+        <View style={styles.form}>
+          <View style={styles.inputWrapper}>
+            <TextField
+              label={'User Name'}
+              onChange={(value) => console.log(value)}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextField
+              label={'Password'}
+              onChange={(value) => console.log(value)}
+            />
+          </View>
+        </View>
+         <View style={styles.loginBtnWrapper}>
+          <Button label="Log In" onPress={() => console.log('Login Clicked')} />
+        </View>
+        <View style={styles.formBottomTextWrapper}>
+          <Text> You don't have an account yet?</Text>
+          <TextButton textStyle={{fontWeight: '800', textDecorationLine:'underline'}} label="Register here" onPress={() => handleSignupButtonClick('Signup')} />
+        </View>
+      </View>
     </View>
   );
 }
 
 export default Login;
+
+
+
+
+
+
 
 
 

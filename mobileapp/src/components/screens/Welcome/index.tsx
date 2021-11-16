@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { TextButton } from '../../common'
+import { View, Text, Image } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+
+import { Button } from '../../common'
 import styles from './styles';
 
 
@@ -8,12 +10,25 @@ import styles from './styles';
 interface IProps {}
 
 
-const Welcome: React.FC<IProps> = ()=>{
-  return(
+const Welcome: React.FC<IProps> = () => {
+  const navigation = useNavigation();
+
+  const handleButtonClick = (screenName) =>{
+    navigation.navigate(screenName);
+  }
+
+  return (
     <View style={styles.container}>
-      <Text style={styles.pageLabel}>This is Our Welcome Page, We will add Slider/Explorer Slides here.</Text>
-      <TextButton label="Create Account" onPress={()=> { console.log('test'); }}/>
-      <TextButton label="Login" onPress={()=> { console.log('test'); }}/>
+      <View style={styles.logoWrapper}>
+        <Image style={styles.logo} source={require('../../../media/logo.png')} />
+      </View>
+      <View style={styles.bodyWrapper}>
+        <Text style={styles.pageLabel}>This is Our Welcome Page, We will add Slider/Explorer Slides here.</Text>
+         <View style={styles.buttonsWrapper}>
+           <Button label="Create Account" touchableStyle={{marginBottom: 5}} onPress={() => handleButtonClick('Signup')} />
+           <Button label="Login" onPress={() => handleButtonClick('Login')} />
+         </View>
+      </View>
     </View>
   );
 }

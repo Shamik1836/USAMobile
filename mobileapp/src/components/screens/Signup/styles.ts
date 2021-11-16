@@ -18,19 +18,24 @@ const styles = StyleSheet.create({
 		resizeMode: 'contain'
 	},
 	bodyWrapper:{
-		flex: 2,
+		flex: 3,
+		width: '100%',
 		alignItems: 'center',
-		justifyContent:'space-around'
 	},
-	pageLabel: {
-		textAlign:'center'
+	form:{
+		width: '80%'
 	},
-	buttonsWrapper:{
-		display: 'flex',
-		width: '80%',
-		alignItems: 'center',
-		padding: 8
-		
+	inputWrapper:{},
+	signupBtnWrapper:{
+		width:'80%',
+		paddingHorizontal: 8, 
+		marginTop: 32
+	},
+	formBottomTextWrapper:{
+		width:'80%',
+		paddingHorizontal: 8,
+		marginTop: 16,
+		alignItems: 'center' 
 	}
 });
 

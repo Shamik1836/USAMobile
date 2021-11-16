@@ -7,7 +7,9 @@ import { WelcomeScreen, LoginScreen, SignupScreen, HomeScreen} from '../componen
 
 
 const Stack = createNativeStackNavigator();
-const INITIAL_ROUTE_NAME = 'AuthLoading';
+const INITIAL_ROUTE_NAME = 'Welcome';
+// const INITIAL_ROUTE_NAME = 'Login';
+// const INITIAL_ROUTE_NAME = 'Signup';
 
 
 // const AppConext =  React.createContext('Auth');
@@ -22,7 +24,12 @@ export default class AppNavigator extends React.Component {
 	render() {
 		return (
 			<NavigationContainer>
-				<Stack.Navigator>
+				<Stack.Navigator 
+					initialRouteName={INITIAL_ROUTE_NAME}
+					screenOptions={{
+					    headerShown: false
+					}}
+				>
 					<Stack.Screen name="Welcome" component={WelcomeScreen} />
 					<Stack.Screen name="Login" component={LoginScreen} />
 					<Stack.Screen name="Signup" component={SignupScreen}/>
