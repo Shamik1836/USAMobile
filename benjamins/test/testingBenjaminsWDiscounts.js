@@ -401,7 +401,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const userLevel = bigNumberToNumber (await benjaminsContract.connect(mintingAccSigner).discountLevel(accountMinting)); 
   
   // starting with minting costs, then rounding down to cents
-  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 8000000;
+  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 16000000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
@@ -429,7 +429,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
 
   const userLevel = bigNumberToNumber (await benjaminsContract.connect(burningAccSigner).discountLevel(accountBurning)); 
     
-  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 8000000;
+  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 16000000;
   const burnReturnInCents = burnReturnInUSDC * 100;
   const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
   
@@ -563,7 +563,7 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
 
     resetTrackers();
     
-    await testMinting("First Setup mint for 100k USDC", 889000, deployer, deployer);    
+    await testMinting("First Setup mint for 100k USDC", 1250000, deployer, deployer);    
         
     for (let index = 0; index < testUserAddressesArray.length; index++) {
       const testingUser = testUserAddressesArray[index];      
@@ -754,7 +754,7 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
   
   it("Test 8. Account levels and discounts should not be triggered below threshold", async function () { 
     
-    await testMinting("Preparation mint", 200000, deployer, deployer);    
+    await testMinting("Preparation mint", 1000000, deployer, deployer);    
 
     await countAllCents(); 
 
@@ -1325,8 +1325,8 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
       "Benjamins is paused."
     );
     
-    // test preparation verification, contract owner should have 889000 tokens from "First Setup mint for 100k USDC"
-    expect(await balBNJI(deployer)).to.equal(1089000);
+    // test preparation verification, contract owner should have 1,250,000 tokens from "First Setup mint for 100k USDC"
+    expect(await balBNJI(deployer)).to.equal(1450000);
     // waiting for another 540 blocks, so that deployer can transfer and burn, since acc level 5
     await mintBlocks(540);    
     // when paused is active, contract owner can use transfer 40 BNJI from themself to testUser_2
@@ -1550,7 +1550,7 @@ describe("Testing Benjamins smart montract, with engaged discounts", function ()
 
   });  
   
-  it.only("Test 29. Holding times are reset by disengaging discount lock, even if user was level 5 and waiting time was over", async function () { 
+  it("Test 29. Holding times are reset by disengaging discount lock, even if user was level 5 and waiting time was over", async function () { 
    
     await countAllCents();
     await addUserAccDataPoints(testUser_1); // expecting discount level 0

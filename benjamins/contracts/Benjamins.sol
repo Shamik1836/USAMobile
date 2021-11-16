@@ -40,7 +40,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
     uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
     
-    uint256 public curveFactor = 8000000;    // Inverse slope of the bonding curve.
+    uint256 public curveFactor = 16000000;  // Inverse slope of the bonding curve.
     uint16  public baseFee = 2;             // in percent as an integer  // TODO: change to real value, this is for testing
 
     // Manage Discounts
@@ -49,6 +49,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8[]  public levelDiscounts;                 // percentage discount given by each level;
 
     // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
+    // TODO: or locks
     mapping (address => uint256) discountLockBlockHeight;
 
     // This mapping keeps track of the users accounts' locking. 
@@ -188,7 +189,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return _decimals;
     }
 
-     function engageDiscountLock() public whenAvailable {
+    function engageDiscountLock() public whenAvailable {
         require(lockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
         lockEngaged[msg.sender] = true;       
         discountLockBlockHeight[msg.sender] = block.number;   
@@ -241,7 +242,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         //checking recipient's discount level after changes        
         uint8 newUserDiscountLevel = discountLevel(recipient);
         // if discount level is different now, adjusting the holding times
-        if ( newUserDiscountLevel > originalUserDiscountLevel){
+        if ( newUserDiscountLevel > originalUserDiscountLevel ){
            newLevelReached(recipient);
         }
         return true;

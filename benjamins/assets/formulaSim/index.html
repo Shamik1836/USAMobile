@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formula Sim 1</title>
+  <script type="text/javascript" src="./jquery-3.4.1.js"></script>
+</head>
+
+<body>
+  <!--
+    FORMULAS: 
+   
+    foundation formula, price for 1 infinitely small amount of token at totalSupply amount of x: 
+    f(x) = x * 0.0000025
+    --------
+    formula for minting a specified amount of tokens: 
+    ( (totalSupplyAfterMinting ^2) - (totalSupplyBeforeMinting ^2) ) / 800,000
+    --------
+    formula for burning a specified amount of tokens
+    totalSupplyafterBurning = totalSupplyBeforeBurning - amountOfTokensBurningNow
+    totalCurrencyForTokensBurningNow = ( (totalSupplyBeforeBurning ^2) - (totalSupplyafterBurning ^2) ) / 800000
+    --------
+    formula for minting for a specified amount of currency (totalPriceForTokensMintingNow) :
+    totalSupplyAfterMinting = SquareRootOf ( (totalPriceForTokensMintingNow * 800000) + (totalSupplyBeforeMinting ^2) )
+    tokenAmountMintingNow = totalSupplyAfterMinting - totalSupplyBeforeMinting
+    --------
+    formula for burning to get a specified amount of currency
+    totalSupplyafterBurning = SquareRootOf ( (totalSupplyBeforeBurning ^2) - (totalCurrencyForTokensBurningNow * 800000) )
+    amountOfTokensBurningNow = totalSupplyBeforeBurning - totalSupplyafterBurning
+  
+  -->
+  <!-- Minting a specified amount of tokens ------------------------------------------------------------------------------------ -->
+  <h1>Minting a specified amount of tokens</h1>
+
+  <input type="number" class="form-control" placeholder="This many tokens exist" id="tokensToStartInputField">
+  <input type="number" class="form-control" placeholder="Amount tok. Minting now" id="tokensMintingNowInputField">
+
+  <button type="button" class="btn btn-primary" id="calcSpecMintButton">
+    Calculate total order price
+  </button>
+
+  <h2 style="color: blue" id="showMintCostPlusFeeHere"></h2>
+
+  <h3 style="color: blue" id="showMintFee"></h3>
+  <h3 style="color: blue" id="showResultHere"></h3>
+  <h3 id="showTokensMintingNow"></h3>
+  <h3 id="showTokensAtStart"></h3>
+  <h3 id="showTokensAtEnd"></h3>
+
+
+  <!-- Burning a specified amount of tokens ----------------------------------------------------------------------------------- -->
+  <h1>Burning a specified amount of tokens</h1>
+
+  <input type="number" class="form-control" placeholder="This many tokens exist" id="tokExistBeforeBurningInputField">
+  <input type="number" class="form-control" placeholder="Amount tok. burning now" id="tokensBurningNowInputField">
+
+  <button type="button" class="btn btn-primary" id="calcBurnButton">
+    Calculate how much currency you will get for your tokens
+  </button>
+
+  <h2 style="color: blue" id="showBurnReturnMinusFeeHere"></h2>
+
+  <h3 style="color: blue" id="showBurnFee"></h3>
+  <h3 style="color: blue" id="showBurnReturnHere"></h3>
+  <h3 id="showTokensBeforeBurning"></h3>
+  <h3 id="showTokensAfterBurning"></h3>
+
+
+  <!-- Minting for a specified amount of currency ------------------------------------------------------------------------------ -->
+  <h1>Minting for a specified amount of currency</h1>
+
+  <input type="number" class="form-control" placeholder="This many tokens exist" id="tokensToStartInputField2">
+  <input type="number" class="form-control" placeholder="youAreSendingThisMuch" id="orderTotalPriceInputField">
+
+  <button type="button" class="btn btn-primary" id="calcGoButton2">
+    Calculate amount of tokens you get
+  </button>
+
+  <h2 style="color: blue" id="showTokensMintingNow2"></h2>
+
+  <h3 id="pricePaid"></h3>
+  <h3 id="showTokensAtStart2"></h3>
+  <h3 id="showTokensAtEnd2"></h3>
+
+
+  <!-- Burning to get a specified amount of currency -------------------------------------------------------------------------- -->
+  <h1>Burning to get a specified amount of currency</h1>
+
+  <input type="number" class="form-control" placeholder="This many tokens exist" id="tokExistBeforeBurningInputField2">
+  <input type="number" class="form-control" placeholder="youWantThisMuchCurrency" id="orderTotalReturnInputField">
+
+  <button type="button" class="btn btn-primary" id="calcBurnButton2">
+    Calculate amount of tokens you will burn
+  </button>
+
+  <h2 style="color: blue" id="showTokensBurningNow2"></h2>
+
+  <h3 id="showBurnReturnHere2"></h3>
+  <h3 id="showTokensBeforeBurning2"></h3>
+  <h3 id="showTokensAfterBurning2"></h3>
+
+  <script>
+
+    /* <!-- Minting a specified amount of tokens ---------------------------------------------------------------------------- --> */
+
+    let tokensExistAtStart;
+    let tokensMintingNow;
+    let tokensExistAtEnd;
+
+    let totalPriceForTokensMintingNow;
+
+    function calculateSpecMintResult() {
+      tokensExistAtStart = $("#tokensToStartInputField").val();
+      tokensMintingNow = $("#tokensMintingNowInputField").val();
+      tokensExistAtEnd = Number(tokensExistAtStart) + Number(tokensMintingNow);
+
+      totalPriceForTokensMintingNow = (((tokensExistAtEnd * tokensExistAtEnd)) - ((tokensExistAtStart * tokensExistAtStart))) / 800000;
+      $(`#showResultHere`).html(`Price before fee (math curve response): ` + totalPriceForTokensMintingNow);
+
+
+      $(`#showTokensAtStart`).html(`This many tokens exist before minting: ` + tokensExistAtStart);
+      $(`#showTokensMintingNow`).html(`This many tokens you're minting now: ` + tokensMintingNow);
+      $(`#showTokensAtEnd`).html(`This many tokens exist after minting: ` + tokensExistAtEnd);
+
+      const inCentsTotalPriceForTokensMintingNow = totalPriceForTokensMintingNow * 100;
+      const inCentsRoundedDown = inCentsTotalPriceForTokensMintingNow - (inCentsTotalPriceForTokensMintingNow % 1);
+      const mintFeeStarter = inCentsTotalPriceForTokensMintingNow / 100;
+      const roundingForFeeDifference = mintFeeStarter % 1;
+      const mintFee = mintFeeStarter - roundingForFeeDifference;
+      const inCentsToPayTotal = inCentsRoundedDown + mintFee;
+      const inUSDCToPayTotal = inCentsToPayTotal / 100;
+      $(`#showMintCostPlusFeeHere`).html(`Total price (incl fee & rounded down cents): ` + inUSDCToPayTotal);
+      $(`#showMintFee`).html(`Mint fee is: ` + (mintFee / 100));
+
+
+    }
+
+    $("#calcSpecMintButton").click(async () => {
+      calculateSpecMintResult();
+    });
+
+
+    /* <!-- Burning a specified amount of tokens --------------------------------------------------------------------------- --> */
+    let tokensExistBeforeBurning;
+    let tokensBurningNow;
+    let tokensExistAfterBurning;
+
+    let totalCurrencyForTokensBurningNow;
+
+    function calculateBurningResult() {
+      tokensExistBeforeBurning = $("#tokExistBeforeBurningInputField").val();
+      tokensBurningNow = $("#tokensBurningNowInputField").val();
+      tokensExistAfterBurning = Number(tokensExistBeforeBurning) - Number(tokensBurningNow);
+
+      totalCurrencyForTokensBurningNow = ((tokensExistBeforeBurning * tokensExistBeforeBurning) - (tokensExistAfterBurning * tokensExistAfterBurning)) / 800000;
+      $(`#showBurnReturnHere`).html(`Return before fee (math curve response): ` + totalCurrencyForTokensBurningNow);
+
+      $(`#showTokensBeforeBurning`).html(`This many tokens exist before burning: ` + tokensExistBeforeBurning);
+      $(`#showTokensBurningNow`).html(`This many tokens you're burning now: ` + tokensBurningNow);
+      $(`#showTokensAfterBurning`).html(`This many tokens exist after burning: ` + tokensExistAfterBurning);
+
+      const inCentsTotalReturnForTokensBurningNow = totalCurrencyForTokensBurningNow * 100;
+      const inCentsRoundedDownBurn = inCentsTotalReturnForTokensBurningNow - (inCentsTotalReturnForTokensBurningNow % 1);
+      const burnFeeStarter = inCentsTotalReturnForTokensBurningNow / 100;
+      const burnRoundingForFeeDifference = burnFeeStarter % 1;
+      const burnFee = burnFeeStarter - burnRoundingForFeeDifference;
+      const inCentsToReceiveTotal = inCentsRoundedDownBurn - burnFee;
+      const inUSDCToReceiveTotal = inCentsToReceiveTotal / 100;
+      $(`#showBurnReturnMinusFeeHere`).html(`Total return (incl fee & rounded down cents):  ` + inUSDCToReceiveTotal);
+      $(`#showBurnFee`).html(`Burn fee is: ` + (burnFee / 100));
+    }
+
+    $("#calcBurnButton").click(async () => {
+      calculateBurningResult();
+    });
+
+
+    /* <!-- Minting for a specified amount of currency ---------------------------------------------------------------------- --> */
+    let tokensExistAtStart2;
+    let tokensMintingNow2;
+    let tokensExistAtEnd2;
+
+    let totalPriceForTokensMintingNow2;
+
+
+    function calculateResult2() {
+
+      totalPriceForTokensMintingNow2 = $("#orderTotalPriceInputField").val();
+      tokensExistAtStart2 = $("#tokensToStartInputField2").val();
+
+      tokensExistAtEnd2 = Math.sqrt((totalPriceForTokensMintingNow2 * 800000) + (tokensExistAtStart2 * tokensExistAtStart2));
+
+      tokensMintingNow2 = tokensExistAtEnd2 - tokensExistAtStart2;
+
+      $(`#showTokensMintingNow2`).html(`This many tokens you will get: ` + tokensMintingNow2);
+
+      $(`#pricePaid`).html(`This is the money you're sending: ` + totalPriceForTokensMintingNow2);
+      $(`#showTokensAtStart2`).html(`This many tokens exist before minting: ` + tokensExistAtStart2);
+      $(`#showTokensAtEnd2`).html(`This many tokens exist after minting: ` + tokensExistAtEnd2);
+    }
+
+    $("#calcGoButton2").click(async () => {
+      calculateResult2();
+    });
+
+
+    /* <!-- Burning to get a specified amount of currency ------------------------------------------------------------------ --> */
+    let tokensExistBeforeBurning2;
+    let tokensBurningNow2;
+    let tokensExistAfterBurning2;
+
+    let totalCurrencyForTokensBurningNow2;
+
+    function calculateBurningResult2() {
+      tokensExistBeforeBurning2 = $("#tokExistBeforeBurningInputField2").val();
+      totalCurrencyForTokensBurningNow2 = $("#orderTotalReturnInputField").val();
+
+      tokensExistAfterBurning2 = Math.sqrt((tokensExistBeforeBurning2 * tokensExistBeforeBurning2) - (totalCurrencyForTokensBurningNow2 * 800000));
+      tokensBurningNow2 = Number(tokensExistBeforeBurning2) - Number(tokensExistAfterBurning2);
+      $(`#showTokensBurningNow2`).html(`This many tokens you will burn: ` + tokensBurningNow2);
+
+      $(`#showBurnReturnHere2`).html(`You will get this much currency back: ` + totalCurrencyForTokensBurningNow2);
+      $(`#showTokensBeforeBurning2`).html(`This many tokens exist before burning: ` + tokensExistBeforeBurning2);
+      $(`#showTokensAfterBurning2`).html(`This many tokens exist after burning: ` + tokensExistAfterBurning2);
+    }
+
+    $("#calcBurnButton2").click(async () => {
+      calculateBurningResult2();
+    });
+
+  </script>
+
+</body>
+
+</html>
