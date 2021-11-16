@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import TradingViewWidget from 'react-tradingview-widget';
 
 function Card({ data, onClose }) {
   const { market_data, links } = data;
@@ -135,6 +136,13 @@ function Card({ data, onClose }) {
           </Typography>
         </Box>
       </Box>
+      <Box className="trading-view">
+        <TradingViewWidget
+          symbol={data.symbol}
+          // theme={}
+          autosize
+        />
+      </Box>
       <Box
         sx={{
           display: 'flex',
@@ -142,16 +150,19 @@ function Card({ data, onClose }) {
           alignItems: 'flex-start',
           mt: 3.75,
         }}
+        className="button-wrap"
       >
         {links.blockchain_site
-          .filter((a) => a)
-          .map((b) => (
+          .filter((a, index) => a && index < 5)
+          .map((b, index) => (
             <Button
               onClick={() => handleClick(b)}
+              key={index}
               variant="contained"
               size={links.blockchain_site.length > 5 ? 'small' : 'medium'}
+              className="link-button"
             >
-              {b.split('/')[2]}
+              {b.split('/')[2].split('.')[0]}
             </Button>
           ))}
       </Box>
