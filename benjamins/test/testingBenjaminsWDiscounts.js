@@ -401,7 +401,7 @@ async function calcMintApprovalAndPrep(amountToMint, accountMinting) {
   const userLevel = bigNumberToNumber (await benjaminsContract.connect(mintingAccSigner).discountLevel(accountMinting)); 
   
   // starting with minting costs, then rounding down to cents
-  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 16000000;
+  const mintingCostinUSDC = ((amountOfTokensAfterMint * amountOfTokensAfterMint) - (amountOfTokensBeforeMint * amountOfTokensBeforeMint)) / 8000000;
   const mintingCostInCents = mintingCostinUSDC * 100;
   const mintingCostRoundedDownInCents = mintingCostInCents - (mintingCostInCents % 1);
 
@@ -429,7 +429,7 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
 
   const userLevel = bigNumberToNumber (await benjaminsContract.connect(burningAccSigner).discountLevel(accountBurning)); 
     
-  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 16000000;
+  const burnReturnInUSDC = ( (amountOfTokensBeforeBurn * amountOfTokensBeforeBurn) - (amountOfTokensAfterBurn * amountOfTokensAfterBurn) ) / 8000000;
   const burnReturnInCents = burnReturnInUSDC * 100;
   const burnReturnRoundedDownInCents = burnReturnInCents - (burnReturnInCents % 1);  
   

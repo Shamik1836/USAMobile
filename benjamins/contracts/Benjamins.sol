@@ -40,8 +40,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
     uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
     
-    uint256 public curveFactor = 16000000;  // Inverse slope of the bonding curve.
-    uint16  public baseFee = 1;             // in percent as an integer  // TODO: change to real value, this is for testing
+    uint256 public curveFactor = 8000000;   // Inverse slope of the bonding curve.
+    uint16  public baseFeeTimes10k = 10000; // percent * 10,000 as an integer (for ex. 1% baseFee expressed as 10000)
 
     // Manage Discounts
     uint32[] public levelAntes;                    // how many BNJI are needed for each level;
@@ -175,14 +175,14 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     function engageDiscountLock() public whenAvailable {
         require(discountLockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
         discountLockEngaged[msg.sender] = true;       
-        discountLockBlockHeight[msg.sender] = block.number;   
+        //discountLockBlockHeight[msg.sender] = block.number;   
         emit LockStatus(msg.sender, true);
     }
 
     function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
         require(discountLockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
         discountLockEngaged[msg.sender] = false;
-        discountLockBlockHeight[msg.sender] = 0;   
+        //discountLockBlockHeight[msg.sender] = 0;   
         emit LockStatus(msg.sender, false);
     }
 
@@ -194,19 +194,11 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         nonReentrant
         whenAvailable
         withdrawAllowed(_msgSender())
-        returns(bool) {        
-        //checking recipient's discount level before transfer
-        uint8 originalUserDiscountLevel = discountLevel(recipient);      
+        returns(bool) {  
 
         // transferring BNJI
         _transfer(_msgSender(), recipient, amount);
         
-        //checking recipient's discount level after changes        
-        uint8 newUserDiscountLevel = discountLevel(recipient);
-        // if discount level is different now, adjusting the holding times
-        if ( newUserDiscountLevel > originalUserDiscountLevel ){
-           newLevelReached(recipient);
-        }
         return true;
     }
 
@@ -221,9 +213,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         whenAvailable
         withdrawAllowed(sender)
     returns (bool) {    
-        //checking recipient's discount level before transfer
-        uint8 originalUserDiscountLevel = discountLevel(recipient);
-
         // checking if allowance for BNJI is enough
         uint256 currentBNJIAllowance = allowance(sender, _msgSender());
         require(currentBNJIAllowance >= amountBNJI, "Benjamins: transfer amount exceeds allowance");
@@ -232,15 +221,8 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         _transfer (sender, recipient, amountBNJI);
 
         // decreasing BNJI allowance by transferred amount
-        _approve(sender, _msgSender(), currentBNJIAllowance - amountBNJI);
-             
-        //checking recipient's discount level after changes
-        uint8 newUserDiscountLevel = discountLevel(recipient);
-
-        // if discount level is different now, adjusting the holding times
-        if ( newUserDiscountLevel > originalUserDiscountLevel){
-            newLevelReached(recipient);
-        }
+        _approve(sender, _msgSender(), currentBNJIAllowance - amountBNJI);   
+       
         return true;
     }
 
@@ -250,16 +232,25 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     // Buy BNJI with USDC for another address
-    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {        
-        // Checking user's discount level before mint
-        uint8 originalUserDiscountLevel = discountLevel(_toWhom);
-        // minting to user
-        changeSupply(_toWhom, _amount, true);        
-        // comparing user's discount level now to before
-        uint8 newUserDiscountLevel = discountLevel(_toWhom);
-        // if new discount level was reached, updating the holding time timeout
-        if ( newUserDiscountLevel > originalUserDiscountLevel){
-            newLevelReached(_toWhom);
+    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {       
+
+        // if user is minting to themself, a new discount level can be reached
+        if (_toWhom == msg.sender) {
+            // Checking user's discount level before mint
+            uint8 originalUserDiscountLevel = theoreticalDiscountLevel(_toWhom);
+
+            // user mints to themself
+            changeSupply(_toWhom, _amount, true);       
+
+            // comparing user's discount level now to before
+            uint8 newUserDiscountLevel = theoreticalDiscountLevel(_toWhom);
+            // if new discount level was reached, updating the holding time timeout
+            if ( newUserDiscountLevel > originalUserDiscountLevel){
+                newLevelReached(_toWhom);
+            }
+        } else {
+            // minting to user
+            changeSupply(_toWhom, _amount, true);       
         }
     }
 
@@ -309,9 +300,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return endAmountUSDCin6dec;                                     // returning USDC value of BNJI before fees
     }
 
-    // Returns THEORETICAL address discount level as an uint8 as a function of balance.
+    // Returns theoretical account discount level as an uint8
     // Discounts are only applied if user has engaged their discount lock mechanism
-    function discountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
+    function theoreticalDiscountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
         uint256 userBalance = balanceOf(_userToCheck); 
         uint8 currentLevel = 0;
         for (uint8 index = 0; index < levelAntes.length ; index++){
@@ -319,34 +310,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
                 currentLevel++;
             }
         }
-        return currentLevel;
-        //// discount level is only applied if user has engaged the discounts lock
-        //if (discountLockEngaged[_userToCheck] == true) {
-        
-            
-        //} else {
-        //    return 0;
-        //}
+        return currentLevel;       
     }
-
-    // Quote % fee the given user will be charged based on their
-    // current balance, Tx amount, and contents of the discount lookup table.
-    // Returns a percentage * 10,000.
-    function quoteFeePercentage(address forWhom)
-        public
-        view
-        whenAvailable
-        returns (uint16)
-    {
-        if (discountLockEngaged[forWhom] == true){
-            return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
-        } else {
-            return 10000*baseFee;
-        }
-        
-    }
-
-    // Execute mint (positive amount) or burn (negative amount).
+    
+    // Execute mint or burn
     function changeSupply(address _forWhom, uint256 _amountBNJI, bool isMint) internal nonReentrant whenAvailable {
         uint256 beforeFeeInUSDCin6dec;
         // Calculate change in tokens and value of difference
@@ -355,7 +322,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         } else {
             beforeFeeInUSDCin6dec = quoteUSDC(_amountBNJI, false);
         }
-        uint256 feeNotRoundedIn6dec = (beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender)))/ USDCscaleFactor;
+        uint256 feeNotRoundedIn6dec = (beforeFeeInUSDCin6dec * baseFeeTimes10k)/ USDCscaleFactor;
         uint256 feeRoundedDownIn6dec = feeNotRoundedIn6dec - (feeNotRoundedIn6dec % USDCcentsScaleFactor);
         // Execute exchange
         if (isMint == true) {
@@ -447,7 +414,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // amount of time that has passed since last account level upgrade or discount lock engagement
         // measured in blocks
         uint256 holdTime = blockNumNow - discountBlock;  
-        uint256 blocksNecessary = blocksPerDay*levelHolds[discountLevel(userToCheck)];
+        uint256 blocksNecessary = blocksPerDay*levelHolds[theoreticalDiscountLevel(userToCheck)];
 
         int256 difference = int256(blocksNecessary) - int256(holdTime);
 
