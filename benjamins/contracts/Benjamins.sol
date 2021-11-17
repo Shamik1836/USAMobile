@@ -41,7 +41,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
     
     uint256 public curveFactor = 16000000;  // Inverse slope of the bonding curve.
-    uint16  public baseFee = 2;             // in percent as an integer  // TODO: change to real value, this is for testing
+    uint16  public baseFee = 1;             // in percent as an integer  // TODO: change to real value, this is for testing
 
     // Manage Discounts
     uint32[] public levelAntes;                    // how many BNJI are needed for each level;
@@ -54,7 +54,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // This mapping keeps track of the users accounts' locking. 
     // Locking activates withdraw/burning timeout periods and grants discounts
-    mapping (address => bool) lockEngaged;    
+    mapping (address => bool) discountLockEngaged;    
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
@@ -68,9 +68,9 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
         // Manage discounts TODO: finalize real numbers
-        levelAntes =         [20, 60, 100, 500, 2000]; // in Benjamins
-        levelHolds =     [ 0,  2,  7,  30,  90,  360]; // in days
-        levelDiscounts = [ 0,  5, 10,  20,  40,   75]; // in percent
+        levelAntes =         [200, 600, 1000]; // in Benjamins
+        levelHolds =       [0, 30,  90,  270]; // in days
+        levelDiscounts =   [0, 10,  25,   50]; // in percent
 
         // calling OpenZeppelin's (pausable) pause function for initial preparations after deployment
         pause();
@@ -129,29 +129,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         _;
     }
 
-    // Has the user held past the withdraw timeout?
+    // If the user has activated their discounts lock,
+    // has their withdraw timeout already run out?
     modifier withdrawAllowed(address userToCheck) {
-        if (lockEngaged[userToCheck] == true) {
+        if (discountLockEngaged[userToCheck] == true) {
             uint256 blocksStillNecessary = getWaitingTime(userToCheck);
             require(blocksStillNecessary <= 0, 'Discount level withdraw timeout in effect.');
-           
-            /*
-            // blockHeight right now
-            uint256 blockNumNow = block.number;
-            uint256 discountBlock = discountLockBlockHeight[userToCheck]; 
-            require(discountBlock > 0, 'No registered holding time. Check if discounts lock is engaged.');                
-
-            // amount of time that has passed since last account level upgrade, measured in blocks
-            uint256 holdTime = blockNumNow - discountBlock;  
-            
-            console.log(msg.sender, 'msg.sender, withdrawAllowed, BNJ');
-            console.log(userToCheck, 'userToCheck, withdrawAllowed, BNJ');
-            console.log(blockNumNow, 'blockNumNow, withdrawAllowed, BNJ');
-            console.log(holdTime, 'holdTime, withdrawAllowed, BNJ');
-            console.log(blocksPerDay*levelHolds[discountLevel(userToCheck)], 'blocksPerDay*levelHolds[discountLevel(userToCheck)], withdrawAllowed, BNJ');
-            */           
-            // checking result against the withdrawal timeout period required by user's account level
-            
         }
         _;
     }
@@ -190,35 +173,21 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     function engageDiscountLock() public whenAvailable {
-        require(lockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
-        lockEngaged[msg.sender] = true;       
+        require(discountLockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
+        discountLockEngaged[msg.sender] = true;       
         discountLockBlockHeight[msg.sender] = block.number;   
         emit LockStatus(msg.sender, true);
     }
 
     function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
-        require(lockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
-        lockEngaged[msg.sender] = false;
+        require(discountLockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
+        discountLockEngaged[msg.sender] = false;
         discountLockBlockHeight[msg.sender] = 0;   
         emit LockStatus(msg.sender, false);
     }
 
-    // calculating fees for transfers
-    function calcTransportFee(uint256 amountOfBNJI) public view whenAvailable returns (uint256) {
-        // calculating USDC value of BNJI)
-        uint256 beforeFeeInUSDCin6dec = quoteUSDC(amountOfBNJI, false);
-        // calculating the fee, rounding it down to full cents and returning the result
-        uint256 feeNotRoundedIn6dec = beforeFeeInUSDCin6dec * uint256(quoteFeePercentage(msg.sender))/ USDCscaleFactor;
-        uint256 feeRoundedDownIn6dec = feeNotRoundedIn6dec - (feeNotRoundedIn6dec % USDCcentsScaleFactor);
-        return feeRoundedDownIn6dec;
-    }
-
-    // Modified ERC20 transfer() 
-    // User needs to give this contract an approval for the necessary transportFeeRoundedIn6dec via the USDC contract
-    // To get the necessary value, user can call calcTransportFee, see above
-    // This must have happened before calling this function, or it will revert
-    // Cannot send until holding time is passed for sender.
-    // Creates possible lockout time for receiver.
+    // Modified ERC20 transfer()     
+    // Cannot send until holding time has passed for sender, if sender has discountLock engaged    
     function transfer(address recipient, uint256 amount)
         public
         override
@@ -227,14 +196,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         withdrawAllowed(_msgSender())
         returns(bool) {        
         //checking recipient's discount level before transfer
-        uint8 originalUserDiscountLevel = discountLevel(recipient);
-
-        // calculating transport fee
-        uint256 transportFeeRoundedIn6dec = calcTransportFee(amount);
-
-        // at this point, user must have given USDC approval for transportFeeRoundedIn6dec, or call will revert
-        // pull USDC from user (_msgSender()), push to feeReceiver
-        polygonUSDC.transferFrom(_msgSender(), feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended
+        uint8 originalUserDiscountLevel = discountLevel(recipient);      
 
         // transferring BNJI
         _transfer(_msgSender(), recipient, amount);
@@ -261,12 +223,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     returns (bool) {    
         //checking recipient's discount level before transfer
         uint8 originalUserDiscountLevel = discountLevel(recipient);
-
-        // calculating transport fee in USDC
-        uint256 transportFeeRoundedIn6dec = calcTransportFee(amountBNJI);
-
-        // pull USDC from user (sender), push to feeReceiver
-        polygonUSDC.transferFrom(sender, feeReceiver, transportFeeRoundedIn6dec); // TODO: verify this call works as intended 
 
         // checking if allowance for BNJI is enough
         uint256 currentBNJIAllowance = allowance(sender, _msgSender());
@@ -353,21 +309,24 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         return endAmountUSDCin6dec;                                     // returning USDC value of BNJI before fees
     }
 
-    // Return address discount level as an uint8 as a function of balance.
+    // Returns THEORETICAL address discount level as an uint8 as a function of balance.
+    // Discounts are only applied if user has engaged their discount lock mechanism
     function discountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
-        // discount level is only applied if user has engaged the discounts lock
-        if (lockEngaged[_userToCheck] == true) {
-            uint256 userBalance = balanceOf(_userToCheck); // lookup once.
-            uint8 currentLevel = 0;
-            for (uint8 index = 0; index < levelAntes.length ; index++){
-                if (userBalance >= levelAntes[index]) {
-                    currentLevel++;
-                }
+        uint256 userBalance = balanceOf(_userToCheck); 
+        uint8 currentLevel = 0;
+        for (uint8 index = 0; index < levelAntes.length ; index++){
+            if (userBalance >= levelAntes[index]) {
+                currentLevel++;
             }
-            return currentLevel;
-        } else {
-            return 0;
         }
+        return currentLevel;
+        //// discount level is only applied if user has engaged the discounts lock
+        //if (discountLockEngaged[_userToCheck] == true) {
+        
+            
+        //} else {
+        //    return 0;
+        //}
     }
 
     // Quote % fee the given user will be charged based on their
@@ -379,7 +338,12 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         whenAvailable
         returns (uint16)
     {
-        return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+        if (discountLockEngaged[forWhom] == true){
+            return 100*baseFee*uint16(100-levelDiscounts[discountLevel(forWhom)]); // 10,000x %
+        } else {
+            return 10000*baseFee;
+        }
+        
     }
 
     // Execute mint (positive amount) or burn (negative amount).
@@ -468,13 +432,13 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
 
     function getDiscountLockStatus(address userToCheck) public view returns (bool) {
-        return lockEngaged[userToCheck];
+        return discountLockEngaged[userToCheck];
     }
 
     // shows how many blocks the user still has to wait until they can burn, transfer tokens, or disengage discounts lock
     // only affects users that have engaged the discounts lock to get discounts
     function getWaitingTime(address userToCheck) public view returns (uint256 blocksNeeded) {
-        require(lockEngaged[userToCheck] == true, "Discount lock is not engaged.");
+        require(discountLockEngaged[userToCheck] == true, "Discount lock is not engaged.");
 
         uint256 blockNumNow = block.number;
         uint256 discountBlock = discountLockBlockHeight[userToCheck]; 

@@ -28,7 +28,7 @@ let liquidCentsArray = [];
 
 const scale6dec = 1000000;
 
-const baseFee = 2;
+const baseFee = 1;
 const levelDiscountsArray = [ 0,  5, 10,  20,  40,   75];       
 
 let benjaminsContract;
