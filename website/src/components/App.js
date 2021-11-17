@@ -20,6 +20,7 @@ import { BottomFooter } from './Screens/BottomFooter';
 import { usePositions } from '../hooks/usePositions';
 
 import { useNetwork } from '../contexts/networkContext';
+import { useExperts } from '../contexts/expertsContext';
 
 import { usePolygonNetwork } from '../hooks/usePolygonNetwork';
 
@@ -39,6 +40,7 @@ function App() {
   const { user, setUserData, isUserUpdating } = useMoralis();
   const { positions, isLoading } = usePositions();
   const { setAccounts, setNetworkId } = useNetwork();
+  const { setDialog } = useExperts();
   const address = user?.attributes?.ethAddress;
 
   const { getSelectedNetwork } = usePolygonNetwork();
@@ -51,6 +53,8 @@ function App() {
       if (isWeb3Enabled) {
         getSelectedNetwork();
       }
+    } else {
+      setDialog('Welcome to USA Wallet.  Simple, Safe, Secure.');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled]);
