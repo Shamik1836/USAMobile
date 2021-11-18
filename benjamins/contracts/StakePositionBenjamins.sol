@@ -58,10 +58,16 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     string testMessage; // TODO: take out, only for testing
   }
 
-  // mapping: user to array of user's lockBoxes
-  mapping (address => lockBox[] ) lockedInMapping;
-  mapping (address => uint8) amountOfLockboxesForUser;
   uint256 lockBoxIDcounter;  // TODO: probably improve, use OZ counter mechanism
+
+  mapping (address => uint8) amountOfLockboxesForUser;
+  
+  // double mapping, user to lockBoxID to lockBox
+  mapping ( address => mapping (uint256 => lockBox) ) usersLockBoxes;
+  
+  // user to array of their lockBox IDs
+  mapping (address => uint256[]) usersIDsOfLockboxes;
+  
 
 
   function calcUsersLockedAmount(address _userToCheck) public view returns (uint256 totalAmountOfLockedBNJIblocksForUser) {
@@ -71,8 +77,9 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // multiplied by the amount of blocks this lockbox existed so far.
     uint256 blocksTimesBNJIlocked = 0; 
     // going through all existing lockboxes for this user
+    // TODO: update description and variable names etc
     // TODO: indexes of lockBoxes must get set and updated correctly upon creating and deleting (change boxID)
-    // TODO: this is 0 index based, works with amountOfLockboxesForUser, if user has 3 lockboxes, the key values for them 
+    // TODO: UPDATE this is not 0 index based, works with amountOfLockboxesForUser, if user has 3 lockboxes, the key values for them 
     // inlockedInMapping[_userToCheck] should be 1,2,3. This way they can be found though they are in a mapping, not an array
     for (uint8 index = 0; index < amountOfLockboxesForUser[_userToCheck]; index++) {
       uint256 foundBNJIinBox = lockedInMapping[_userToCheck][index].amountOfBNJIlocked;
@@ -111,8 +118,10 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
       testMessage:        string(testingMessage)        // just for testing, to see if keeping track works as intended
     });   
     
-    // saving new lockBox to users array, in the global lockedInMapping 
-    lockedInMapping[msg.sender].push(newLockBox);     
+    // saving new lockBox to usersLockBoxes under their address and the fitting lockBoxID
+    usersLockBoxes[msg.sender][newLockBoxID] = newLockBox; 
+
+    usersIDsOfLockboxes[msg.sender]    
 
     // increasing their counter of lockBoxes
     amountOfLockboxesForUser[msg.sender] += 1;
@@ -120,6 +129,9 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     emit LockBoxCreated (newLockBoxID, msg.sender, _amountOfBNJItoLock, blockHeightNow, testingMessage);
   }
 
+  function unlockAndDestroyLockBox() {
+
+  }
 
 
   // This mapping keeps track of the blockheight, each time a user engages their discount lock    
