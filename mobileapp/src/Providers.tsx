@@ -19,12 +19,12 @@ const appId = "Yp4jqCYDS3aNQD5KDUegQ633MIFe4ikP5oJDFaJ7"; // Application id from
 const serverUrl = "https://vscjt8ylh8co.usemoralis.com:2053/server"; //Server url from moralis.io
 const environment = "native";
 const getMoralis = () => Moralis;
-// Initialize Moralis with AsyncStorage to support react-native storage
-Moralis.setAsyncStorage(AsyncStorage);
 
 // Replace the enable function to use the react-native WalletConnect
-if (Platform.OS === 'web') {
-  // @ts-ignore
+if (Platform.OS !== 'web') {
+  // Initialize Moralis with AsyncStorage to support react-native storage
+  Moralis.setAsyncStorage(AsyncStorage);
+  //@ts-ignore
   Moralis.setEnableWeb3(enableViaWalletConnect);
 }
 
@@ -43,9 +43,9 @@ const walletConnectOptions: WalletConnectProviderProps = {
 export const Providers = ({ children }: ProvidersProps) => {
   if (Platform.OS === 'web') {
     return (
-        <MoralisProvider appId={appId} serverUrl={serverUrl} environment={environment} getMoralis={getMoralis}>
-          {children}
-        </MoralisProvider>
+      <MoralisProvider appId={appId} serverUrl={serverUrl} environment={environment}>
+        {children}
+      </MoralisProvider>
     );
   } else {
     return (

@@ -9,7 +9,7 @@ interface IProps {}
 const Home: React.FC<IProps> = ()=>{
   return(
     <View>
-      <Text>This is Our Home Page, We will add Tabs and other stuff here</Text>
+      <Text>This is Our Home Screen Template, We will use this to create each screen.</Text>
     </View>
   );
 }

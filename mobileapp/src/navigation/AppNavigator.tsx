@@ -1,45 +1,42 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useMoralis } from 'react-moralis';
 
-import { WelcomeScreen, LoginScreen, SignupScreen, HomeScreen} from '../components/screens';
-
-
+import { AuthNavigator, TabsNavigator } from './';
 
 const Stack = createNativeStackNavigator();
-const INITIAL_ROUTE_NAME = 'Welcome';
-// const INITIAL_ROUTE_NAME = 'Login';
-// const INITIAL_ROUTE_NAME = 'Signup';
 
+const AppNavigator = () => {
+	const [isSignedIn, setSignedIn] = useState(false);
+	const { isAuthenticated } = useMoralis();
+	useEffect(() => {
+		if (isAuthenticated) {
+			console.log('User Is Authenticated!');
+		}else{
+			console.log('User Is Not Authenticated');
+		}
+	}, [isAuthenticated]);
 
-// const AppConext =  React.createContext('Auth');
-
-export default class AppNavigator extends React.Component {
-
-
-	constructor(props) {
-		super(props);
-	}
-
-	render() {
-		return (
-			<NavigationContainer>
-				<Stack.Navigator 
-					initialRouteName={INITIAL_ROUTE_NAME}
-					screenOptions={{
-					    headerShown: false
-					}}
-				>
-					<Stack.Screen name="Welcome" component={WelcomeScreen} />
-					<Stack.Screen name="Login" component={LoginScreen} />
-					<Stack.Screen name="Signup" component={SignupScreen}/>
-					<Stack.Screen name="Home" component={HomeScreen}/>
-				</Stack.Navigator>
-			</NavigationContainer>
-
-		)
-	}
+	return (
+		<NavigationContainer>
+			<Stack.Navigator
+				screenOptions={{
+					headerShown: false
+				}}>
+				{
+					isAuthenticated ? (
+						<Stack.Screen name="Tabs" component={TabsNavigator} />
+					) : (
+						<Stack.Screen name="Auth" component={AuthNavigator} />
+					)
+				}
+			</Stack.Navigator>
+		</NavigationContainer>
+	)
 }
+
+export default AppNavigator;
 
 
 

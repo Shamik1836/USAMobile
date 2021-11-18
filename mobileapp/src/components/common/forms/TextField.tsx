@@ -9,7 +9,8 @@ interface IProps {
 	label: string;
 	labelStyle?: StyleProp<TextStyle>;
 	containerStyle?: StyleProp<ViewStyle>;
-	secureEntry?: boolean;
+	secureTextEntry?: boolean;
+	value?: string;
 	onChange: (value) => void;
 
 }

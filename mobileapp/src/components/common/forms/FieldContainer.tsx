@@ -21,6 +21,5 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 8,
     paddingTop: 8,
-    borderBottomColor: '#fff'
   },
 });
