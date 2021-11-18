@@ -28,38 +28,37 @@ import "hardhat/console.sol";
 // Discounts and level holds are staged vs. a lookup table.
 contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     
-    ILendingPool public polygonLendingPool; // Aave lending pool on Polygon
-    IERC20 public polygonUSDC;              // USDC crypto currency on Polygon
-    IERC20 public polygonAMUSDC;            // Aave's amUSDC crypto currency on Polygon
+    ILendingPool public polygonLendingPool;     // Aave lending pool on Polygon
+    IERC20 public polygonUSDC;                  // USDC crypto currency on Polygon
+    IERC20 public polygonAMUSDC;                // Aave's amUSDC crypto currency on Polygon
 
-    address public feeReceiver;             // beneficiary address for collected fees
+    address public feeReceiver;                 // beneficiary address for collected fees
 
-    uint256 public reserveInUSDCin6dec;     // end user USDC on deposit
-    uint256 USDCscaleFactor = 1000000;      // 6 decimals scale of USDC crypto currency
-    uint256 USDCcentsScaleFactor = 10000;   // 4 decimals scale of USDC crypto currency cents
-    uint256 public blocksPerDay = 2;        // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
-    uint8   private _decimals;              // storing BNJI decimals, set to 0 in constructor
+    uint256 public reserveInUSDCin6dec;         // end user USDC on deposit
+    uint256 USDCscaleFactor = 1000000;          // 6 decimals scale of USDC crypto currency
+    uint256 USDCcentsScaleFactor = 10000;       // 4 decimals scale of USDC crypto currency cents
+    uint256 public blocksPerDay = 2;            // amount of blocks minted per day on polygon mainnet // TODO: change to 43200, value now is for testing
+    uint8   private _decimals;                  // storing BNJI decimals, set to 0 in constructor
     
-    uint256 public curveFactor = 8000000;   // Inverse slope of the bonding curve.
-    uint16  public baseFeeTimes10k = 10000; // percent * 10,000 as an integer (for ex. 1% baseFee expressed as 10000)
+    uint256 public curveFactor = 8000000;       // Inverse slope of the bonding curve.
+    uint16  public baseFeeTimes10k = 10000;     // percent * 10,000 as an integer (for ex. 1% baseFee expressed as 10000)
 
     // Manage Discounts
-    uint32[] public levelAntes;                    // how many BNJI are needed for each level;
-    uint16[] public levelHolds;                    // how many blocks to hold are necessary before withdraw is unlocked, at each level;
-    uint8[]  public levelDiscounts;                 // percentage discount given by each level;
+    uint32[] public levelAntes;                 // how many BNJI are needed for each level;
+    uint16[] public levelHolds;                 // how many blocks to hold are necessary before withdraw is unlocked, at each level;
+    uint8[]  public levelDiscounts;             // percentage discount given by each level;
 
-    // This mapping keeps track of the blockheight, each time a user upgrades into a better account level
-    // TODO: or locks
+    // This mapping keeps track of the blockheight, each time a user engages their discount lock    
     mapping (address => uint256) discountLockBlockHeight;
 
     // This mapping keeps track of the users accounts' locking. 
-    // Locking activates withdraw/burning timeout periods and grants discounts
+    // Locking activates withdraw and burning timeout periods and grants discounts
     mapping (address => bool) discountLockEngaged;    
 
     constructor() ERC20("Benjamins", "BNJI") {
         // Manage Benjamins
-        _decimals = 0;                      // Benjamins have 0 decimals, only full tokens exist.
-        reserveInUSDCin6dec = 0;            // upon contract creation, the reserve in USDC is 0
+        _decimals = 0;                          // Benjamins have 0 decimals, only full tokens exist.
+        reserveInUSDCin6dec = 0;                // upon contract creation, the reserve in USDC is 0
 
         // setting addresses for feeReceiver, USDC-, amUSDC- and Aave lending pool contracts
         feeReceiver = 0xE51c8401fe1E70f78BBD3AC660692597D33dbaFF;
@@ -67,10 +66,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
         polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
 
-        // Manage discounts TODO: finalize real numbers
-        levelAntes =         [200, 600, 1000]; // in Benjamins
-        levelHolds =       [0, 30,  90,  270]; // in days
-        levelDiscounts =   [0, 10,  25,   50]; // in percent
+        // Manage discounts
+        levelAntes =        [600, 1200, 1800];  // in Benjamins
+        levelHolds =     [0,  30,   90,  180];  // in days
+        levelDiscounts = [0,  10,   25,   50];  // in percent
 
         // calling OpenZeppelin's (pausable) pause function for initial preparations after deployment
         pause();
@@ -129,6 +128,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         _;
     }
 
+    // TODO: check for circular logic: should lock get disengaged before burning (at least if user would lower their discount level)?
     // If the user has activated their discounts lock,
     // has their withdraw timeout already run out?
     modifier withdrawAllowed(address userToCheck) {
@@ -174,15 +174,16 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     function engageDiscountLock() public whenAvailable {
         require(discountLockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
+        require(getDiscountLevel(msg.sender) >= 1, 'Account level must be at least 1, to get discounts.');
         discountLockEngaged[msg.sender] = true;       
-        //discountLockBlockHeight[msg.sender] = block.number;   
+        discountLockBlockHeight[msg.sender] = block.number;   
         emit LockStatus(msg.sender, true);
     }
 
     function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
         require(discountLockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
         discountLockEngaged[msg.sender] = false;
-        //discountLockBlockHeight[msg.sender] = 0;   
+        discountLockBlockHeight[msg.sender] = 0;   
         emit LockStatus(msg.sender, false);
     }
 
@@ -231,27 +232,10 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         mintTo(_amount, msg.sender);
     }
 
-    // Buy BNJI with USDC for another address
-    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {       
-
-        // if user is minting to themself, a new discount level can be reached
-        if (_toWhom == msg.sender) {
-            // Checking user's discount level before mint
-            uint8 originalUserDiscountLevel = theoreticalDiscountLevel(_toWhom);
-
-            // user mints to themself
-            changeSupply(_toWhom, _amount, true);       
-
-            // comparing user's discount level now to before
-            uint8 newUserDiscountLevel = theoreticalDiscountLevel(_toWhom);
-            // if new discount level was reached, updating the holding time timeout
-            if ( newUserDiscountLevel > originalUserDiscountLevel){
-                newLevelReached(_toWhom);
-            }
-        } else {
-            // minting to user
-            changeSupply(_toWhom, _amount, true);       
-        }
+    // Buy BNJI with USDC for another address.
+    function mintTo(uint256 _amount, address _toWhom) public whenAvailable {   
+        // minting to user
+        changeSupply(_toWhom, _amount, true);
     }
 
     // Sell BNJI for USDC.
@@ -280,29 +264,39 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         uint256 supplyAfterTx2;                             // post-mint supply squared, see below
         uint256 squareDiff;                                 // difference in supply, before and after, see below
 
-        if (isMint==true){                                  // this calculation is for minting BNJI
-            supplyAfterTx = supply + _amount;               // post-mint supply on mint
-            supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
+        // this calculation is for minting BNJI
+        if (isMint==true){                                  
+            supplyAfterTx = supply + _amount;               
+            supplyAfterTx2 = supplyAfterTx*supplyAfterTx;   
             squareDiff = supplyAfterTx2 - supply2;
         } 
         
-        else {                                              // this calculation is for burning BNJI
-            supplyAfterTx = supply - _amount;               // post-mint supply on burn
+        // this calculation is for burning BNJI
+        else {                                              
+            supplyAfterTx = supply - _amount;               
             supplyAfterTx2 = supplyAfterTx*supplyAfterTx;
             squareDiff = supply2 - supplyAfterTx2;
         }
 
-        uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;        // bringing difference into 6 decimals for USDC
-        uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;    // finishing bonding curve calculation
-        uint256 stubble = amountInUSDCin6dec % USDCcentsScaleFactor;    // defining sub-cent value
-        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - stubble;     // rounding down to USDC cents
+        // bringing difference into 6 decimals format for USDC
+        uint256 scaledSquareDiff = squareDiff * USDCscaleFactor;       
+
+        // finishing bonding curve calculation 
+        uint256 amountInUSDCin6dec = scaledSquareDiff / curveFactor;    
+
+        // rounding down to USDC cents
+        uint256 endAmountUSDCin6dec = amountInUSDCin6dec - (amountInUSDCin6dec % USDCcentsScaleFactor); 
+
+        // the amount of BNJI to be moved must be at least currently valued at $5 of USDC
         require (endAmountUSDCin6dec >= 5000000, "BNJ, quoteUSDC: Minimum BNJI value to move is $5 USDC" );
-        return endAmountUSDCin6dec;                                     // returning USDC value of BNJI before fees
+
+        // returning USDC value of BNJI before fees
+        return endAmountUSDCin6dec;                         
     }
 
     // Returns theoretical account discount level as an uint8
     // Discounts are only applied if user has engaged their discount lock mechanism
-    function theoreticalDiscountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
+    function getDiscountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
         uint256 userBalance = balanceOf(_userToCheck); 
         uint8 currentLevel = 0;
         for (uint8 index = 0; index < levelAntes.length ; index++){
@@ -384,11 +378,6 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         }
     }    
 
-    // Updating time counter measuring holding times, triggered when reaching new account level
-    function newLevelReached(address _toWhom) internal whenAvailable returns (bool) {
-        discountLockBlockHeight[_toWhom] = block.number;
-    }
-
     // TODO: test and look at in depth
     // Withdraw available fees and interest gains from lending pool to receiver address.
     function withdrawGains(uint256 _amountIn6dec) public onlyOwner {
@@ -414,7 +403,7 @@ contract Benjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
         // amount of time that has passed since last account level upgrade or discount lock engagement
         // measured in blocks
         uint256 holdTime = blockNumNow - discountBlock;  
-        uint256 blocksNecessary = blocksPerDay*levelHolds[theoreticalDiscountLevel(userToCheck)];
+        uint256 blocksNecessary = blocksPerDay*levelHolds[getDiscountLevel(userToCheck)];
 
         int256 difference = int256(blocksNecessary) - int256(holdTime);
 
