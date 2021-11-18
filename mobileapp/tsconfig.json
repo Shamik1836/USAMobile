@@ -3,9 +3,11 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
     "lib": [
+
       "dom",
       "esnext"
     ],
+    "target": "es2017",
     "moduleResolution": "node",
     "noEmit": true,
     "skipLibCheck": true,

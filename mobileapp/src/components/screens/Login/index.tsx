@@ -13,8 +13,8 @@ interface IProps { }
 
 
 const Login: React.FC<IProps> = () => {
-  const [email, setEmail] =  useState(null);
-  const [password, setPassword] =  useState(null);
+  const [email, setEmail] =  useState('');
+  const [password, setPassword] =  useState('');
 
   const navigation = useNavigation();
   const { login } = useMoralis();
