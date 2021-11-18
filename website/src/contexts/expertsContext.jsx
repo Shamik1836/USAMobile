@@ -7,9 +7,7 @@ export const useExperts = () => useContext(ExpertsContext);
 export const ExpertsProvider = (props) => {
   const [expertsOn, toggleExperts] = useState(true);
   const [actionMode, setActionMode] = useState('idle');
-  const [dialog, setDialog] = useState(
-    'Welcome to USA Wallet.  Simple, Safe, Secure.'
-  );
+  const [dialog, setDialog] = useState('');
 
   return (
     <ExpertsContext.Provider

@@ -44,7 +44,7 @@ export const usePositions = () => {
               let runningTotal = 0;
               const newList = allPositions
                 .map((token) => {
-                  const { symbol, balance, decimals } = token;
+                  const { symbol, balance, decimals, name } = token;
                   const {
                     id,
                     image,
@@ -55,6 +55,7 @@ export const usePositions = () => {
                   runningTotal += value;
                   return {
                     ...token,
+                    name: name.replace('(PoS)', '').trim(),
                     id,
                     image,
                     price,
