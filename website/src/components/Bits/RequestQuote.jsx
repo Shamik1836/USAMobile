@@ -41,7 +41,7 @@ export const RequestQuote = () => {
   }, [isFetching, fromTokenSymbol, toTokenSymbol, setDialog]);
 
   useEffect(() => {
-    if (data) {
+    if (data && !data.error) {
       setQuote(data);
       setDialog(
         "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
