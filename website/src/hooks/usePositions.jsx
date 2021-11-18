@@ -17,7 +17,11 @@ export const usePositions = () => {
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      const options = { chain: networkName };
+      const user = Moralis.User.current();
+      const options = {
+        chain: networkName,
+        address: user?.attributes.ethAddress,
+      };
       Promise.all([
         Moralis.Web3API.account.getNativeBalance(options),
         Moralis.Web3API.account.getTokenBalances(options),

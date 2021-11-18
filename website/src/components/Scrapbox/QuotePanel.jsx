@@ -16,13 +16,12 @@ export const QuotePanel = () => {
   } = useQuote();
 
   const { setDialog } = useExperts();
-
   const handleCancel = (e) => {
     setQuote();
     setDialog('Change your swap settings to recieve a new quote.');
   };
 
-  const gas = estimatedGas / 10 ** 7;
+  const gas = (estimatedGas * 2) / 10 ** 10;
 
   // const usdGas = (gas * price).toLocaleString("en-US", {
   //   minimumFractionDigits: 2,
