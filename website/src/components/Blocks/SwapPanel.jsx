@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Box, Stack } from '@mui/material';
 
 import { useActions } from '../../contexts/actionsContext';
@@ -12,9 +13,11 @@ import { RequestQuote } from '../Bits/RequestQuote';
 import { QuotePanel } from '../Scrapbox/QuotePanel';
 
 export const SwapPanel = () => {
-  const { fromToken } = useActions();
-  const { quoteValid } = useQuote();
-
+  const { fromToken, txAmount } = useActions();
+  const { quoteValid, setQuote } = useQuote();
+  useEffect(() => {
+    setQuote();
+  }, [fromToken, txAmount]);
   return (
     <Box
       sx={{
