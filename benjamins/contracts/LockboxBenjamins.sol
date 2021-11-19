@@ -81,18 +81,14 @@ contract LockboxBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     }
     return blocksTimesBNJIlocked;
   }
-
+  // todo: check if allowance is needed
   // todo: take out testingmessage
   // todo: probably put in reentrancyGuard here and in destroy lockbox function, against flashloan attacks, cant both be called in same block 
   function createLockbox (uint256 _amountOfBNJItoLock, string memory testingMessage) public hasTheBenjamins(_amountOfBNJItoLock) {
-    // checking if allowance for BNJI is enough, owner is msg.sender, spender is this contract
-    uint256 currentBNJIAllowance = allowance(msg.sender, address(this));
-    require(currentBNJIAllowance >= _amountOfBNJItoLock, "Benjamins: transfer amount exceeds allowance");
+   
     // transferring BNJI from msg.sender to this contract
-    _transfer (msg.sender, address(this), _amountOfBNJItoLock);                       // TODO: check if caller is correct, should be msg.sender, might need transferFrom
-    // decreasing BNJI allowance by transferred amount
-    _approve(msg.sender, address(this), currentBNJIAllowance - _amountOfBNJItoLock);  // TODO: check if caller is correct, should be msg.sender
-
+    transfer(address(this), _amountOfBNJItoLock);                       // TODO: check if caller is correct, should be msg.sender, might need transferFrom
+    
     // this is now, expressed in blockheight
     uint256 blockHeightNow = block.number;
 
@@ -143,8 +139,14 @@ contract LockboxBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     lockbox memory foundBox = usersLockboxes[_userToCheck][positionToLookUp];
 
-    
+    console.log(positionToLookUp, 'positionToLookUp in owners mapping, queried positionInUsersMapping[_lockboxIDtoFind],  findLockboxByIDforUser');
 
+    console.log(foundBox.lockboxID, 'lockboxID,  findLockboxByIDforUser');
+    console.log(foundBox.createdTimestamp, 'createdTimestamp,  findLockboxByIDforUser');
+    console.log(foundBox.amountOfBNJIlocked, 'amountOfBNJIlocked,  findLockboxByIDforUser');
+    console.log(foundBox.ownerOfLockbox, 'ownerOfLockbox,  findLockboxByIDforUser');
+    console.log(foundBox.testMessage, 'testMessage,  findLockboxByIDforUser');
+    
     return(
       foundBox.lockboxID,
       foundBox.createdTimestamp,
@@ -199,7 +201,7 @@ contract LockboxBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     // msg.sender must be owner of lockbox
     require (_lockboxtoDestroy.ownerOfLockbox == msg.sender);    
     // at least 10 blocks must have passed since lockbox was created
-    require((_lockboxtoDestroy.createdTimestamp +10) >= blockHeightNow);   
+    require((_lockboxtoDestroy.createdTimestamp +10) <= blockHeightNow, 'Flashloan-Protection: Lockbox must exist for at least 10 blocks.');   
 
     uint256 amountOfBNJIunlocked = _lockboxtoDestroy.amountOfBNJIlocked;
     
@@ -219,8 +221,19 @@ contract LockboxBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     delete positionInUsersMapping[_lockboxIDtoDestroy];
     delete usersLockboxes[msg.sender][lastLockboxPositionOfUser];
 
+    // this contract approves msg.sender to use transferFrom and pull in amountOfBNJIunlocked BNJI
+    _approve(address(this), msg.sender, amountOfBNJIunlocked);    
+
+    // checking allowance for BNJI 
+    uint256 fromThisContractToCallerBNJIAllowance = allowance(address(this), msg.sender);
+    console.log(fromThisContractToCallerBNJIAllowance, 'this many BNJI are allowed by this contract to user' );
+
     // this contract pushes msg.sender amountOfBNJIunlocked to msg.sender
-    transfer(msg.sender, amountOfBNJIunlocked);
+    transferFrom(address(this), msg.sender, amountOfBNJIunlocked);
+
+    // rechecking allowance for BNJI 
+    uint256 fromThisContractToCallerBNJIAllowanceNow = allowance(address(this), msg.sender);
+    console.log(fromThisContractToCallerBNJIAllowanceNow, 'this many BNJI are allowed by this contract to user after transferFrom' );
 
     emit LockboxDestroyed(_lockboxIDtoDestroy, msg.sender, amountOfBNJIunlocked, blockHeightNow);   
     

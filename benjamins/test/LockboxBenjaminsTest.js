@@ -96,6 +96,13 @@ function confirmUserDataPoints(userToCheck, expectedUserLevelsArray, expectedUse
   */
 }
 
+// simulate the passing of blocks
+async function mintBlocks (amountOfBlocksToMint) {
+  for (let i = 0; i < amountOfBlocksToMint; i++) {
+    await ethers.provider.send("evm_mine");
+  }
+}
+
 async function balUSDCinCents(userToQuery) {
   return dividefrom6decToUSDCcents(bigNumberToNumber(await polygonUSDC.balanceOf(userToQuery)));
 }
@@ -208,35 +215,18 @@ async function countAllCents() {
 }
 
 async function testTransfer(amountBNJItoTransfer, callingAccAddress, receivingAddress, isTransferFrom, fromSenderAddress){
-    
-  //const feeReceiverUSDCBalanceBeforeTransferIn6dec = await balUSDCin6decBN(feeReceiver);
-
+   
   // allowing benjaminsContract to handle USDC for ${callingAcc}   
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
-
-  
-  //const feeInCentsRoundedDown = await calcBurnVariables(amountBNJItoTransfer, callingAccAddress, true);  
-   
-  if (isTransferFrom == false) {
-   /* // showing the necessary fee: if USDC allowance is not given, transfer call will throw
-    await expect( benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJItoTransfer) ).to.be.revertedWith(
-      "ERC20: transfer amount exceeds allowance"
-    );  
-
-    await polygonUSDC.connect(callingAccSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));*/
+     
+  if (isTransferFrom == false) {   
     // calling transfer function on benjaminscontract     
     await benjaminsContract.connect(callingAccSigner).transfer(receivingAddress, amountBNJItoTransfer);
   } else {
-    /*
-    // showing the necessary fee for transferFrom: if USDC allowance is not given, transferFrom call will throw
-    await expect( benjaminsContract.connect(callingAccSigner).transferFrom(fromSenderAddress, receivingAddress, amountBNJItoTransfer) ).to.be.revertedWith(
-      "ERC20: transfer amount exceeds allowance"
-    );  */
-
+    
     // BNJI owner gives necessary USDC approval for fee to benjaminsContract
     const fromSenderSigner = await ethers.provider.getSigner(fromSenderAddress);   
-    /*await polygonUSDC.connect(fromSenderSigner).approve(benjaminsContract.address, multiplyFromUSDCcentsTo6dec(feeInCentsRoundedDown));  
-    */
+    
     // BNJI owner allows callingAccAddress to handle amountBNJItoTransfer BNJI 
     await benjaminsContract.connect(fromSenderSigner).approve(callingAccAddress, amountBNJItoTransfer);  
     
@@ -419,6 +409,45 @@ async function calcBurnVariables(amountToBurn, accountBurning, isTransfer=false)
   }  
 }
 
+
+async function testLockboxCreation(callingAccAddress, amountToLockUp) {
+
+  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+
+  const beforeBoxCreationBNJIbal_User = await balBNJI(callingAccAddress);
+  const beforeBoxCreationBNJIbal_Contract = await balBNJI(benjaminsContract.address);  
+
+  await benjaminsContract.connect(callingAccSigner).createLockbox(amountToLockUp, "This is the first box.");
+
+  const afterBoxCreationBNJIbal_User = await balBNJI(callingAccAddress);
+  const afterBoxCreationBNJIbal_Contract = await balBNJI(benjaminsContract.address);
+
+  expect(afterBoxCreationBNJIbal_User).to.equal(beforeBoxCreationBNJIbal_User - amountToLockUp);   
+  expect(afterBoxCreationBNJIbal_Contract).to.equal(beforeBoxCreationBNJIbal_Contract + amountToLockUp);   
+
+}  
+
+async function findLockboxByIDandUser(userToCheck, lockboxIDtoFind){
+  await benjaminsContract.findLockboxByIDforUser(userToCheck, lockboxIDtoFind);   
+}  
+
+async function unlockAndDestroyLockboxForUser(callingAccAddress, lockboxIDtoUnlockAndDestroy) {
+  const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
+
+  await benjaminsContract.connect(callingAccSigner).unlockAndDestroyLockbox(lockboxIDtoUnlockAndDestroy);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 describe("Testing Lockbox version of Benjamins", function () {
 
   // setting instances of contracts
@@ -557,9 +586,98 @@ describe("Testing Lockbox version of Benjamins", function () {
 
     await countAllCents();    
     await checkTestAddresses(3000,10,0, true);
-  })      
+  })     
   
+  it("Test NEW 1. testUser_1 should create a lockbox", async function () {  
+    await countAllCents();         
+    await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);     
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0);
+
+    await testLockboxCreation(testUser_1, 400)
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+    
+    await countAllCents();    
+  });
+
+  it("Test NEW 2. testUser_1 should create a lockbox and it should be found as expected", async function () {  
+    await countAllCents();         
+    await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);     
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0);
+
+    await testLockboxCreation(testUser_1, 400)
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+    
+    await countAllCents();    
+
+    await findLockboxByIDandUser(testUser_1, 1);   
+
+    
+     
+  });
+
+  it("Test NEW 3. testUser_1 should create a lockbox, tries to delete it too early", async function () {  
+    await countAllCents();         
+    await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);     
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0);
+
+    await testLockboxCreation(testUser_1, 400)
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+    
+    await countAllCents();    
+
+    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1) ).to.be.revertedWith(
+      "Flashloan-Protection: Lockbox must exist for at least 10 blocks."
+    );    
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+     
+  });
+
+  it("Test NEW 4. testUser_1 should create a lockbox, deletes it at first too early, then correctly", async function () {  
+    await countAllCents();         
+    await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);     
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0);
+
+    await testLockboxCreation(testUser_1, 400)
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+    
+    await countAllCents();    
+
+    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1) ).to.be.revertedWith(
+      "Flashloan-Protection: Lockbox must exist for at least 10 blocks."
+    );    
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+
+    await mintBlocks(10);
+     
+    await unlockAndDestroyLockboxForUser(testUser_1, 1);
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0); 
+
+  });
+
   
+  /*
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
     await countAllCents();         
     await testMinting("Test 1, minting 40 BNJI to caller", 40, testUser_1, testUser_1);      
@@ -1242,7 +1360,7 @@ describe("Testing Lockbox version of Benjamins", function () {
     await benjaminsContract.connect(deployerSigner).unpause();
     expect(await benjaminsContract.paused()).to.equal(false);
       
-    await countAllCents();//*/
+    await countAllCents();//
     
   });
 
