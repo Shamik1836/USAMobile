@@ -4,6 +4,7 @@ import { LibertyFox } from '../Guides/LibertyFox';
 import { SamEagle } from '../Guides/SamEagle';
 import { Benicorn } from '../Guides/Benicorn';
 import { useExperts } from '../../contexts/expertsContext';
+import { useNetwork } from '../../contexts/networkContext';
 
 import { Text } from '../UW/Text';
 
@@ -24,8 +25,9 @@ const Icons = {
 export const ExpertStage = () => {
   const { expertsOn, actionMode, dialog } = useExperts();
   const Icon = Icons[actionMode];
+  const { isPolygon } = useNetwork();
 
-  if (expertsOn === true) {
+  if (expertsOn === true || !isPolygon) {
     return (
       <Box sx={{ alignSelf: 'center', px: 2 }}>
         <Stack

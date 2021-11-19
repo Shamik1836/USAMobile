@@ -39,7 +39,7 @@ function App() {
   const { isAuthenticated, Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
   const { user, setUserData, isUserUpdating } = useMoralis();
   const { positions, isLoading } = usePositions();
-  const { setAccounts, setNetworkId } = useNetwork();
+  const { setAccounts, setNetworkId, isPolygon } = useNetwork();
   const { setDialog } = useExperts();
   const address = user?.attributes?.ethAddress;
 
@@ -63,19 +63,20 @@ function App() {
     const initMoralisEvents = () => {
       Moralis.onAccountsChanged((accounts) => {
         console.log('Account Changed Called.', accounts);
+        Moralis.link(accounts[0]);
         setAccounts(accounts);
         if (user && !isUserUpdating) {
-          setUserData(
-            {
-              accounts: accounts,
-              ethAddress: accounts?.length > 0 ? accounts[0] : null,
-            },
-            {
-              onError: (error) => {
-                console.log('UpdateUserError:', error);
-              },
-            }
-          );
+          // setUserData(
+          //   {
+          //     accounts: accounts,
+          //     ethAddress: accounts?.length > 0 ? accounts[0] : null,
+          //   },
+          //   {
+          //     onError: (error) => {
+          //       console.log('UpdateUserError:', error);
+          //     },
+          //   }
+          // );
         }
       });
       Moralis.onChainChanged((chainId) => {
@@ -100,17 +101,17 @@ function App() {
           if (window?.ethereum?.selectedAddress) {
             setAccounts([window.ethereum?.selectedAddress]);
             if (user && !isUserUpdating) {
-              setUserData(
-                {
-                  accounts: [window.ethereum?.selectedAddress],
-                  ethAddress: window.ethereum?.selectedAddress,
-                },
-                {
-                  onError: (error) => {
-                    console.log('UpdateUserError:', error);
-                  },
-                }
-              );
+              // setUserData(
+              //   {
+              //     accounts: [window.ethereum?.selectedAddress],
+              //     ethAddress: window.ethereum?.selectedAddress,
+              //   },
+              //   {
+              //     onError: (error) => {
+              //       console.log('UpdateUserError:', error);
+              //     },
+              //   }
+              // );
             }
           }
         }
@@ -139,7 +140,7 @@ function App() {
       <Stack>
         <TopNavBar />
         <ExpertStage />
-        {isAuthenticated ? (
+        {isAuthenticated && isPolygon ? (
           <BrowserRouter>
             <Stack
               direction="row"
@@ -197,7 +198,7 @@ function App() {
                   }}
                   startIcon={<MailIcon />}
                 >
-                  Send/Recieve
+                  {isOnlyMatic ? 'Recieve' : 'Send/Recieve'}
                 </Button>
               </Link>
             </Stack>
