@@ -25,8 +25,7 @@ import "hardhat/console.sol";
 // Collected fees and interest are withdrawable to the owner to a set recipient address.
 // Fee discounts are calculated based on BNJI balance.
 // Reentrancy is protected against via OpenZeppelin's ReentrancyGuard
-// Discounts and level holds are staged vs. a lookup table.
-contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
+contract LockboxBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     
   ILendingPool public polygonLendingPool;     // Aave lending pool on Polygon
   IERC20 public polygonUSDC;                  // USDC crypto currency on Polygon
@@ -42,13 +41,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
      
   uint256 public curveFactor = 8000000;       // Inverse slope of the bonding curve.
   uint16  public baseFeeTimes10k = 10000;     // percent * 10,000 as an integer (for ex. 1% baseFee expressed as 10000)
-
-  // Manage Discounts
-  uint32[] public levelAntes;                 // how many BNJI are needed for each level;
-  uint16[] public levelHolds;                 // how many blocks to hold are necessary before withdraw is unlocked, at each level;
-  uint8[]  public levelDiscounts;             // percentage discount given by each level;
-
-  
 
   struct lockbox {
     uint256 lockboxID;
@@ -67,9 +59,8 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
   // global mapping of all lockboxIDs to their position (key) in their owner's mapping 
   mapping (uint256 => uint8) positionInUsersMapping;
-
  
-  function calcUsersLockedAmount(address _userToCheck) public view returns (uint256 totalAmountOfLockedBNJIblocksForUser) {
+  function calcUsersLockedBNJIBlocks(address _userToCheck) public view returns (uint256 totalAmountOfLockedBNJIblocksForUser) {
     // this is now, expressed in blockheight
     uint256 blockHeightNow = block.number;
     // this is the counter for amount of BNJI locked in the lockbox that's beeing looked at, 
@@ -195,9 +186,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
   }  
 
-
-  
-
   function unlockAndDestroyLockbox(uint256 _lockboxIDtoDestroy) public {
 
     // this is now, expressed in blockheight
@@ -238,14 +226,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     
   }
 
-
-  // This mapping keeps track of the blockheight, each time a user engages their discount lock    
-  mapping (address => uint256) discountLockBlockHeight;
-
-  // This mapping keeps track of the users accounts' locking. 
-  // Locking activates withdraw and burning timeout periods and grants discounts
-  mapping (address => bool) discountLockEngaged;    
-
   constructor() ERC20("Benjamins", "BNJI") {
     // Manage Benjamins
     _decimals = 0;                          // Benjamins have 0 decimals, only full tokens exist.
@@ -256,12 +236,7 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     polygonUSDC = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
     polygonAMUSDC = IERC20(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
     polygonLendingPool = ILendingPool(0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf);
-
-    // Manage discounts
-    levelAntes =        [600, 1200, 1800];  // in Benjamins
-    levelHolds =     [0,  30,   90,  180];  // in days
-    levelDiscounts = [0,  10,   25,   50];  // in percent
-
+    
     // calling OpenZeppelin's (pausable) pause function for initial preparations after deployment
     pause();
   }
@@ -302,15 +277,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
   // event for updating the contract's approval to Aave's USDC lending pool
   event LendingPoolApprovalUpdate(uint256 amountToApproveIn6dec);
 
-  // event for updating the table of necessary BNJI amounts for the respective account level
-  event LevelAntesUpdate(uint32[] newLevelAntes);
-
-  // event for updating the table of necessary holding periods for the respective account level
-  event LevelHoldsUpdate(uint16[] newLevelHolds);
-
-  // event for updating the table of discounts for the respective account level
-  event LevelDiscountsUpdate(uint8[] newLevelDiscounts);
-
   // owner overrides paused.
   modifier whenAvailable() {        
     require(!paused() || (msg.sender == owner()), "Benjamins is paused.");
@@ -323,16 +289,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     _;
   }
 
-  // TODO: check for circular logic: should lock get disengaged before burning (at least if user would lower their discount level)?
-  // If the user has activated their discounts lock,
-  // has their withdraw timeout already run out?
-  modifier withdrawAllowed(address userToCheck) {
-    if (discountLockEngaged[userToCheck] == true) {
-      uint256 blocksStillNecessary = getWaitingTime(userToCheck);
-      require(blocksStillNecessary <= 0, 'Discount level withdraw timeout in effect.');
-    }
-    _;
-  }
 
   // Redundant reserveInUSDCin6dec protection vs. user withdraws. TODO: clean up
   modifier wontBreakTheBank(uint256 amountBNJItoBurn) {        
@@ -367,20 +323,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     return _decimals;
   }
 
-  function engageDiscountLock() public whenAvailable {
-    require(discountLockEngaged[msg.sender] == false, 'Discount lock already engaged for user.');
-    require(getDiscountLevel(msg.sender) >= 1, 'Account level must be at least 1, to get discounts.');
-    discountLockEngaged[msg.sender] = true;       
-    discountLockBlockHeight[msg.sender] = block.number;   
-    emit LockStatus(msg.sender, true);
-  }
-
-  function disengageDiscountLock() public whenAvailable withdrawAllowed(msg.sender) {
-    require(discountLockEngaged[msg.sender] == true, 'Discount lock already disengaged for user.');
-    discountLockEngaged[msg.sender] = false;
-    discountLockBlockHeight[msg.sender] = 0;   
-    emit LockStatus(msg.sender, false);
-  }
 
   // Modified ERC20 transfer()     
   // Cannot send until holding time has passed for sender, if sender has discountLock engaged    
@@ -388,8 +330,7 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     public
     override
     nonReentrant
-    whenAvailable
-    withdrawAllowed(_msgSender())
+    whenAvailable    
   returns(bool) {  
     // transferring BNJI
     _transfer(_msgSender(), recipient, amount);
@@ -405,8 +346,7 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     public
     override
     nonReentrant
-    whenAvailable
-    withdrawAllowed(sender)
+    whenAvailable    
   returns (bool) {    
     // checking if allowance for BNJI is enough
     uint256 currentBNJIAllowance = allowance(sender, _msgSender());
@@ -441,8 +381,7 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     public
     whenAvailable
     hasTheBenjamins(_amount)
-    wontBreakTheBank(_amount)
-    withdrawAllowed(msg.sender)
+    wontBreakTheBank(_amount)   
   {
     changeSupply(_toWhom, _amount, false);
   }
@@ -485,19 +424,6 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
     // returning USDC value of BNJI before fees
     return endAmountUSDCin6dec;                         
-  }
-
-  // Returns theoretical account discount level as an uint8
-  // Discounts are only applied if user has engaged their discount lock mechanism
-  function getDiscountLevel(address _userToCheck) public view whenAvailable returns(uint8) {
-    uint256 userBalance = balanceOf(_userToCheck); 
-    uint8 currentLevel = 0;
-    for (uint8 index = 0; index < levelAntes.length ; index++){
-      if (userBalance >= levelAntes[index]) {
-        currentLevel++;
-      }
-    }
-    return currentLevel;       
   }
     
   // Execute mint or burn
@@ -580,72 +506,27 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     emit ProfitTaken(availableIn6dec, _amountIn6dec);
   }
 
-    function getDiscountLockStatus(address userToCheck) public view returns (bool) {
-        return discountLockEngaged[userToCheck];
-    }
-
-    // shows how many blocks the user still has to wait until they can burn, transfer tokens, or disengage discounts lock
-    // only affects users that have engaged the discounts lock to get discounts
-    function getWaitingTime(address userToCheck) public view returns (uint256 blocksNeeded) {
-      require(discountLockEngaged[userToCheck] == true, "Discount lock is not engaged.");
-
-      uint256 blockNumNow = block.number;
-      uint256 discountBlock = discountLockBlockHeight[userToCheck]; 
-      require(discountBlock > 0, 'No registered holding time. Check if discounts lock is engaged.');                
-
-      // amount of time that has passed since last account level upgrade or discount lock engagement
-      // measured in blocks
-      uint256 holdTime = blockNumNow - discountBlock;  
-      uint256 blocksNecessary = blocksPerDay*levelHolds[getDiscountLevel(userToCheck)];
-
-      int256 difference = int256(blocksNecessary) - int256(holdTime);
-
-      uint256 blocksStillNeeded;
-
-      if(difference<0){
-        blocksStillNeeded = 0;
-      } else {
-        blocksStillNeeded = uint256(difference);
-      }
-
-      // number is positive if there is still time needed to wait
-      // number is zero if discount lock timeout period has ended
-      return blocksStillNeeded;
-    }
-
-    // Returns the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
-    // to be 100% backed against burning tokens at all times
-    function getReserveIn6dec() public view returns (uint256 reserveInUSDCin6decNow) {
-      return reserveInUSDCin6dec;
-    }
+  // Returns the reserveInUSDCin6dec tracker, which logs the amount of USDC (in 6 decimals format),
+  // to be 100% backed against burning tokens at all times
+  function getReserveIn6dec() public view returns (uint256 reserveInUSDCin6decNow) {
+    return reserveInUSDCin6dec;
+  }
     
-    function getFeeReceiver() public view returns (address feeReceiverNow) {
-      return feeReceiver;           
-    } 
+  function getFeeReceiver() public view returns (address feeReceiverNow) {
+    return feeReceiver;           
+  } 
 
-    function getPolygonUSDC() public view returns (address addressNow) {
-      return address(polygonUSDC);           
-    }
+  function getPolygonUSDC() public view returns (address addressNow) {
+    return address(polygonUSDC);           
+  }
 
-    function getPolygonAMUSDC() public view returns (address addressNow) {
-      return address(polygonAMUSDC);           
-    }
+  function getPolygonAMUSDC() public view returns (address addressNow) {
+    return address(polygonAMUSDC);           
+  }
 
-    function getBlocksPerDay() public view returns (uint256 amountOfBlocksPerDayNow) {
-      return blocksPerDay;           
-    }
-
-    function getLevelAntes() public view returns (uint32[] memory levelAntesNow) {
-      return levelAntes;           
-    }
-
-    function getLevelHolds() public view returns (uint16[] memory levelHoldsNow) {
-      return levelHolds;           
-    }
-
-    function getLevelDiscounts() public view returns (uint8[] memory levelDiscountsNow) {
-      return levelDiscounts;           
-    }
+  function getBlocksPerDay() public view returns (uint256 amountOfBlocksPerDayNow) {
+    return blocksPerDay;           
+  }
       
   // function for owner to withdraw MATIC that were sent directly to contract by mistake
   function cleanMATICtips() public onlyOwner {
@@ -724,23 +605,5 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
     polygonUSDC.approve(address(polygonLendingPool), amountToApproveIn6dec);
     emit LendingPoolApprovalUpdate(amountToApproveIn6dec);
   }
-
-  // Update token amount required for account levels
-  function updateLevelAntes (uint32[] memory newLevelAntes) public onlyOwner {
-    levelAntes = newLevelAntes;
-    emit LevelAntesUpdate(newLevelAntes);
-  }
-
-  // Update timeout times required by account levels
-  function updateLevelHolds (uint16[] memory newLevelHolds) public onlyOwner {
-    levelHolds = newLevelHolds;
-    emit LevelHoldsUpdate(newLevelHolds);
-  }
-
-  // Update fee discounts for account levels
-  function updateLevelDiscounts (uint8[] memory newLevelDiscounts) public onlyOwner {
-    levelDiscounts = newLevelDiscounts;
-    emit LevelDiscountsUpdate(newLevelDiscounts);
-  }   
 
 }

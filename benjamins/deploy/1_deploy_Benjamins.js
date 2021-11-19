@@ -1,4 +1,4 @@
-const CONTRACT_NAME = "Benjamins"; 
+const CONTRACT_NAME = "LockboxBenjamins"; 
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
@@ -6,7 +6,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   console.log("Deploying now with the acc:", deployer); 
 
-  await deploy("Benjamins", {   
+  await deploy("LockboxBenjamins", {   
     from: deployer,
     args: [],
     log: true,      
