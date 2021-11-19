@@ -128,7 +128,7 @@ async function getMATICbalance(adress) {
 // converting BN big numbers to normal numbers
 function bigNumberToNumber(bignumber) {
   let convertedNumber = Number ((ethers.utils.formatUnits(bignumber, 0)).toString());  
-  return convertedNumber;
+  return Number (convertedNumber);
 }
 
 // converting from 6dec to USDC cents
@@ -415,26 +415,97 @@ async function testLockboxCreation(callingAccAddress, amountToLockUp) {
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
 
   const beforeBoxCreationBNJIbal_User = await balBNJI(callingAccAddress);
-  const beforeBoxCreationBNJIbal_Contract = await balBNJI(benjaminsContract.address);  
+  const beforeBoxCreationBNJIbal_Contract = await balBNJI(benjaminsContract.address); 
+  const beforeBoxCreationBoxAmount = await amountOfUsersLockboxes(callingAccAddress);
 
   await benjaminsContract.connect(callingAccSigner).createLockbox(amountToLockUp, "This is the first box.");
 
   const afterBoxCreationBNJIbal_User = await balBNJI(callingAccAddress);
   const afterBoxCreationBNJIbal_Contract = await balBNJI(benjaminsContract.address);
+  const afterBoxCreationBoxAmount = await amountOfUsersLockboxes(callingAccAddress);
 
   expect(afterBoxCreationBNJIbal_User).to.equal(beforeBoxCreationBNJIbal_User - amountToLockUp);   
-  expect(afterBoxCreationBNJIbal_Contract).to.equal(beforeBoxCreationBNJIbal_Contract + amountToLockUp);   
+  expect(afterBoxCreationBNJIbal_Contract).to.equal(beforeBoxCreationBNJIbal_Contract + amountToLockUp); 
+  expect(afterBoxCreationBoxAmount).to.equal(beforeBoxCreationBoxAmount + 1);  
 
 }  
 
-async function findLockboxByIDandUser(userToCheck, lockboxIDtoFind){
+async function findLockboxByUserAndID(userToCheck, lockboxIDtoFind){
   await benjaminsContract.findLockboxByIDforUser(userToCheck, lockboxIDtoFind);   
 }  
 
-async function unlockAndDestroyLockboxForUser(callingAccAddress, lockboxIDtoUnlockAndDestroy) {
+async function findLockboxPositionByID(lockboxID){
+  return (bigNumberToNumber (await benjaminsContract.getLBpositionInUsersMapping(lockboxID)));   
+}  
+
+async function getUsersHistoricBNJIblocks (userToCheck){
+  const historicLockedBNJIblocksForUser = bigNumberToNumber (await benjaminsContract.getHistoricLockedBNJIblocksForUser(userToCheck));
+  return historicLockedBNJIblocksForUser;
+}
+
+async function amountOfUsersLockboxes(userToCheck){
+  return (await benjaminsContract.getAmountOfUsersLockboxes(userToCheck));
+}
+
+async function confirmUsersArrayOfLockBoxIDs(userToCheck, expectedLockBoxIDsArray) {
+  const usersAmountOfLockboxes = await amountOfUsersLockboxes(userToCheck);
+  const foundLockBoxIDarray = await getUsersArrayOfLockBoxIDs(userToCheck);
+
+  for (let index = 0; index < usersAmountOfLockboxes; index++) {
+    expect(foundLockBoxIDarray[index]).to.equal(expectedLockBoxIDsArray[index]);    
+  };
+}
+
+async function getUsersArrayOfLockBoxIDs(userToCheck){
+
+  const bigNumberFoundArray = await benjaminsContract.getUsersLockboxIDs(userToCheck);
+  const usersArrayOfLockboxIDs = [];
+
+  for (let index = 0; index < bigNumberFoundArray.length; index++) {
+    usersArrayOfLockboxIDs.push(bigNumberToNumber(bigNumberFoundArray[index]));    
+  }
+
+  return usersArrayOfLockboxIDs;
+}
+
+async function showLockedBNJIblocksForActLB(userToCheck, position) {
+  return (bigNumberToNumber (await benjaminsContract.calcLockedBNJIblocksForActiveLB(userToCheck, position)));
+}
+
+async function unlockAndDestroyLockboxForUser(callingAccAddress, lockboxIDtoUnlockAndDestroy, expectedAmount) {
+
   const callingAccSigner = await ethers.provider.getSigner(callingAccAddress);
 
+  const positionOfLockboxOfUser = await findLockboxPositionByID(lockboxIDtoUnlockAndDestroy);
+
+  const beforeBoxDestructionBNJIbal_User = await balBNJI(callingAccAddress);
+  const beforeBoxDestructionBNJIbal_Contract = await balBNJI(benjaminsContract.address);
+  const beforeBoxDestructionBoxAmount = await amountOfUsersLockboxes(callingAccAddress); 
+  const beforeBoxDestructionHistoricLockedBNJIblocks = await getUsersHistoricBNJIblocks(callingAccAddress);
+
+  // querying the lockedBNJIblocks in the active lockbox before unlocking
+  const amountOfLockedBNJIblocksInBox = await showLockedBNJIblocksForActLB(callingAccAddress, positionOfLockboxOfUser);
+
+  // here, one block passes
+
+  // in the next block, user unlocks and destroys the lockbox
   await benjaminsContract.connect(callingAccSigner).unlockAndDestroyLockbox(lockboxIDtoUnlockAndDestroy);
+
+  // one block passes between (querying the lockedBNJIblocks in the active lockbox before unlocking) and (unlocking and destrying it) 
+  // therefore 1*expectedAmount must be added to the expected result. As 1 block generates 1*expectedAmount additional lockedBNJIblocks.
+  const afterBoxDestructionHistoricLockedBNJIblocks = await getUsersHistoricBNJIblocks(callingAccAddress);  
+  const expectedHistoricBNJIblocksResult = beforeBoxDestructionHistoricLockedBNJIblocks + amountOfLockedBNJIblocksInBox + expectedAmount;
+
+  const afterBoxDestructionBNJIbal_User = await balBNJI(callingAccAddress);
+  const afterBoxDestructionBNJIbal_Contract = await balBNJI(benjaminsContract.address);
+  const afterBoxDestructionBoxAmount = await amountOfUsersLockboxes(callingAccAddress);
+  
+  expect(afterBoxDestructionBNJIbal_User).to.equal(beforeBoxDestructionBNJIbal_User + expectedAmount);   
+  expect(afterBoxDestructionBNJIbal_Contract).to.equal(beforeBoxDestructionBNJIbal_Contract - expectedAmount); 
+
+  expect(afterBoxDestructionBoxAmount).to.equal(beforeBoxDestructionBoxAmount - 1);  
+  expect(afterBoxDestructionHistoricLockedBNJIblocks).to.equal(expectedHistoricBNJIblocksResult);
+
 }
 
 
@@ -588,7 +659,7 @@ describe("Testing Lockbox version of Benjamins", function () {
     await checkTestAddresses(3000,10,0, true);
   })     
   
-  it("Test NEW 1. testUser_1 should create a lockbox", async function () {  
+  it("Test NEW 1. testUser_1 creates a lockbox", async function () {  
     await countAllCents();         
     await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
 
@@ -603,7 +674,7 @@ describe("Testing Lockbox version of Benjamins", function () {
     await countAllCents();    
   });
 
-  it("Test NEW 2. testUser_1 should create a lockbox and it should be found as expected", async function () {  
+  it("Test NEW 2. testUser_1 creates a lockbox and it should be found as expected", async function () {  
     await countAllCents();         
     await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
 
@@ -615,38 +686,38 @@ describe("Testing Lockbox version of Benjamins", function () {
     expect(await balBNJI(testUser_1)).to.equal(800);    
     expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
     
-    await countAllCents();    
-
-    await findLockboxByIDandUser(testUser_1, 1);   
-
+    await findLockboxByUserAndID(testUser_1, 1);   
     
+    await countAllCents();    
      
   });
 
-  it("Test NEW 3. testUser_1 should create a lockbox, tries to delete it too early", async function () {  
+  it("Test NEW 3. testUser_1 creates a lockbox, tries to delete it too early", async function () {  
     await countAllCents();         
     await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
 
     expect(await balBNJI(testUser_1)).to.equal(1200);     
     expect(await balBNJI(benjaminsContract.address)).to.equal(0);
 
-    await testLockboxCreation(testUser_1, 400)
+    await testLockboxCreation(testUser_1, 400);
 
     expect(await balBNJI(testUser_1)).to.equal(800);    
     expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
     
     await countAllCents();    
 
-    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1) ).to.be.revertedWith(
+    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1, 400) ).to.be.revertedWith(
       "Flashloan-Protection: Lockbox must exist for at least 10 blocks."
     );    
 
     expect(await balBNJI(testUser_1)).to.equal(800);    
     expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+
+    await countAllCents();    
      
   });
 
-  it("Test NEW 4. testUser_1 should create a lockbox, deletes it at first too early, then correctly", async function () {  
+  it("Test NEW 4. testUser_1 creates a lockbox, deletes it at first too early, then correctly", async function () {  
     await countAllCents();         
     await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
 
@@ -660,7 +731,7 @@ describe("Testing Lockbox version of Benjamins", function () {
     
     await countAllCents();    
 
-    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1) ).to.be.revertedWith(
+    await expect( unlockAndDestroyLockboxForUser(testUser_1, 1, 400) ).to.be.revertedWith(
       "Flashloan-Protection: Lockbox must exist for at least 10 blocks."
     );    
 
@@ -669,13 +740,43 @@ describe("Testing Lockbox version of Benjamins", function () {
 
     await mintBlocks(10);
      
-    await unlockAndDestroyLockboxForUser(testUser_1, 1);
+    await unlockAndDestroyLockboxForUser(testUser_1, 1, 400);
 
     expect(await balBNJI(testUser_1)).to.equal(1200);    
     expect(await balBNJI(benjaminsContract.address)).to.equal(0); 
 
+    await countAllCents();    
+
   });
 
+  it("Test NEW 5. testUser_1 creates a lockbox, starts accumulating lockedBenjaminBlocks as expected", async function () {  
+    await countAllCents();         
+    await testMinting("Minting 1200 BNJI to caller", 1200, testUser_1, testUser_1);     
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);     
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0);
+
+    await testLockboxCreation(testUser_1, 400);
+
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+    
+    await countAllCents();    
+   
+    expect(await balBNJI(testUser_1)).to.equal(800);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(400); 
+
+    await mintBlocks(577);
+     
+    await unlockAndDestroyLockboxForUser(testUser_1, 1, 400);
+
+    expect(await balBNJI(testUser_1)).to.equal(1200);    
+    expect(await balBNJI(benjaminsContract.address)).to.equal(0); 
+
+    await countAllCents();
+    
+
+  });
   
   /*
   it("Test 1. testUser_1 should mint 10 BNJI for themself", async function () {  
