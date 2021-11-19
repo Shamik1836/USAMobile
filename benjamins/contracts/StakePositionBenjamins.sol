@@ -50,40 +50,41 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
 
   
 
-  struct lockBox {
-    uint256 lockBoxID;
+  struct lockbox {
+    uint256 lockboxID;
     uint256 createdTimestamp;
     uint256 amountOfBNJIlocked;    
     address ownerOfLockbox;
     string testMessage; // TODO: take out, only for testing
   }
 
-  uint256 lockBoxIDcounter;  // TODO: probably improve, use OZ counter mechanism
+  uint256 lockboxIDcounter;  // TODO: probably improve, use OZ counter mechanism
 
   mapping (address => uint8) amountOfLockboxesForUser;
   
-  // double mapping, user to lockBoxID to lockBox
-  mapping ( address => mapping (uint256 => lockBox) ) usersLockBoxes;
-  
-  // user to array of their lockBox IDs
-  mapping (address => uint256[]) usersIDsOfLockboxes;
-  
+  // double mapping, user to position to lockbox
+  mapping ( address => mapping (uint256 => lockbox) ) usersLockboxes;
 
+  // global mapping of all lockboxIDs to their position (key) in their owner's mapping 
+  mapping (uint256 => uint8) positionInUsersMapping;
 
+ 
   function calcUsersLockedAmount(address _userToCheck) public view returns (uint256 totalAmountOfLockedBNJIblocksForUser) {
     // this is now, expressed in blockheight
     uint256 blockHeightNow = block.number;
     // this is the counter for amount of BNJI locked in the lockbox that's beeing looked at, 
     // multiplied by the amount of blocks this lockbox existed so far.
     uint256 blocksTimesBNJIlocked = 0; 
+
     // going through all existing lockboxes for this user
     // TODO: update description and variable names etc
-    // TODO: indexes of lockBoxes must get set and updated correctly upon creating and deleting (change boxID)
+    // TODO: indexes of lockboxes must get set and updated correctly upon creating and deleting (change boxID)
     // TODO: UPDATE this is not 0 index based, works with amountOfLockboxesForUser, if user has 3 lockboxes, the key values for them 
     // inlockedInMapping[_userToCheck] should be 1,2,3. This way they can be found though they are in a mapping, not an array
-    for (uint8 index = 0; index < amountOfLockboxesForUser[_userToCheck]; index++) {
-      uint256 foundBNJIinBox = lockedInMapping[_userToCheck][index].amountOfBNJIlocked;
-      uint256 blocksLocked = blockHeightNow - lockedInMapping[_userToCheck][index].createdTimestamp;
+    for (uint8 position = 1; position <= amountOfLockboxesForUser[_userToCheck]; position++) {
+      
+      uint256 foundBNJIinBox = usersLockboxes[_userToCheck][position].amountOfBNJIlocked;
+      uint256 blocksLocked = blockHeightNow - usersLockboxes[_userToCheck][position].createdTimestamp;
 
       blocksTimesBNJIlocked += foundBNJIinBox*blocksLocked;
     }
@@ -91,46 +92,150 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
   }
 
   // todo: take out testingmessage
-  function createLockBox (uint256 _amountOfBNJItoLock, string memory testingMessage) public hasTheBenjamins(_amountOfBNJItoLock) {
+  // todo: probably put in reentrancyGuard here and in destroy lockbox function, against flashloan attacks, cant both be called in same block 
+  function createLockbox (uint256 _amountOfBNJItoLock, string memory testingMessage) public hasTheBenjamins(_amountOfBNJItoLock) {
     // checking if allowance for BNJI is enough, owner is msg.sender, spender is this contract
     uint256 currentBNJIAllowance = allowance(msg.sender, address(this));
     require(currentBNJIAllowance >= _amountOfBNJItoLock, "Benjamins: transfer amount exceeds allowance");
     // transferring BNJI from msg.sender to this contract
-    _transfer (msg.sender, address(this), _amountOfBNJItoLock);
+    _transfer (msg.sender, address(this), _amountOfBNJItoLock);                       // TODO: check if caller is correct, should be msg.sender, might need transferFrom
     // decreasing BNJI allowance by transferred amount
-    _approve(msg.sender, address(this), currentBNJIAllowance - _amountOfBNJItoLock); 
+    _approve(msg.sender, address(this), currentBNJIAllowance - _amountOfBNJItoLock);  // TODO: check if caller is correct, should be msg.sender
 
     // this is now, expressed in blockheight
     uint256 blockHeightNow = block.number;
 
-    // increasing global lockBoxIDcounter
-    lockBoxIDcounter +=1;
+    // increasing global lockboxIDcounter
+    lockboxIDcounter +=1;
 
-    // updated lockBoxIDcounter is saved as lockBoxID into lockBox
-    uint256 newLockBoxID = lockBoxIDcounter;  
+    // updated lockboxIDcounter is saved as lockboxID into lockbox
+    uint256 newLockboxID = lockboxIDcounter;  
 
-    // creating new lockBox
-    lockBox memory newLockBox = lockBox ({  
-      lockBoxID:          uint256(newLockBoxID),        // unique identifier
+    // creating new lockbox
+    lockbox memory newLockbox = lockbox ({  
+      lockboxID:          uint256(newLockboxID),        // unique identifier
       createdTimestamp:   uint256(blockHeightNow),      // timestamp of creation
       amountOfBNJIlocked: uint256(_amountOfBNJItoLock), // amount of BNJI that were locked in
-      ownerOfLockbox:     address(msg.sender),          // msg.sender is owner of lockBox
+      ownerOfLockbox:     address(msg.sender),          // msg.sender is owner of lockbox
       testMessage:        string(testingMessage)        // just for testing, to see if keeping track works as intended
     });   
     
-    // saving new lockBox to usersLockBoxes under their address and the fitting lockBoxID
-    usersLockBoxes[msg.sender][newLockBoxID] = newLockBox; 
-
-    usersIDsOfLockboxes[msg.sender]    
-
-    // increasing their counter of lockBoxes
+    // increasing user's counter of lockboxes
     amountOfLockboxesForUser[msg.sender] += 1;
-   
-    emit LockBoxCreated (newLockBoxID, msg.sender, _amountOfBNJItoLock, blockHeightNow, testingMessage);
+
+    // using the updated counter as position (key) in users mapping of lockboxes
+    uint8 position = amountOfLockboxesForUser[msg.sender];
+
+    // saving new lockbox to usersLockboxes under their address and the fitting position
+    usersLockboxes[msg.sender][position] = newLockbox; 
+
+    // saving the position to global mapping of lockboxIDs
+    positionInUsersMapping[newLockboxID] = position;
+
+    // emitting event with all related useful details
+    emit LockboxCreated (newLockboxID, msg.sender, _amountOfBNJItoLock, blockHeightNow, testingMessage);
   }
 
-  function unlockAndDestroyLockBox() {
+  function findLockboxByIDforUser (address _userToCheck, uint256 _lockboxIDtoFind) 
+    public 
+    view 
+  returns (
+    uint256 foundLockboxID,
+    uint256 foundCreatedTimestamp,
+    uint256 foundAmountOfBNJIlocked,
+    address foundOwnerOfLockbox,
+    string memory foundTestingMessage
+    )
+  {
 
+    uint8 positionToLookUp = positionInUsersMapping[_lockboxIDtoFind];
+
+    lockbox memory foundBox = usersLockboxes[_userToCheck][positionToLookUp];
+
+    
+
+    return(
+      foundBox.lockboxID,
+      foundBox.createdTimestamp,
+      foundBox.amountOfBNJIlocked,
+      foundBox.ownerOfLockbox,
+      foundBox.testMessage
+    );
+
+  }
+  
+  function getAmountOfUsersLockboxes(address _userToCheck) public view returns (uint8 amountOfBoxesForUser) {
+    return amountOfLockboxesForUser[_userToCheck];
+  }
+
+  function getAllUsersLockboxIDs (address _userToCheck)  public view returns (uint256[] memory lockboxIDsOfUser) {
+
+    require(_userToCheck != address(0), "Query for the zero address");
+
+    uint256 lockboxAmount = getAmountOfUsersLockboxes(_userToCheck);
+
+    if (lockboxAmount == 0) {
+      // Return an empty array
+      return new uint256[](0);
+    }
+
+    uint256[] memory result = new uint256[](lockboxAmount);
+
+    uint256 counter;
+
+    for (counter = 0; counter < lockboxAmount; counter++) {
+
+      lockbox memory foundBox = usersLockboxes[_userToCheck][counter];
+
+      result[counter] = foundBox.lockboxID;
+    }
+
+    return result;
+    
+
+  }  
+
+
+  
+
+  function unlockAndDestroyLockbox(uint256 _lockboxIDtoDestroy) public {
+
+    // this is now, expressed in blockheight
+    uint256 blockHeightNow = block.number;    
+
+    uint8 positionToRefill = positionInUsersMapping[_lockboxIDtoDestroy];
+    lockbox memory _lockboxtoDestroy = usersLockboxes[msg.sender][positionToRefill];
+
+    // lockboxID inside the lockbox must be equal to _lockboxIDtoDestroy
+    require (_lockboxtoDestroy.lockboxID == _lockboxIDtoDestroy);
+    // msg.sender must be owner of lockbox
+    require (_lockboxtoDestroy.ownerOfLockbox == msg.sender);    
+    // at least 10 blocks must have passed since lockbox was created
+    require((_lockboxtoDestroy.createdTimestamp +10) >= blockHeightNow);   
+
+    uint256 amountOfBNJIunlocked = _lockboxtoDestroy.amountOfBNJIlocked;
+    
+    uint8 lastLockboxPositionOfUser = getAmountOfUsersLockboxes(msg.sender);    
+
+    uint8 positionOfLockboxToDestroy = positionToRefill;
+
+    // When the lockbox to destroy is the already in the user's mapping's last position, the swap operation is unnecessary
+    if (positionOfLockboxToDestroy != lastLockboxPositionOfUser) {
+
+      lockbox memory lockboxToMove = usersLockboxes[msg.sender][lastLockboxPositionOfUser];
+
+      usersLockboxes[msg.sender][positionToRefill] = lockboxToMove;       // Move the last lockbox to the slot of the to-destroy lockbox
+      positionInUsersMapping[lockboxToMove.lockboxID] = positionToRefill;  // Update the moved lockbox's position
+    }
+    
+    delete positionInUsersMapping[_lockboxIDtoDestroy];
+    delete usersLockboxes[msg.sender][lastLockboxPositionOfUser];
+
+    // this contract pushes msg.sender amountOfBNJIunlocked to msg.sender
+    transfer(msg.sender, amountOfBNJIunlocked);
+
+    emit LockboxDestroyed(_lockboxIDtoDestroy, msg.sender, amountOfBNJIunlocked, blockHeightNow);   
+    
   }
 
 
@@ -164,7 +269,9 @@ contract StakePositionBenjamins is Ownable, ERC20, Pausable, ReentrancyGuard {
   // event for engaging and disengaging the account's discount locking features
   event LockStatus(address account, bool acccountIsLocked);   
 
-  event LockBoxCreated(uint256 lockBoxID, address owner, uint256 lockedBNJI, uint256 createdTimestamp, string testingMessage);
+  event LockboxCreated(uint256 lockboxID, address owner, uint256 lockedBNJI, uint256 createdTimestamp, string testingMessage);
+
+  event LockboxDestroyed(uint256 lockboxID, address owner, uint256 unlockedBNJI, uint256 destroyedTimestamp);
 
   // event for exchanging USDC and BNJI // TODO:include mint or burn bool or type string 
   event Exchanged(
