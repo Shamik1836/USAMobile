@@ -3,8 +3,8 @@ import { View, Text, Image } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { useMoralis } from "react-moralis";
 
-import { Button, TextButton } from '../../common/button'
-import { TextField } from '../../common/forms'
+import { Button, TextButton } from '../../Common/Button'
+import { TextField } from '../../Common/Forms'
 import styles from './styles';
 
 

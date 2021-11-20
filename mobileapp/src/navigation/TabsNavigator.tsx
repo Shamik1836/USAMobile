@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { PortfolioPricesScreen, SwapTradeScreen, BuySellScreen, SendReceiveScreen } from '../components/screens';
+import { PortfolioPricesScreen, SwapTradeScreen, BuySellScreen, SendReceiveScreen } from '../components/Screens';
 
 const Tab = createBottomTabNavigator();
 const INITIAL_ROUTE_NAME = 'Portfolio';

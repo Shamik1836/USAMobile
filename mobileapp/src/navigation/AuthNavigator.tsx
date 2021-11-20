@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { WelcomeScreen, LoginScreen, SignupScreen } from '../components/screens';
+import { WelcomeScreen, LoginScreen, SignupScreen } from '../components/Screens';
 
 const Stack = createNativeStackNavigator();
 const INITIAL_ROUTE_NAME = 'Welcome';

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Image } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 
-import { Button } from '../../common'
+import { Button } from '../../Common/Button'
 import styles from './styles';
 
 
