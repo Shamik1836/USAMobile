@@ -6,6 +6,8 @@ import geckoCoinIds from '../data/geckoCoinIds.json';
 const emptyList = [];
 const geckoHead =
   'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=';
+const url =
+  'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd';
 
 export const usePositions = () => {
   const { isInitialized, isAuthenticated, Moralis } = useMoralis();
@@ -13,11 +15,16 @@ export const usePositions = () => {
   const [positions, setPositions] = useState(emptyList);
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(1);
+  const [maticPrice, setMaticPrice] = useState(0);
 
   useEffect(() => {
     if (!isInitialized) return;
     if (isAuthenticated) {
-      const options = { chain: networkName };
+      const user = Moralis.User.current();
+      const options = {
+        chain: networkName,
+        address: user?.attributes.ethAddress,
+      };
       Promise.all([
         Moralis.Web3API.account.getNativeBalance(options),
         Moralis.Web3API.account.getTokenBalances(options),
@@ -68,6 +75,11 @@ export const usePositions = () => {
               setTotalValue(runningTotal);
               setIsLoading(0);
             });
+          fetch(`${url}`)
+            .then((response) => response.json())
+            .then((data) => {
+              setMaticPrice(data['matic-network'].usd);
+            });
         })
         .catch(() => {
           setPositions(emptyList);
@@ -79,5 +91,5 @@ export const usePositions = () => {
     }
   }, [Moralis, isAuthenticated, isInitialized, networkName, nativeToken]);
 
-  return { positions, isLoading, totalValue };
+  return { positions, isLoading, totalValue, maticPrice };
 };

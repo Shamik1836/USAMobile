@@ -18,7 +18,7 @@ export const RequestQuote = () => {
     toTokenAddress,
     txAmount,
   } = useActions();
-  const { setQuote } = useQuote();
+  const { setQuote, quoteValid } = useQuote();
   const { setDialog } = useExperts();
   const { colorMode } = useColorMode();
   const { fetch, isFetching, data, error } = useQuoteAction({
@@ -31,17 +31,13 @@ export const RequestQuote = () => {
   useEffect(() => {
     if (isFetching) {
       setDialog(
-        'Estimating costs to swap ' +
-          fromTokenSymbol +
-          ' to ' +
-          toTokenSymbol +
-          ' ... '
+        `Estimating costs to swap ${fromTokenSymbol} to ${toTokenSymbol} ... `
       );
     }
   }, [isFetching, fromTokenSymbol, toTokenSymbol, setDialog]);
 
   useEffect(() => {
-    if (data) {
+    if (data && !data.error) {
       setQuote(data);
       setDialog(
         "Push 'Do it!' to execute swap.  Or adjust inputs to update quote."
@@ -67,7 +63,7 @@ export const RequestQuote = () => {
               loading={isFetching}
               onClick={fetch}
             >
-              Get Swap Quote
+              {quoteValid ? 'Refresh Swap Quote' : 'Get Swap Quote'}
             </LoadingButton>
           </span>
         </Tooltip>

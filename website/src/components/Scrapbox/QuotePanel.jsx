@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, Button, Stack, Typography } from '@mui/material';
 
 import { useQuote } from '../../contexts/quoteContext';
+import { usePositions } from '../../hooks/usePositions';
 import { useExperts } from '../../contexts/expertsContext';
 import { DoItButton } from './DoItButton';
 
@@ -15,14 +16,14 @@ export const QuotePanel = () => {
     estimatedGas,
   } = useQuote();
 
+  const { maticPrice } = usePositions();
   const { setDialog } = useExperts();
-
   const handleCancel = (e) => {
     setQuote();
     setDialog('Change your swap settings to recieve a new quote.');
   };
 
-  const gas = estimatedGas / 10 ** 7;
+  const gas = (estimatedGas * 2) / 10 ** 7;
 
   // const usdGas = (gas * price).toLocaleString("en-US", {
   //   minimumFractionDigits: 2,
@@ -63,7 +64,9 @@ export const QuotePanel = () => {
         />
         <Typography>{toToken.symbol}</Typography>
       </Stack>
-      <Typography>Estimated network fee: {gas} MATIC</Typography>
+      <Typography>
+        Estimated network fee: {(gas * maticPrice).toFixed(5)} USD
+      </Typography>
       <Stack direction="row">
         <DoItButton />
         <Button
