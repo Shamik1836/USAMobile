@@ -1,3 +1,4 @@
+// import React from "react";
 // import IconBadge from "../../media/characters/LibertyFox.svg";
 
 // export const LibertyFox = () => {
