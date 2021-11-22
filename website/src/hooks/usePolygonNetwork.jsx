@@ -14,7 +14,7 @@ const BLOCK_EXPLORER_URL = 'https://polygonscan.com/';
 
 export const usePolygonNetwork = () => {
   const { Moralis, enableWeb3, isWeb3Enabled } = useMoralis();
-  const { isAuthenticated, setNetworkId } = useNetwork();
+  const { isAuthenticated, setNetworkId, setHasPolygon } = useNetwork();
   const { setDialog } = useExperts();
 
   useEffect(() => {
@@ -54,31 +54,33 @@ export const usePolygonNetwork = () => {
       Moralis.switchNetwork(CHAIN_ID)
         .then(
           (success) => {
+            setHasPolygon(true);
             console.log('Success:', success);
             setNetworkId(CHAIN_ID);
             setDialog('Polygon Chain switched successfully.');
           },
           (switchError) => {
             console.log('SwitchError:', switchError);
-            setNetworkId(1);
-            setDialog(switchError.message);
+            // setNetworkId(1);
+            // setDialog(switchError.message);
+            setHasPolygon(false);
             if (switchError.code === 4902) {
               // console.log('We will call Add Network here.');
-              addPolygonNetwork();
+              // addPolygonNetwork();
             } else {
               const message = switchError.message ?? '';
               const testString = 'Unrecognized chain ID';
               if (message.toLowerCase().includes(testString.toLowerCase())) {
                 // console.log('We will call Add Network here.');
-                addPolygonNetwork();
+                // addPolygonNetwork();
               }
             }
           }
         )
         .catch((error) => {
           console.log('SwitchCatch:', error);
-          setNetworkId(1);
-          setDialog(error.message);
+          // setNetworkId(1);
+          // setDialog(error.message);
         });
     } else {
       setNetworkId(1);

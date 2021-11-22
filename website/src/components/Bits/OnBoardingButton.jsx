@@ -4,6 +4,7 @@ import { Button } from '@mui/material';
 
 import { ReactComponent as MetaMask } from '../../media/icons/metamask.svg';
 import { useNetwork } from '../../contexts/networkContext';
+import { useExperts } from '../../contexts/expertsContext';
 
 const ONBOARD_TEXT = 'Click here to install MetaMask!';
 const CONNECT_TEXT = 'Connect';
@@ -13,6 +14,7 @@ export function OnBoardingButton() {
   const [isDisabled, setDisabled] = React.useState(false);
   const onboarding = React.useRef();
   const { accounts, setAccounts } = useNetwork();
+  const { setDialog } = useExperts();
 
   React.useEffect(() => {
     if (!onboarding.current) {
@@ -29,8 +31,10 @@ export function OnBoardingButton() {
         setButtonText(CONNECT_TEXT);
         setDisabled(false);
       }
+    } else {
+      setDialog('Click above to install MetaMask in your browser.');
     }
-  }, [accounts]);
+  }, [accounts, setDialog]);
 
   const onClick = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {

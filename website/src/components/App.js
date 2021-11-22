@@ -26,11 +26,13 @@ import { usePolygonNetwork } from '../hooks/usePolygonNetwork';
 
 import './App.scss';
 
-const CryptoRoute = ({ component: Component, address, ...rest }) => {
+const CryptoRoute = ({ component: Component, emptyPositions, ...rest }) => {
   return (
     <Route
       {...rest}
-      render={() => (address ? <Component /> : <Redirect to="/BuySell" />)}
+      render={() =>
+        emptyPositions ? <Redirect to="/BuySell" /> : <Component />
+      }
     />
   );
 };
@@ -42,8 +44,9 @@ function App() {
   const { setAccounts, setNetworkId, isPolygon } = useNetwork();
   const { setDialog } = useExperts();
   const address = user?.attributes?.ethAddress;
+  const hasMetamask = window.ethereum?.isMetaMask;
 
-  const { getSelectedNetwork } = usePolygonNetwork();
+  const { getSelectedNetwork, switchNetworkToPolygon } = usePolygonNetwork();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -58,6 +61,12 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled]);
+
+  useEffect(() => {
+    if (isAuthenticated && !isPolygon && hasMetamask) {
+      switchNetworkToPolygon();
+    }
+  }, [hasMetamask, isAuthenticated, isPolygon, switchNetworkToPolygon]);
 
   useEffect(() => {
     const initMoralisEvents = () => {
@@ -120,6 +129,7 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled, enableWeb3]);
 
+  const emptyPositions = !address || positions.length === 0;
   const isOnlyMatic = positions.length === 1 && positions[0].symbol === 'MATIC';
 
   if (isLoading) {
@@ -149,7 +159,7 @@ function App() {
             >
               <Link
                 to="/PortfolioPrices"
-                className={`NavBar${address ? '' : ' disabled'}`}
+                className={`NavBar${emptyPositions ? ' disabled' : ''}`}
               >
                 <Button
                   variant="uw"
@@ -163,7 +173,7 @@ function App() {
               </Link>
               <Link
                 to="/SwapTrade"
-                className={`NavBar${address ? '' : ' disabled'}`}
+                className={`NavBar${emptyPositions ? ' disabled' : ''}`}
               >
                 <Button
                   variant="uw"
@@ -189,7 +199,7 @@ function App() {
 
               <Link
                 to="/SendRecieve"
-                className={`NavBar${address ? '' : ' disabled'}`}
+                className={`NavBar${emptyPositions ? ' disabled' : ''}`}
               >
                 <Button
                   variant="uw"
@@ -207,13 +217,13 @@ function App() {
                 exact
                 path="/PortfolioPrices"
                 component={PortfolioPrices}
-                address={address}
+                emptyPositions={emptyPositions}
               />
               <CryptoRoute
                 exact
                 path="/SwapTrade"
                 component={SwapTrade}
-                address={address}
+                emptyPositions={emptyPositions}
               />
               <Route exact path="/BuySell">
                 <BuySell />
@@ -222,7 +232,7 @@ function App() {
                 exact
                 path="/SendRecieve"
                 component={SendReceive}
-                address={address}
+                emptyPositions={emptyPositions}
               />
               <Redirect to={isOnlyMatic ? '/SwapTrade' : '/PortfolioPrices'} />
             </Switch>

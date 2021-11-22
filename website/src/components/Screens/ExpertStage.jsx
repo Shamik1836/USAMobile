@@ -9,8 +9,8 @@ import { useNetwork } from '../../contexts/networkContext';
 import { Text } from '../UW/Text';
 
 const Icons = {
-  '': Benicorn,
-  idle: Benicorn,
+  '': SamEagle,
+  idle: SamEagle,
   portfolio: SamEagle,
   chart: SamEagle,
   trade: Benicorn,

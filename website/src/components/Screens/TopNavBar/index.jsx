@@ -16,7 +16,7 @@ import USAWalletEagleLogo from '../../../media/logos/USAWalletLogo.svg';
 export const TopNavBar = () => {
   const { isAuthenticated } = useMoralis();
   const hasMetamask = window.ethereum?.isMetaMask;
-  const { isPolygon } = useNetwork();
+  const { isPolygon, hasPolygon } = useNetwork();
 
   return (
     <Box
@@ -42,9 +42,9 @@ export const TopNavBar = () => {
       </Stack>
       {isAuthenticated && !hasMetamask && <br />}
       <Stack direction="row" spacing={1} style={{ display: 'inline-flex' }}>
-        {isAuthenticated && isPolygon && <ExpertButton />}
+        {isAuthenticated && hasPolygon && <ExpertButton />}
         <LightSwitch />
-        {isAuthenticated && hasMetamask && !isPolygon && <AddNetworkButton />}
+        {isAuthenticated && hasMetamask && !hasPolygon && <AddNetworkButton />}
         <AuthButton />
         {isAuthenticated && <OnBoardingButton />}
         {isAuthenticated && <ProfileAvatar />}
